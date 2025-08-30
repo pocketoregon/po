@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Better Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            background: linear-gradient(-45deg, #FF6B6B, #F9D949, #A9A9FF, #6BFFB2);
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #scene-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .overlay {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        #searchContainer {
+            position: relative;
+            background-color: white;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .unselectable {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .active-engine {
+            background-color: #3B82F6;
+            color: white;
+            border-color: #3B82F6;
+        }
+
+        #engineToggle {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        #engineToggle.open {
+            transform: rotate(90deg);
+        }
+
+        #engineOptions {
+            position: absolute;
+            bottom: 40px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: row;
+            gap: 8px;
+            transform-origin: bottom right;
+            z-index: 1000;
+        }
+
+        #engineOptions.open {
+            display: flex;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        #engineOptions.closing {
+            animation: fadeOut 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        @keyframes waterFlow {
+            0%, 100% { background-color: rgba(255, 255, 255, 1); border-color: #D1D5DB; }
+            50% { background-color: rgba(255, 255, 255, 0.3); border-color: rgba(209, 213, 219, 0.3); }
+        }
+
+        #searchInput { animation: waterFlow 6s ease-in-out infinite; }
+        .title-font { font-family: 'Merriweather', serif; }
+
+        .animated-e {
+            color: black;
+            animation: bwFade 8s ease-in-out infinite, eOpacityPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes bwFade { 0% { color: #000; } 50% { color: #fff; } 100% { color: #000; } }
+        @keyframes eOpacityPulse { 0% { opacity: 1; } 50% { opacity: 0.1; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+
+    <div class="overlay">
+        <div id="searchContainer">
+            <h1 class="text-3xl font-bold text-center mb-6 unselectable title-font">
+                BETT<span class="animated-e">E</span>R
+            </h1>
+
+            <div class="flex items-center space-x-2">
+                <input type="text" id="searchInput" placeholder="Search..." class="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                <button onclick="performSearch()" id="searchButton" class="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 shadow-md flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="engineToggle" class="unselectable" tabindex="-1">
+                <span class="font-bold text-xs">S</span>
+            </div>
+
+            <div id="engineOptions" class="hidden">
+                <button class="px-4 py-2 rounded-full border-2 border-transparent hover:border-blue-500 transition duration-300 active-engine" data-engine="google">Google</button>
+                <button class="px-4 py-2 rounded-full border-2 border-transparent hover:border-blue-500 transition duration-300" data-engine="yahoo">Yahoo</button>
+                <button class="px-4 py-2 rounded-full border-2 border-transparent hover:border-blue-500 transition duration-300" data-engine="duckduckgo">DuckDuckGo</button>
+                <button class="px-4 py-2 rounded-full border-2 border-transparent hover:border-blue-500 transition duration-300" data-engine="bing">Bing</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeEngine = 'google';
+        const engineToggle = document.getElementById('engineToggle');
+        const engineOptions = document.getElementById('engineOptions');
+        const searchInput = document.getElementById('searchInput');
+
+        function closeOptions() {
+            if (engineOptions.classList.contains('open')) {
+                engineOptions.classList.add('closing');
+                engineOptions.classList.remove('open');
+                engineToggle.classList.remove('open');
+                setTimeout(() => {
+                    engineOptions.classList.add('hidden');
+                    engineOptions.classList.remove('closing');
+                }, 300);
+            }
+        }
+
+        function openOptions() {
+            engineOptions.classList.remove('hidden');
+            engineOptions.classList.add('open');
+            engineToggle.classList.add('open');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            engineToggle.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (engineOptions.classList.contains('open')) {
+                    closeOptions();
+                } else {
+                    openOptions();
+                }
+            });
+
+            document.body.addEventListener('click', (event) => {
+                if (engineOptions.classList.contains('open') && !engineOptions.contains(event.target) && event.target !== engineToggle) {
+                    closeOptions();
+                }
+            });
+
+            document.querySelectorAll('#engineOptions button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('#engineOptions button').forEach(btn => btn.classList.remove('active-engine'));
+                    button.classList.add('active-engine');
+                    activeEngine = button.getAttribute('data-engine');
+                    closeOptions();
+                });
+            });
+
+            searchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
+
+        function performSearch() {
+            const query = searchInput.value;
+            if (!query) return;
+
+            let searchUrl = '';
+            switch (activeEngine) {
+                case 'google': searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break;
+                case 'yahoo': searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}`; break;
+                case 'duckduckgo': searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`; break;
+                case 'bing': searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`; break;
+                default: searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            }
+            window.location.href = searchUrl;
+        }
+
+        // --- 3D Scene Setup ---
+        window.onload = function() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('scene-container').appendChild(renderer.domElement);
+
+            camera.position.z = 50;
+
+            const lines = new THREE.Group();
+            scene.add(lines);
+
+            const numLines = 100;
+            const lineLength = 100;
+
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.2 });
+
+            for (let i = 0; i < numLines; i++) {
+                const startPoint = new THREE.Vector3((Math.random() - 0.5) * 200,(Math.random() - 0.5) * 200,(Math.random() - 0.5) * 200);
+                const endPoint = new THREE.Vector3(startPoint.x + (Math.random() - 0.5) * lineLength,startPoint.y + (Math.random() - 0.5) * lineLength,startPoint.z + (Math.random() - 0.5) * lineLength);
+                const geometry = new THREE.BufferGeometry().setFromPoints([startPoint, endPoint]);
+                const line = new THREE.Line(geometry, lineMaterial);
+                lines.add(line);
+            }
+
+            const shapes = new THREE.Group();
+            scene.add(shapes);
+            const numShapes = 20;
+            const shapeMaterial = new THREE.MeshBasicMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+
+            const shapeGeometries = [ new THREE.DodecahedronGeometry(5, 0), new THREE.IcosahedronGeometry(5, 0) ];
+
+            for (let i = 0; i < numShapes; i++) {
+                const geo = shapeGeometries[Math.floor(Math.random() * shapeGeometries.length)].clone();
+                const shape = new THREE.Mesh(geo, shapeMaterial);
+                shape.position.set((Math.random() - 0.5) * 200,(Math.random() - 0.5) * 200,(Math.random() - 0.5) * 200);
+                shape.rotationSpeedX = (Math.random() - 0.5) * 0.01;
+                shape.rotationSpeedY = (Math.random() - 0.5) * 0.01;
+                shape.rotationSpeedZ = (Math.random() - 0.5) * 0.01;
+                shape.scale.setScalar(Math.random() * 0.5 + 0.5);
+                shapes.add(shape);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                lines.rotation.x += 0.0005;
+                lines.rotation.y += 0.0008;
+
+                shapes.children.forEach(shape => {
+                    shape.rotation.x += shape.rotationSpeedX;
+                    shape.rotation.y += shape.rotationSpeedY;
+                    shape.rotation.z += shape.rotationSpeedZ;
+                    shape.position.x += Math.sin(Date.now() * 0.0001 + shape.position.z) * 0.05;
+                    shape.position.y += Math.cos(Date.now() * 0.0001 + shape.position.x) * 0.05;
+                    shape.position.z += Math.sin(Date.now() * 0.0001 + shape.position.y) * 0.05;
+                });
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            document.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                camera.rotation.y += deltaX * 0.005;
+                camera.rotation.x += deltaY * 0.005;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            document.addEventListener('mouseup', () => { isDragging = false; });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+    </script>
+</body>
+</html>
