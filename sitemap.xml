@@ -7,11 +7,3 @@
   </url>
 </urlset>
 ```
-
-**`robots.txt`**
-```
-User-agent: *
-Allow: /
-Disallow: /admin.html
-
-Sitemap: https://pocketoregon.site/sitemap.xml
