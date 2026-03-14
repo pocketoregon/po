@@ -16,24 +16,6 @@
             -webkit-user-select: none;
         }
 
-        .btn-greeting {
-            border: 1px solid #333238;
-            border-radius: 4px;
-            padding: 4px 10px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: #1f1e24;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            background-color: transparent;
-        }
-        .btn-greeting:hover { background-color: #000; color: #fff; border-color: #000; }
-        @media (min-width: 640px) { .btn-greeting { padding: 4px 12px; font-size: 0.8125rem; } }
-
-        .nav-link-sub { color: #333238; font-size: 0.9375rem; font-weight: 400; }
-        .nav-link-sub:hover { color: #108548; }
-
         /* Top bar */
         #top-bar {
             background: white;
@@ -42,14 +24,35 @@
             position: relative;
         }
 
-        /* The logo is always position:fixed so it can travel freely */
+        /* Nav & Glass Effect */
+        #main-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 1);
+            border-bottom: 1px solid #e5e7eb;
+            transition: 
+                background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #main-nav.shadowed { 
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Logo Traveller */
         #logo-traveller {
             position: fixed;
             z-index: 200;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* JS sets top and left */
             transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1),
                         left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
@@ -59,18 +62,6 @@
                         height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Nav */
-        #main-nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            transition: box-shadow 0.3s ease;
-        }
-        #main-nav.shadowed { box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
-
-        /* Spacer inside nav so brand text doesn't overlap logo when scrolled */
         #nav-spacer {
             width: 0;
             height: 24px;
@@ -79,7 +70,36 @@
             overflow: hidden;
         }
 
-        /* Hero */
+        /* Modern Glass Hover Effect for Nav Links */
+        .nav-link-sub { 
+            color: #333238; 
+            font-size: 0.9375rem; 
+            font-weight: 500; 
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+        .nav-link-sub:hover { 
+            color: #626168;
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-greeting {
+            border: 1px solid #333238;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: #1f1e24;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .btn-greeting:hover { background-color: #000; color: #fff; }
+
+        /* Hero & Decorations */
         .hero-section {
             background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%);
             padding-top: 3rem;
@@ -91,9 +111,8 @@
 
         .decoration-container {
             position: absolute; bottom: 20px; left: 20px;
-            display: flex; align-items: center; gap: 8px; opacity: 0.45;
+            display: flex; align-items: center; gap: 8px; opacity: 0.3;
         }
-        @media (min-width: 1024px) { .decoration-container { left: 6rem; } }
         .shape-pill-lg { width:80px;height:20px;background:#e9e0ff;border-radius:999px; }
         .shape-pill-sm { width:35px;height:20px;background:#e9e0ff;border-radius:999px; }
         .shape-pill-md { width:120px;height:20px;background:#e9e0ff;border-radius:999px; }
@@ -115,15 +134,19 @@
         .gl-card-desc  { color:#333238; font-size:1rem; line-height:1.6; margin-bottom:1.5rem; flex-grow:1; }
         .gl-card-link  { color:#1f1e24; font-weight:700; font-size:1rem; display:flex; align-items:center; cursor:pointer; background:none; border:none; padding:0; }
 
-        #current-time { color:#1f1e24; font-weight:700; font-size:0.875rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
-        .brand-text { font-weight:700; color:#111827; white-space:nowrap; padding-left:0.5rem; }
-        @media (min-width:640px) { .brand-text { padding-left:0; } }
+        /* Mobile Menu Grid Animation */
+        .menu-transition {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .menu-transition.open { grid-template-rows: 1fr; }
+        .menu-inner { overflow: hidden; }
 
         #custom-alert {
             display:none; position:fixed; top:20px; left:50%;
             transform:translateX(-50%); background:#1f1e24; color:#fff;
-            padding:12px 24px; border-radius:8px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:300;
+            padding:12px 24px; border-radius:8px; z-index:300;
         }
     </style>
 </head>
@@ -131,48 +154,43 @@
 
     <div id="custom-alert"></div>
 
-    <!-- Logo traveller — always fixed, JS moves it -->
     <div id="logo-traveller">
         <svg id="logo-svg" class="text-orange-600" style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
         </svg>
     </div>
 
-    <!-- Top bar: invisible anchor for the logo start position -->
     <div id="top-bar" class="hidden sm:block">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center">
-            <!-- anchor point: logo traveller will sit over this -->
             <div id="logo-anchor" style="width:20px;height:20px;"></div>
         </div>
     </div>
 
-    <!-- Main Nav -->
     <nav id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center min-w-0">
-                <!-- nav anchor: where logo lands after scroll -->
                 <div id="nav-anchor" style="width:20px;height:20px;flex-shrink:0;"></div>
                 <div id="nav-spacer"></div>
 
                 <div class="flex items-center space-x-1 min-w-0">
-                    <span class="brand-text text-lg sm:text-xl truncate">PocketOregon</span>
+                    <span class="font-bold text-gray-900 text-lg sm:text-xl truncate ml-2">PocketOregon</span>
                     <div class="hidden sm:flex items-center space-x-1">
                         <span class="text-gray-300 text-2xl font-light">|</span>
                         <span class="text-xl font-bold text-gray-900">site</span>
                     </div>
                 </div>
 
-                <div class="hidden lg:flex ml-8 space-x-6">
+                <div class="hidden lg:flex ml-8 space-x-2">
                     <a href="#card-comic" class="nav-link-sub">Pocketverse</a>
                     <a href="#card-info"  class="nav-link-sub">Site Info</a>
                     <a href="#card-chapters" class="nav-link-sub">Chapters</a>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6 ml-auto flex-shrink-0">
+            <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6 ml-auto">
                 <div id="dynamic-greeting" class="btn-greeting">--</div>
-                <div id="current-time">--:--</div>
-                <button id="mobile-menu-btn" class="lg:hidden p-1 text-gray-600 hover:text-gray-900">
+                <div id="current-time" class="font-bold text-sm">--:--</div>
+                <button id="mobile-menu-btn" class="lg:hidden p-1 text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path id="menu-icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -180,13 +198,15 @@
             </div>
         </div>
 
-        <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-gray-100 shadow-xl absolute w-full left-0 top-16">
-            <div class="px-4 py-4 space-y-3">
-                <a href="#card-comic"    onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Pocketverse</a>
-                <a href="#card-info"     onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Site Info</a>
-                <a href="#card-chapters" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Chapters</a>
-                <hr>
-                <button id="contact-us-btn" class="block text-sm text-gray-500 w-full text-left">Contact us</button>
+        <div id="mobile-menu" class="lg:hidden absolute w-full left-0 top-16 bg-white shadow-xl opacity-0 pointer-events-none menu-transition">
+            <div class="menu-inner">
+                <div class="px-4 py-4 space-y-3 border-t border-gray-100">
+                    <a href="#card-comic" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Pocketverse</a>
+                    <a href="#card-info" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Site Info</a>
+                    <a href="#card-chapters" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Chapters</a>
+                    <hr>
+                    <button id="contact-us-btn" class="block text-sm text-gray-500 w-full text-left">Contact us</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -249,95 +269,82 @@
     </footer>
 
     <script>
-        // ── Clock ──────────────────────────────────────────────────
+        const logo = document.getElementById('logo-traveller');
+        const topAnchor = document.getElementById('logo-anchor');
+        const navAnchor = document.getElementById('nav-anchor');
+        const spacer = document.getElementById('nav-spacer');
+        const nav = document.getElementById('main-nav');
+        const logoSvg = document.getElementById('logo-svg');
+
         function updateClock() {
             const now = new Date();
-            document.getElementById('current-time').textContent =
-                now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-time').textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
             const h = now.getHours();
             const greetEl = document.getElementById('dynamic-greeting');
-            if (greetEl) greetEl.textContent =
-                h >= 5  && h < 12 ? 'Good Morning'  :
-                h >= 12 && h < 17 ? 'Good Afternoon' :
-                h >= 17 && h < 21 ? "It's Evening"   : 'Good Night';
+            if (greetEl) {
+                greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : h >= 12 && h < 17 ? 'Good Afternoon' : h >= 17 && h < 21 ? "It's Evening" : 'Good Night';
+            }
             const origin = new Date('2026-03-13');
             const ms = Math.max(0, new Date().setHours(0,0,0,0) - origin.setHours(0,0,0,0));
             document.getElementById('site-age').textContent = `Age: ${Math.floor(ms / 86400000)} days`;
         }
-        updateClock();
-        setInterval(updateClock, 1000);
-
-        // ── Logo position logic ────────────────────────────────────
-        const logo      = document.getElementById('logo-traveller');
-        const topAnchor = document.getElementById('logo-anchor');   // where logo starts (top bar)
-        const navAnchor = document.getElementById('nav-anchor');    // where logo ends (nav bar)
-        const spacer    = document.getElementById('nav-spacer');
-        const nav       = document.getElementById('main-nav');
 
         function getCenter(el) {
             const r = el.getBoundingClientRect();
-            return { x: r.left, y: r.top + r.height / 2 - 10 }; // -10 = half logo height
+            return { x: r.left, y: r.top + r.height / 2 - 10 };
         }
-
-        const logoSvg = document.getElementById('logo-svg');
 
         function positionLogo() {
             const scrolled = window.scrollY > 35;
-
             if (scrolled) {
-                // grow to nav size first so getCenter offset is correct
-                logoSvg.style.width  = '28px';
+                logoSvg.style.width = '28px';
                 logoSvg.style.height = '28px';
                 const dest = getCenter(navAnchor);
-                logo.style.top  = (dest.y - 4) + 'px'; // re-center for larger size
+                logo.style.top = (dest.y - 4) + 'px';
                 logo.style.left = dest.x + 'px';
                 spacer.style.width = '36px';
                 nav.classList.add('shadowed');
             } else {
-                logoSvg.style.width  = '20px';
+                logoSvg.style.width = '20px';
                 logoSvg.style.height = '20px';
-                // top bar is still visible; place logo over topAnchor
                 const src = getCenter(topAnchor);
-                logo.style.top  = src.y + 'px';
+                logo.style.top = src.y + 'px';
                 logo.style.left = src.x + 'px';
                 spacer.style.width = '0px';
                 nav.classList.remove('shadowed');
             }
         }
 
-        // Run once after layout is ready
-        window.addEventListener('load', positionLogo);
-        window.addEventListener('scroll', positionLogo);
-        window.addEventListener('resize', positionLogo);
-        // Also run now (handles cases where load already fired)
-        setTimeout(positionLogo, 50);
-
-        // ── Mobile menu ────────────────────────────────────────────
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu    = document.getElementById('mobile-menu');
-        const menuIconPath  = document.getElementById('menu-icon-path');
         function toggleMenu() {
-            mobileMenu.classList.toggle('hidden');
-            menuIconPath.setAttribute('d',
-                mobileMenu.classList.contains('hidden')
-                    ? 'M4 6h16M4 12h16M4 18h16'
-                    : 'M6 18L18 6M6 6l12 12');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIconPath = document.getElementById('menu-icon-path');
+            const isOpen = mobileMenu.classList.contains('open');
+            if (!isOpen) {
+                mobileMenu.classList.add('open', 'opacity-100', 'pointer-events-auto');
+                mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+                menuIconPath.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+            } else {
+                mobileMenu.classList.remove('open', 'opacity-100', 'pointer-events-auto');
+                mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+                menuIconPath.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+            }
         }
-        mobileMenuBtn.addEventListener('click', toggleMenu);
 
-        // ── Alerts ─────────────────────────────────────────────────
         function showCustomAlert(msg) {
             const box = document.getElementById('custom-alert');
             box.textContent = msg;
             box.style.display = 'block';
             setTimeout(() => box.style.display = 'none', 3000);
         }
-        document.getElementById('warn-btn').addEventListener('click', () =>
-            showCustomAlert("i warn you don't click it"));
-        document.getElementById('contact-us-btn').addEventListener('click', () => {
-            toggleMenu();
-            showCustomAlert("Please don't disturb we are busy now");
-        });
+
+        window.addEventListener('load', () => { updateClock(); positionLogo(); });
+        window.addEventListener('scroll', positionLogo);
+        window.addEventListener('resize', positionLogo);
+        setInterval(updateClock, 1000);
+        
+        document.getElementById('mobile-menu-btn').addEventListener('click', toggleMenu);
+        document.getElementById('warn-btn').addEventListener('click', () => showCustomAlert("i warn you don't click it"));
+        document.getElementById('contact-us-btn').addEventListener('click', () => { toggleMenu(); showCustomAlert("Please don't disturb we are busy now"); });
     </script>
 </body>
 </html>
