@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pocket verse</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
@@ -71,6 +72,41 @@
         }
         .btn-greeting:hover { background-color:#000; color:#fff; }
 
+        .btn-login {
+            border:1px solid #333238; border-radius:4px; padding:4px 12px;
+            font-weight:600; font-size:0.75rem; color:#1f1e24;
+            transition: all 0.2s ease; cursor:pointer; background: white;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-login:hover { background-color:#000; color:#fff; }
+
+        .user-avatar {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #1f1e24; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
+            border: 2px solid #e5e7eb; transition: border-color 0.2s;
+        }
+        .user-avatar:hover { border-color: #1f1e24; }
+
+        .user-dropdown {
+            position: absolute; top: 100%; right: 0; margin-top: 8px;
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px;
+            min-width: 180px; z-index: 500;
+            display: none;
+        }
+        .user-dropdown.open { display: block; }
+        .user-dropdown-name { font-weight: 600; font-size: 0.875rem; padding: 6px 8px; color: #1f1e24; }
+        .user-dropdown-email { font-size: 0.75rem; padding: 0 8px 6px; color: #9ca3af; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px; }
+        .user-dropdown-btn {
+            width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px;
+            font-size: 0.875rem; color: #1f1e24; background: none; border: none;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .user-dropdown-btn:hover { background: #f3f4f6; }
+        .user-dropdown-btn.admin { color: #7c3aed; font-weight: 600; }
+
         .hero-section {
             background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%);
             padding-top:3rem; padding-bottom:4rem; position:relative; overflow:hidden;
@@ -107,6 +143,30 @@
             transform:translateX(-50%); background:#1f1e24; color:#fff;
             padding:12px 24px; border-radius:8px; z-index:300;
         }
+
+        /* Comments Section */
+        .comments-section { background: #f9fafb; padding: 4rem 0; border-top: 1px solid #e5e7eb; }
+        .comment-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 1rem 1.25rem; margin-bottom: 0.75rem;
+        }
+        .comment-author { font-weight: 600; font-size: 0.875rem; color: #1f1e24; }
+        .comment-time { font-size: 0.75rem; color: #9ca3af; margin-left: 8px; }
+        .comment-text { font-size: 0.9rem; color: #374151; margin-top: 4px; line-height: 1.5; }
+        .comment-input {
+            width: 100%; border: 1px solid #e5e7eb; border-radius: 6px;
+            padding: 10px 14px; font-size: 0.9rem; font-family: 'Inter', sans-serif;
+            outline: none; color: #1f1e24; transition: border-color 0.15s;
+            user-select: text; -webkit-user-select: text; resize: none;
+        }
+        .comment-input:focus { border-color: #1f1e24; }
+        .comment-submit {
+            background: #1f1e24; color: white; border: none; border-radius: 6px;
+            padding: 8px 20px; font-size: 0.875rem; font-weight: 600;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .comment-submit:hover { background: #374151; }
+        .comment-submit:disabled { background: #9ca3af; cursor: not-allowed; }
 
         /* ── AI Chat Widget ── */
         #ai-chat-btn {
@@ -241,6 +301,26 @@
             <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6 ml-auto">
                 <div id="dynamic-greeting" class="btn-greeting">--</div>
                 <div id="current-time" class="font-bold text-sm">--:--</div>
+
+                <!-- Auth Area -->
+                <div id="auth-area" class="relative flex items-center">
+                    <!-- Shown when logged out -->
+                    <button id="login-btn" class="btn-login">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        Sign in
+                    </button>
+                    <!-- Shown when logged in -->
+                    <div id="user-area" style="display:none; position:relative;">
+                        <div id="user-avatar" class="user-avatar"></div>
+                        <div id="user-dropdown" class="user-dropdown">
+                            <div id="dropdown-name" class="user-dropdown-name"></div>
+                            <div id="dropdown-email" class="user-dropdown-email"></div>
+                            <button id="admin-btn" class="user-dropdown-btn admin" style="display:none;" onclick="window.location.href='admin.html'">⚙ Admin Panel</button>
+                            <button class="user-dropdown-btn" onclick="signOut()">Sign out</button>
+                        </div>
+                    </div>
+                </div>
+
                 <button id="mobile-menu-btn" class="lg:hidden p-1 text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path id="menu-icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -306,6 +386,34 @@
         </div>
     </section>
 
+    <!-- Comments Section -->
+    <section class="comments-section" id="comments-section">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="outfit-font text-2xl font-bold text-gray-900 mb-2">Community</h2>
+            <p class="text-gray-500 text-sm mb-6">Share your thoughts about the Pocketverse.</p>
+
+            <!-- Comment form (shown only when logged in) -->
+            <div id="comment-form-area" style="display:none;" class="mb-6">
+                <textarea id="comment-input" class="comment-input" rows="3" placeholder="What are your thoughts on the Pocketverse?..." maxlength="500"></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="comment-char" class="text-xs text-gray-400">0 / 500</span>
+                    <button id="comment-submit" class="comment-submit">Post Comment</button>
+                </div>
+            </div>
+
+            <!-- Login prompt (shown when logged out) -->
+            <div id="comment-login-prompt" class="mb-6 p-4 bg-white border border-gray-200 rounded-lg text-center">
+                <p class="text-gray-500 text-sm mb-3">Sign in to join the conversation</p>
+                <button onclick="document.getElementById('login-btn').click()" class="comment-submit">Sign in with Google</button>
+            </div>
+
+            <!-- Comments list -->
+            <div id="comments-list">
+                <div class="text-gray-400 text-sm text-center py-6">Loading comments...</div>
+            </div>
+        </div>
+    </section>
+
     <footer class="bg-[#1f1e24] py-12 border-t border-gray-800">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="flex items-center justify-center mb-4">
@@ -345,7 +453,152 @@
         </div>
     </div>
 
+    <!-- Hidden Google Sign-In -->
+    <div id="g_id_onload"
+         data-client_id="930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com"
+         data-callback="handleGoogleLogin"
+         data-auto_prompt="false">
+    </div>
+
     <script>
+        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+        let currentUser = null;
+
+        // ── Auth ──
+        function handleGoogleLogin(response) {
+            fetch(WORKER_URL + '/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: response.credential })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.user) {
+                    currentUser = data.user;
+                    localStorage.setItem('po_user', JSON.stringify(data.user));
+                    updateAuthUI(data.user);
+                    loadComments();
+                    showCustomAlert('Welcome, ' + data.user.name + '!');
+                }
+            })
+            .catch(() => showCustomAlert('Login failed. Please try again.'));
+        }
+
+        function updateAuthUI(user) {
+            document.getElementById('login-btn').style.display = 'none';
+            document.getElementById('user-area').style.display = 'block';
+            const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?';
+            document.getElementById('user-avatar').textContent = initials;
+            document.getElementById('dropdown-name').textContent = user.name || 'User';
+            document.getElementById('dropdown-email').textContent = user.email || '';
+            if (user.role === 'admin') {
+                document.getElementById('admin-btn').style.display = 'block';
+            }
+            document.getElementById('comment-form-area').style.display = 'block';
+            document.getElementById('comment-login-prompt').style.display = 'none';
+        }
+
+        function signOut() {
+            currentUser = null;
+            localStorage.removeItem('po_user');
+            document.getElementById('login-btn').style.display = 'flex';
+            document.getElementById('user-area').style.display = 'none';
+            document.getElementById('user-dropdown').classList.remove('open');
+            document.getElementById('comment-form-area').style.display = 'none';
+            document.getElementById('comment-login-prompt').style.display = 'block';
+            showCustomAlert('Signed out successfully.');
+        }
+
+        document.getElementById('login-btn').addEventListener('click', () => {
+            google.accounts.id.prompt();
+        });
+
+        document.getElementById('user-avatar').addEventListener('click', () => {
+            document.getElementById('user-dropdown').classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            const area = document.getElementById('user-area');
+            if (area && !area.contains(e.target)) {
+                document.getElementById('user-dropdown').classList.remove('open');
+            }
+        });
+
+        // Restore session
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('po_user');
+            if (saved) {
+                try {
+                    const user = JSON.parse(saved);
+                    currentUser = user;
+                    updateAuthUI(user);
+                } catch(e) {}
+            }
+            loadComments();
+            updateClock();
+            positionLogo();
+        });
+
+        // ── Comments ──
+        async function loadComments() {
+            try {
+                const res = await fetch(WORKER_URL + '/comments?chapter=general');
+                const data = await res.json();
+                const list = document.getElementById('comments-list');
+                if (!data.comments || data.comments.length === 0) {
+                    list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No comments yet. Be the first!</div>';
+                    return;
+                }
+                list.innerHTML = data.comments.map(c => `
+                    <div class="comment-card">
+                        <div>
+                            <span class="comment-author">${escapeHtml(c.name || 'Anonymous')}</span>
+                            <span class="comment-time">${formatTime(c.created_at)}</span>
+                        </div>
+                        <p class="comment-text">${escapeHtml(c.text)}</p>
+                    </div>
+                `).join('');
+            } catch(e) {
+                document.getElementById('comments-list').innerHTML = '<div class="text-gray-400 text-sm text-center py-6">Could not load comments.</div>';
+            }
+        }
+
+        document.getElementById('comment-input').addEventListener('input', function() {
+            document.getElementById('comment-char').textContent = this.value.length + ' / 500';
+        });
+
+        document.getElementById('comment-submit').addEventListener('click', async () => {
+            const text = document.getElementById('comment-input').value.trim();
+            if (!text || !currentUser) return;
+            const btn = document.getElementById('comment-submit');
+            btn.disabled = true;
+            btn.textContent = 'Posting...';
+            try {
+                await fetch(WORKER_URL + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, chapter: 'general', text })
+                });
+                document.getElementById('comment-input').value = '';
+                document.getElementById('comment-char').textContent = '0 / 500';
+                await loadComments();
+            } catch(e) {
+                showCustomAlert('Could not post comment. Try again.');
+            }
+            btn.disabled = false;
+            btn.textContent = 'Post Comment';
+        });
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
         // ── Original Scripts ──
         const logo = document.getElementById('logo-traveller');
         const topAnchor = document.getElementById('logo-anchor');
@@ -410,7 +663,6 @@
             setTimeout(() => box.style.display = 'none', 3000);
         }
 
-        window.addEventListener('load', () => { updateClock(); positionLogo(); });
         window.addEventListener('scroll', positionLogo);
         window.addEventListener('resize', positionLogo);
         setInterval(updateClock, 1000);
@@ -419,9 +671,6 @@
         document.getElementById('contact-us-btn').addEventListener('click', () => { toggleMenu(); showCustomAlert("Please don't disturb we are busy now"); });
 
         // ── AI Chat Widget ──
-        // ⚠️ This points to your Cloudflare Worker
-        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
-
         const chatBtn    = document.getElementById('ai-chat-btn');
         const chatWindow = document.getElementById('ai-chat-window');
         const chatClose  = document.getElementById('ai-chat-close');
@@ -469,36 +718,27 @@
         async function sendMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
-
             chatInput.value = '';
             chatSend.disabled = true;
             appendMsg(text, 'user');
             showTyping();
-
             try {
-                const res = await fetch(WORKER_URL, {
+                const res = await fetch(WORKER_URL + '/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: text
+                        prompt: text,
+                        userId: currentUser ? currentUser.id : null
                     })
                 });
-
                 const data = await res.json();
                 removeTyping();
                 const reply = data.response || data.result?.response || "Sorry, I couldn't get a response. Try again!";
                 appendMsg(reply, 'ai');
             } catch (err) {
                 removeTyping();
-                if (!res || res.status === 429 || res.status === 503) {
-                    appendMsg("⚠️ We've hit our daily limit. Service will be back tomorrow. Sorry for the inconvenience!", 'ai');
-                } else if (!navigator.onLine) {
-                    appendMsg("⚠️ You seem to be offline. Please check your internet connection.", 'ai');
-                } else {
-                    appendMsg("⚠️ Something went wrong on our end. Please try again in a moment.", 'ai');
-                }
+                appendMsg("⚠️ Something went wrong. Please try again in a moment.", 'ai');
             }
-
             chatSend.disabled = false;
             chatInput.focus();
         }
