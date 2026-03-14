@@ -73,14 +73,20 @@ export default {
         const prompt = body.prompt || body.message;
         const userId = body.userId || null;
 
-        const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+        if (!prompt) {
+          return new Response(JSON.stringify({ error: 'No message provided' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const aiResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: prompt }
           ]
         });
 
-        const reply = response.response;
+        const reply = aiResult?.response ?? "Sorry, I couldn't generate a response.";
 
         if (userId) {
           await env.DB.prepare(
@@ -88,7 +94,8 @@ export default {
           ).bind(userId, prompt, reply).run();
         }
 
-        return new Response(JSON.stringify(response), {
+        // ✅ THE FIX: returns { response } so frontend data.response works
+        return new Response(JSON.stringify({ response: reply }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       } catch (e) {
