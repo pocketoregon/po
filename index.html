@@ -81,6 +81,13 @@
         }
         #logo-svg { transition: width 0.35s cubic-bezier(0.4,0,0.2,1), height 0.35s cubic-bezier(0.4,0,0.2,1); }
         #nav-spacer { width:0; height:24px; flex-shrink:0; transition: width 0.35s cubic-bezier(0.4,0,0.2,1); overflow:hidden; }
+        /* On mobile: hide the travelling logo, show a static inline logo instead */
+        @media (max-width: 639px) {
+            #logo-traveller { display: none !important; }
+            #nav-spacer { display: none !important; }
+            #mobile-logo-static { display: flex !important; }
+        }
+        #mobile-logo-static { display: none; align-items: center; flex-shrink: 0; }
         .nav-link-sub {
             color:#333238; font-size:0.9375rem; font-weight:500; padding:6px 12px;
             border-radius:6px; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -295,6 +302,12 @@
             <div class="flex items-center min-w-0">
                 <div id="nav-anchor" style="width:20px;height:20px;flex-shrink:0;"></div>
                 <div id="nav-spacer"></div>
+                <!-- Static logo shown only on mobile (sm: and up use the travelling logo) -->
+                <div id="mobile-logo-static">
+                    <svg class="text-orange-600" style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
+                    </svg>
+                </div>
                 <div class="flex items-center space-x-1 min-w-0">
                     <span class="outfit-font font-bold text-gray-900 text-lg sm:text-xl truncate ml-2">PocketOregon</span>
                     <div class="hidden sm:flex items-center space-x-1">
