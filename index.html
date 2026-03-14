@@ -100,6 +100,11 @@
             display: flex; align-items: center; gap: 6px;
         }
         .btn-login:hover { background-color:#000; color:#fff; }
+        /* Mobile: icon-only sign in button on very small screens */
+        @media (max-width: 399px) {
+            .btn-login .btn-login-text { display: none; }
+            .btn-login { padding: 6px 8px; }
+        }
         .user-avatar {
             width: 28px; height: 28px; border-radius: 50%;
             background: #1f1e24; color: white;
@@ -286,7 +291,7 @@
     </div>
 
     <nav id="main-nav">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
             <div class="flex items-center min-w-0">
                 <div id="nav-anchor" style="width:20px;height:20px;flex-shrink:0;"></div>
                 <div id="nav-spacer"></div>
@@ -303,13 +308,13 @@
                     <a href="#card-chapters" class="nav-link-sub">Chapters</a>
                 </div>
             </div>
-            <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6 ml-auto">
-                <div id="dynamic-greeting" class="btn-greeting">--</div>
-                <div id="current-time" class="font-bold text-sm">--:--</div>
+            <div class="flex items-center space-x-2 sm:space-x-3 ml-auto">
+                <div id="dynamic-greeting" class="btn-greeting hidden sm:block">--</div>
+                <div id="current-time" class="font-bold text-sm hidden sm:block">--:--</div>
                 <div id="auth-area" class="relative flex items-center">
                     <button id="login-btn" class="btn-login" onclick="openLoginModal()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                        Sign in
+                        <span class="btn-login-text">Sign in</span>
                     </button>
                     <div id="user-area" style="display:none; position:relative;">
                         <div id="user-avatar" class="user-avatar"></div>
@@ -328,14 +333,19 @@
                 </button>
             </div>
         </div>
-        <div id="mobile-menu" class="lg:hidden absolute w-full left-0 top-16 bg-white shadow-xl opacity-0 pointer-events-none menu-transition">
+        <div id="mobile-menu" class="lg:hidden absolute w-full left-0 top-14 sm:top-16 bg-white shadow-xl opacity-0 pointer-events-none menu-transition">
             <div class="menu-inner">
                 <div class="px-4 py-4 space-y-3 border-t border-gray-100">
-                    <a href="#card-comic" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Pocketverse</a>
-                    <a href="#card-info" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Site Info</a>
-                    <a href="#card-chapters" onclick="toggleMenu()" class="block text-base font-medium text-gray-900">Chapters</a>
+                    <!-- Greeting + time shown in mobile menu instead of nav bar -->
+                    <div class="flex items-center justify-between pb-2 mb-1 border-b border-gray-100">
+                        <span id="mobile-greeting" class="text-sm font-semibold text-gray-700">--</span>
+                        <span id="mobile-time" class="text-sm font-bold text-gray-900">--:--</span>
+                    </div>
+                    <a href="#card-comic" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Pocketverse</a>
+                    <a href="#card-info" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Site Info</a>
+                    <a href="#card-chapters" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Chapters</a>
                     <hr>
-                    <button id="contact-us-btn" class="block text-sm text-gray-500 w-full text-left">Contact us</button>
+                    <button id="contact-us-btn" class="block text-sm text-gray-500 w-full text-left py-1">Contact us</button>
                 </div>
             </div>
         </div>
@@ -701,10 +711,15 @@
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('current-time').textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
+            const timeStr = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-time').textContent = timeStr;
+            document.getElementById('mobile-time').textContent = timeStr;
             const h = now.getHours();
             const greetEl = document.getElementById('dynamic-greeting');
-            if (greetEl) greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : h >= 12 && h < 17 ? 'Good Afternoon' : h >= 17 && h < 21 ? "It's Evening" : 'Good Night';
+            const mobileGreetEl = document.getElementById('mobile-greeting');
+            const greeting = h >= 5 && h < 12 ? 'Good Morning' : h >= 12 && h < 17 ? 'Good Afternoon' : h >= 17 && h < 21 ? "It's Evening" : 'Good Night';
+            if (greetEl) greetEl.textContent = greeting;
+            if (mobileGreetEl) mobileGreetEl.textContent = greeting;
             const origin = new Date('2026-03-13');
             const ms = Math.max(0, new Date().setHours(0,0,0,0) - origin.setHours(0,0,0,0));
             const ageEl = document.getElementById('site-age');
