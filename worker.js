@@ -19,7 +19,7 @@ RULES:
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Email',
 };
 
 export default {
@@ -27,12 +27,11 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // AUTH ROUTE - Google login
+    // AUTH ROUTE
     if (path === '/auth' && request.method === 'POST') {
       try {
         const { token } = await request.json();
@@ -67,7 +66,7 @@ export default {
       }
     }
 
-    // CHAT ROUTE - upgraded with DB saving
+    // CHAT ROUTE
     if (path === '/chat' && request.method === 'POST') {
       try {
         const body = await request.json();
@@ -147,7 +146,77 @@ export default {
       }
     }
 
-    // DEFAULT - original catch-all (keeps old behavior)
+    // ADMIN - GET USERS
+    if (path === '/admin/users' && request.method === 'GET') {
+      const adminEmail = request.headers.get('X-Admin-Email');
+      if (adminEmail !== ADMIN_EMAIL) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      try {
+        const users = await env.DB.prepare(
+          'SELECT * FROM users ORDER BY created_at DESC'
+        ).all();
+        return new Response(JSON.stringify(users.results), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    // ADMIN - GET COMMENTS
+    if (path === '/admin/comments' && request.method === 'GET') {
+      const adminEmail = request.headers.get('X-Admin-Email');
+      if (adminEmail !== ADMIN_EMAIL) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      try {
+        const comments = await env.DB.prepare(`
+          SELECT comments.*, users.name, users.email
+          FROM comments
+          JOIN users ON comments.user_id = users.id
+          ORDER BY comments.created_at DESC
+          LIMIT 100
+        `).all();
+        return new Response(JSON.stringify(comments.results), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    // ADMIN - GET CHATS
+    if (path === '/admin/chats' && request.method === 'GET') {
+      const adminEmail = request.headers.get('X-Admin-Email');
+      if (adminEmail !== ADMIN_EMAIL) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      try {
+        const chats = await env.DB.prepare(
+          'SELECT * FROM chat_history ORDER BY created_at DESC LIMIT 100'
+        ).all();
+        return new Response(JSON.stringify(chats.results), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    // DEFAULT
     try {
       const body = await request.json();
       const prompt = body.prompt;
