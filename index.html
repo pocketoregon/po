@@ -195,6 +195,11 @@
         .chat-msg.user { background: #1f1e24; color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; }
         .chat-msg.ai { background: #f3f4f6; color: #1f1e24; align-self: flex-start; border-bottom-left-radius: 3px; }
         .chat-msg.ai.typing { display: flex; gap: 4px; align-items: center; padding: 12px 13px; }
+        .chat-msg.system-note {
+            background: #fef9c3; color: #92400e; align-self: center;
+            font-size: 0.78rem; padding: 6px 12px; border-radius: 20px;
+            max-width: 95%; text-align: center; border: 1px solid #fde68a;
+        }
         .typing-dot { width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBounce 1.2s infinite; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
@@ -205,6 +210,26 @@
         #ai-chat-send { background: #1f1e24; color: #fff; border: none; border-radius: 6px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
         #ai-chat-send:hover { background: #374151; }
         #ai-chat-send:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        /* Login gate for chat */
+        #chat-login-gate {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 32px 20px; gap: 12px; text-align: center;
+            min-height: 260px;
+        }
+        #chat-login-gate p { font-size: 0.875rem; color: #6b7280; margin: 0; }
+        #chat-login-gate strong { font-size: 1rem; color: #1f1e24; font-family: 'Outfit', sans-serif; font-weight: 700; }
+        .chat-signin-btn {
+            background: #1f1e24; color: white; border: none; border-radius: 6px;
+            padding: 9px 22px; font-size: 0.875rem; font-weight: 600;
+            cursor: pointer; transition: background 0.15s; margin-top: 4px;
+        }
+        .chat-signin-btn:hover { background: #374151; }
+        .chat-date-divider {
+            align-self: center; font-size: 0.72rem; color: #9ca3af;
+            background: #f9fafb; border: 1px solid #e5e7eb;
+            padding: 3px 10px; border-radius: 20px; margin: 4px 0;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -381,6 +406,16 @@
             <span>✦ PocketOregon AI</span>
             <button id="ai-chat-close">✕</button>
         </div>
+
+        <!-- Shown when not logged in -->
+        <div id="chat-login-gate">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <strong>Sign in to chat</strong>
+            <p>Your conversation is saved so you can continue where you left off.</p>
+            <button class="chat-signin-btn" onclick="openLoginModal()">Sign in with Google</button>
+        </div>
+
+        <!-- Shown when logged in -->
         <div id="ai-chat-messages">
             <div class="chat-msg ai">Hey! I'm the PocketOregon AI assistant. Ask me anything about this site, the Pocketverse story, or anything else! 👋</div>
         </div>
@@ -401,8 +436,11 @@
         let currentUser = null;
         let googleReady = false;
 
+        // conversationHistory holds {role, content} pairs for AI context
+        let conversationHistory = [];
+        let historyLoaded = false;
+
         // ── Google Init ──
-        // Poll until google library is available
         function waitForGoogle() {
             if (typeof google !== 'undefined' && google.accounts) {
                 google.accounts.id.initialize({
@@ -423,11 +461,7 @@
             container.innerHTML = '';
             if (googleReady) {
                 google.accounts.id.renderButton(container, {
-                    type: 'standard',
-                    theme: 'outline',
-                    size: 'large',
-                    text: 'signin_with',
-                    width: 280
+                    type: 'standard', theme: 'outline', size: 'large', text: 'signin_with', width: 280
                 });
             } else {
                 container.innerHTML = '<p style="color:#9ca3af;font-size:0.85rem;">Loading Google Sign-In...</p>';
@@ -468,6 +502,11 @@
                     updateAuthUI(data.user);
                     loadComments();
                     showCustomAlert('Welcome, ' + data.user.name + '!');
+                    // If chat is open, load history now
+                    if (document.getElementById('ai-chat-window').classList.contains('open')) {
+                        showChatForLoggedIn();
+                        loadChatHistory();
+                    }
                 } else {
                     showCustomAlert('Login failed: ' + (data.error || 'Unknown error'));
                 }
@@ -491,12 +530,15 @@
 
         function signOut() {
             currentUser = null;
+            conversationHistory = [];
+            historyLoaded = false;
             localStorage.removeItem('po_user');
             document.getElementById('login-btn').style.display = 'flex';
             document.getElementById('user-area').style.display = 'none';
             document.getElementById('user-dropdown').classList.remove('open');
             document.getElementById('comment-form-area').style.display = 'none';
             document.getElementById('comment-login-prompt').style.display = 'block';
+            showChatLoginGate();
             showCustomAlert('Signed out successfully.');
         }
 
@@ -523,6 +565,86 @@
             updateClock();
             positionLogo();
         });
+
+        // ── Chat UI State ──
+        function showChatLoginGate() {
+            document.getElementById('chat-login-gate').style.display = 'flex';
+            document.getElementById('ai-chat-messages').style.display = 'none';
+            document.getElementById('ai-chat-input-row').style.display = 'none';
+        }
+
+        function showChatForLoggedIn() {
+            document.getElementById('chat-login-gate').style.display = 'none';
+            document.getElementById('ai-chat-messages').style.display = 'flex';
+            document.getElementById('ai-chat-input-row').style.display = 'flex';
+        }
+
+        // ── Chat History ──
+        async function loadChatHistory() {
+            if (!currentUser || historyLoaded) return;
+            const msgs = document.getElementById('ai-chat-messages');
+
+            try {
+                const res = await fetch(`${WORKER_URL}/chat/history?userId=${currentUser.id}`);
+                const data = await res.json();
+
+                if (!data.history || data.history.length === 0) {
+                    // No history — show default greeting
+                    msgs.innerHTML = '<div class="chat-msg ai">Hey! I\'m the PocketOregon AI assistant. Ask me anything about this site, the Pocketverse story, or anything else! 👋</div>';
+                    historyLoaded = true;
+                    return;
+                }
+
+                msgs.innerHTML = '';
+
+                // Group messages by date for dividers
+                let lastDate = null;
+                data.history.forEach(row => {
+                    const date = new Date(row.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                    if (date !== lastDate) {
+                        const divider = document.createElement('div');
+                        divider.className = 'chat-date-divider';
+                        divider.textContent = date;
+                        msgs.appendChild(divider);
+                        lastDate = date;
+                    }
+
+                    // User message
+                    const userDiv = document.createElement('div');
+                    userDiv.className = 'chat-msg user';
+                    userDiv.textContent = row.message;
+                    msgs.appendChild(userDiv);
+
+                    // AI reply
+                    const aiDiv = document.createElement('div');
+                    aiDiv.className = 'chat-msg ai';
+                    aiDiv.innerHTML = renderMarkdown(row.reply);
+                    msgs.appendChild(aiDiv);
+
+                    // Build context array for AI continuity
+                    conversationHistory.push({ role: 'user', content: row.message });
+                    conversationHistory.push({ role: 'assistant', content: row.reply });
+                });
+
+                // Keep only last 20 for context (10 exchanges)
+                if (conversationHistory.length > 20) {
+                    conversationHistory = conversationHistory.slice(-20);
+                }
+
+                // Note at bottom
+                const note = document.createElement('div');
+                note.className = 'chat-msg system-note';
+                note.textContent = '↑ Your past conversation — continue below';
+                msgs.appendChild(note);
+
+                msgs.scrollTop = msgs.scrollHeight;
+                historyLoaded = true;
+
+            } catch(e) {
+                msgs.innerHTML = '<div class="chat-msg ai">Hey! I\'m the PocketOregon AI assistant. Ask me anything! 👋</div>';
+                historyLoaded = true;
+            }
+        }
 
         // ── Comments ──
         async function loadComments() {
@@ -654,12 +776,29 @@
         const chatSend = document.getElementById('ai-chat-send');
         const chatMsgs = document.getElementById('ai-chat-messages');
 
-        chatBtn.addEventListener('click', () => { chatWindow.classList.toggle('open'); if (chatWindow.classList.contains('open')) chatInput.focus(); });
+        chatBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('open');
+            if (chatWindow.classList.contains('open')) {
+                if (!currentUser) {
+                    showChatLoginGate();
+                } else {
+                    showChatForLoggedIn();
+                    loadChatHistory();
+                    chatInput.focus();
+                }
+            }
+        });
+
         chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
 
         function renderMarkdown(text) {
-            return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            return text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
         }
+
         function appendMsg(text, role) {
             const div = document.createElement('div');
             div.className = `chat-msg ${role}`;
@@ -668,6 +807,7 @@
             chatMsgs.scrollTop = chatMsgs.scrollHeight;
             return div;
         }
+
         function showTyping() {
             const div = document.createElement('div');
             div.className = 'chat-msg ai typing'; div.id = 'typing-indicator';
@@ -677,20 +817,40 @@
         function removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
 
         async function sendMessage() {
+            if (!currentUser) { openLoginModal(); return; }
             const text = chatInput.value.trim();
             if (!text) return;
             chatInput.value = ''; chatSend.disabled = true;
             appendMsg(text, 'user'); showTyping();
+
             try {
                 const res = await fetch(WORKER_URL + '/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: text, userId: currentUser ? currentUser.id : null })
+                    body: JSON.stringify({
+                        prompt: text,
+                        userId: currentUser.id,
+                        history: conversationHistory.slice(-10) // send last 10 for context
+                    })
                 });
                 const data = await res.json();
                 removeTyping();
-                appendMsg(data.response || data.result?.response || "Sorry, I couldn't get a response. Try again!", 'ai');
-            } catch(err) { removeTyping(); appendMsg("⚠️ Something went wrong. Please try again in a moment.", 'ai'); }
+
+                if (data.error) {
+                    appendMsg('⚠️ ' + data.error, 'ai');
+                } else {
+                    const reply = data.response ?? "Sorry, I couldn't get a response.";
+                    appendMsg(reply, 'ai');
+                    // Update local history for continuity
+                    conversationHistory.push({ role: 'user', content: text });
+                    conversationHistory.push({ role: 'assistant', content: reply });
+                    // Keep last 20 entries
+                    if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
+                }
+            } catch(err) {
+                removeTyping();
+                appendMsg("⚠️ Something went wrong. Please try again in a moment.", 'ai');
+            }
             chatSend.disabled = false; chatInput.focus();
         }
 
