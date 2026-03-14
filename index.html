@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PocketOregon | Precision Solutions</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -14,6 +14,27 @@
             scroll-behavior: smooth;
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        /* Modern Heading Font */
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #111827 0%, #374151 50%, #111827 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 8s linear infinite;
+        }
+
+        /* Styled Logo & Card Titles Font */
+        .outfit-font {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
         }
 
         /* Top bar */
@@ -173,10 +194,10 @@
                 <div id="nav-spacer"></div>
 
                 <div class="flex items-center space-x-1 min-w-0">
-                    <span class="font-bold text-gray-900 text-lg sm:text-xl truncate ml-2">PocketOregon</span>
+                    <span class="outfit-font font-bold text-gray-900 text-lg sm:text-xl truncate ml-2">PocketOregon</span>
                     <div class="hidden sm:flex items-center space-x-1">
                         <span class="text-gray-300 text-2xl font-light">|</span>
-                        <span class="text-xl font-bold text-gray-900">site</span>
+                        <span class="outfit-font text-xl font-semibold text-gray-900">site</span>
                     </div>
                 </div>
 
@@ -213,7 +234,7 @@
 
     <header class="hero-section px-4">
         <div class="max-w-4xl mx-auto text-left md:ml-12 lg:ml-24">
-            <h1 class="text-4xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-6">Pocket's private spaces</h1>
+            <h1 class="hero-title text-4xl md:text-7xl font-extrabold tracking-tight mb-6">Pocket's private spaces</h1>
             <p class="text-lg md:text-2xl text-gray-800 mb-10 leading-relaxed max-w-3xl font-normal">
                 This site is a home of multiple fun projects that would be taken in future. Stay connected with us.
             </p>
@@ -233,12 +254,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="gl-card" id="card-comic">
-                    <h3 class="gl-card-title">Pocketverse Comic Project</h3>
+                    <h3 class="gl-card-title outfit-font">Pocketverse Comic Project</h3>
                     <p class="gl-card-date">03/12/2026</p>
                     <p class="gl-card-desc">Our creative team is currently sketching out the lore and character designs for the first installment of the Pocketverse saga.</p>
                 </div>
                 <div class="gl-card" id="card-info">
-                    <h3 class="gl-card-title">Site Info</h3>
+                    <h3 class="gl-card-title outfit-font">Site Info</h3>
                     <div class="gl-card-date flex flex-wrap gap-2">
                         <span>Origin date: 3/13/2026</span>
                         <span class="text-gray-400">|</span>
@@ -247,7 +268,7 @@
                     <p class="gl-card-desc">This site is a site for fiction story fundamentally.</p>
                 </div>
                 <div class="gl-card" id="card-chapters">
-                    <h3 class="gl-card-title">Chapters ...</h3>
+                    <h3 class="gl-card-title outfit-font">Chapters ...</h3>
                     <p class="gl-card-date">03/18/2026</p>
                     <p class="gl-card-desc">This section will be updated soon and provide insights on chapter release dates. the button below don't work now so don't click it yet.</p>
                     <button id="warn-btn" class="gl-card-link">View Chapters <span class="ml-2">&gt;</span></button>
@@ -262,7 +283,7 @@
                 <svg class="h-6 w-6 text-orange-600" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
                 </svg>
-                <span class="ml-2 text-lg font-bold text-white">PocketOregon</span>
+                <span class="ml-2 outfit-font text-lg font-bold text-white">PocketOregon</span>
             </div>
             <p class="text-gray-500 text-xs">&copy; 2024 PocketOregon, Inc. All rights reserved.</p>
         </div>
