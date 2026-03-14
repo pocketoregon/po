@@ -490,7 +490,13 @@
                 appendMsg(reply, 'ai');
             } catch (err) {
                 removeTyping();
-                appendMsg("Oops! Something went wrong. Please try again later.", 'ai');
+                if (!res || res.status === 429 || res.status === 503) {
+                    appendMsg("⚠️ We've hit our daily limit. Service will be back tomorrow. Sorry for the inconvenience!", 'ai');
+                } else if (!navigator.onLine) {
+                    appendMsg("⚠️ You seem to be offline. Please check your internet connection.", 'ai');
+                } else {
+                    appendMsg("⚠️ Something went wrong on our end. Please try again in a moment.", 'ai');
+                }
             }
 
             chatSend.disabled = false;
