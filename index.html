@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pocket verse</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         ::-webkit-scrollbar { display: none; }
@@ -107,6 +106,30 @@
         .user-dropdown-btn:hover { background: #f3f4f6; }
         .user-dropdown-btn.admin { color: #7c3aed; font-weight: 600; }
 
+        /* Login Modal */
+        #login-modal {
+            display: none; position: fixed; inset: 0; z-index: 600;
+            background: rgba(0,0,0,0.4); align-items: center; justify-content: center;
+        }
+        #login-modal.open { display: flex; }
+        .login-modal-box {
+            background: white; border-radius: 12px; padding: 2rem;
+            max-width: 360px; width: 90%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .login-modal-box h2 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .login-modal-box p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
+        .google-btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 10px 20px; border: 1px solid #e5e7eb;
+            border-radius: 6px; background: white; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; color: #1f1e24;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+        .google-btn:hover { background: #f9fafb; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .modal-close { margin-top: 1rem; font-size: 0.8rem; color: #9ca3af; cursor: pointer; background: none; border: none; }
+        .modal-close:hover { color: #6b7280; }
+
         .hero-section {
             background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%);
             padding-top:3rem; padding-bottom:4rem; position:relative; overflow:hidden;
@@ -141,10 +164,9 @@
         #custom-alert {
             display:none; position:fixed; top:20px; left:50%;
             transform:translateX(-50%); background:#1f1e24; color:#fff;
-            padding:12px 24px; border-radius:8px; z-index:300;
+            padding:12px 24px; border-radius:8px; z-index:700;
         }
 
-        /* Comments Section */
         .comments-section { background: #f9fafb; padding: 4rem 0; border-top: 1px solid #e5e7eb; }
         .comment-card {
             background: white; border: 1px solid #e5e7eb; border-radius: 8px;
@@ -168,7 +190,6 @@
         .comment-submit:hover { background: #374151; }
         .comment-submit:disabled { background: #9ca3af; cursor: not-allowed; }
 
-        /* ── AI Chat Widget ── */
         #ai-chat-btn {
             position: fixed; bottom: 28px; right: 28px; z-index: 400;
             width: 52px; height: 52px;
@@ -178,7 +199,6 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         #ai-chat-btn:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(0,0,0,0.22); }
-
         #ai-chat-window {
             position: fixed; bottom: 92px; right: 28px; z-index: 400;
             width: 360px; max-width: calc(100vw - 32px);
@@ -190,22 +210,13 @@
             transition: opacity 0.25s ease, transform 0.25s ease;
         }
         #ai-chat-window.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
-
         #ai-chat-header {
             background: #1f1e24; padding: 14px 18px;
             display: flex; align-items: center; justify-content: space-between;
         }
-        #ai-chat-header span {
-            font-family: 'Outfit', sans-serif; font-weight: 700;
-            font-size: 1rem; color: #fff; letter-spacing: -0.01em;
-        }
-        #ai-chat-close {
-            background: none; border: none; color: #9ca3af;
-            cursor: pointer; font-size: 1.2rem; line-height: 1; padding: 0;
-            transition: color 0.15s;
-        }
+        #ai-chat-header span { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; color: #fff; letter-spacing: -0.01em; }
+        #ai-chat-close { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 1.2rem; line-height: 1; padding: 0; transition: color 0.15s; }
         #ai-chat-close:hover { color: #fff; }
-
         #ai-chat-messages {
             flex: 1; overflow-y: auto; padding: 16px;
             display: flex; flex-direction: column; gap: 10px;
@@ -214,52 +225,19 @@
         }
         #ai-chat-messages::-webkit-scrollbar { display: block; width: 4px; }
         #ai-chat-messages::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
-
-        .chat-msg {
-            max-width: 85%; padding: 9px 13px; border-radius: 10px;
-            font-size: 0.9rem; line-height: 1.55;
-            animation: msgIn 0.2s ease;
-        }
+        .chat-msg { max-width: 85%; padding: 9px 13px; border-radius: 10px; font-size: 0.9rem; line-height: 1.55; animation: msgIn 0.2s ease; }
         @keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-
-        .chat-msg.user {
-            background: #1f1e24; color: #fff;
-            align-self: flex-end; border-bottom-right-radius: 3px;
-        }
-        .chat-msg.ai {
-            background: #f3f4f6; color: #1f1e24;
-            align-self: flex-start; border-bottom-left-radius: 3px;
-        }
+        .chat-msg.user { background: #1f1e24; color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; }
+        .chat-msg.ai { background: #f3f4f6; color: #1f1e24; align-self: flex-start; border-bottom-left-radius: 3px; }
         .chat-msg.ai.typing { display: flex; gap: 4px; align-items: center; padding: 12px 13px; }
-
-        .typing-dot {
-            width: 6px; height: 6px; background: #9ca3af;
-            border-radius: 50%; animation: typingBounce 1.2s infinite;
-        }
+        .typing-dot { width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBounce 1.2s infinite; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-5px); }
-        }
-
-        #ai-chat-input-row {
-            display: flex; align-items: center; gap: 8px;
-            padding: 12px 14px; border-top: 1px solid #f3f4f6;
-        }
-        #ai-chat-input {
-            flex: 1; border: 1px solid #e5e7eb; border-radius: 6px;
-            padding: 8px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif;
-            outline: none; color: #1f1e24; transition: border-color 0.15s;
-            user-select: text; -webkit-user-select: text;
-        }
+        @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+        #ai-chat-input-row { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid #f3f4f6; }
+        #ai-chat-input { flex: 1; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; color: #1f1e24; transition: border-color 0.15s; user-select: text; -webkit-user-select: text; }
         #ai-chat-input:focus { border-color: #1f1e24; }
-        #ai-chat-send {
-            background: #1f1e24; color: #fff; border: none; border-radius: 6px;
-            width: 36px; height: 36px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.15s; flex-shrink: 0;
-        }
+        #ai-chat-send { background: #1f1e24; color: #fff; border: none; border-radius: 6px; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
         #ai-chat-send:hover { background: #374151; }
         #ai-chat-send:disabled { background: #9ca3af; cursor: not-allowed; }
     </style>
@@ -267,6 +245,19 @@
 <body class="antialiased">
 
     <div id="custom-alert"></div>
+
+    <!-- Login Modal -->
+    <div id="login-modal">
+        <div class="login-modal-box">
+            <svg class="mx-auto mb-3 text-orange-500" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
+            </svg>
+            <h2>Sign in</h2>
+            <p>Join the PocketOregon community to leave comments and save your chat history.</p>
+            <div id="google-btn-container"></div>
+            <button class="modal-close" onclick="closeLoginModal()">Cancel</button>
+        </div>
+    </div>
 
     <div id="logo-traveller">
         <svg id="logo-svg" class="text-orange-600" style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor">
@@ -302,14 +293,11 @@
                 <div id="dynamic-greeting" class="btn-greeting">--</div>
                 <div id="current-time" class="font-bold text-sm">--:--</div>
 
-                <!-- Auth Area -->
                 <div id="auth-area" class="relative flex items-center">
-                    <!-- Shown when logged out -->
-                    <button id="login-btn" class="btn-login">
+                    <button id="login-btn" class="btn-login" onclick="openLoginModal()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                         Sign in
                     </button>
-                    <!-- Shown when logged in -->
                     <div id="user-area" style="display:none; position:relative;">
                         <div id="user-avatar" class="user-avatar"></div>
                         <div id="user-dropdown" class="user-dropdown">
@@ -386,13 +374,10 @@
         </div>
     </section>
 
-    <!-- Comments Section -->
     <section class="comments-section" id="comments-section">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="outfit-font text-2xl font-bold text-gray-900 mb-2">Community</h2>
             <p class="text-gray-500 text-sm mb-6">Share your thoughts about the Pocketverse.</p>
-
-            <!-- Comment form (shown only when logged in) -->
             <div id="comment-form-area" style="display:none;" class="mb-6">
                 <textarea id="comment-input" class="comment-input" rows="3" placeholder="What are your thoughts on the Pocketverse?..." maxlength="500"></textarea>
                 <div class="flex justify-between items-center mt-2">
@@ -400,14 +385,10 @@
                     <button id="comment-submit" class="comment-submit">Post Comment</button>
                 </div>
             </div>
-
-            <!-- Login prompt (shown when logged out) -->
             <div id="comment-login-prompt" class="mb-6 p-4 bg-white border border-gray-200 rounded-lg text-center">
                 <p class="text-gray-500 text-sm mb-3">Sign in to join the conversation</p>
-                <button onclick="document.getElementById('login-btn').click()" class="comment-submit">Sign in with Google</button>
+                <button onclick="openLoginModal()" class="comment-submit">Sign in with Google</button>
             </div>
-
-            <!-- Comments list -->
             <div id="comments-list">
                 <div class="text-gray-400 text-sm text-center py-6">Loading comments...</div>
             </div>
@@ -426,14 +407,12 @@
         </div>
     </footer>
 
-    <!-- ── AI Chat Button ── -->
     <button id="ai-chat-btn" title="Ask AI Assistant">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
     </button>
 
-    <!-- ── AI Chat Window ── -->
     <div id="ai-chat-window">
         <div id="ai-chat-header">
             <span>✦ PocketOregon AI</span>
@@ -453,19 +432,63 @@
         </div>
     </div>
 
-    <!-- Hidden Google Sign-In -->
-    <div id="g_id_onload"
-         data-client_id="930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com"
-         data-callback="handleGoogleLogin"
-         data-auto_prompt="false">
-    </div>
+    <!-- Google GSI loaded AFTER body so renderButton works -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogle()"></script>
 
     <script>
         const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+        const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
         let currentUser = null;
+        let googleReady = false;
+
+        // ── Google Init ──
+        function initGoogle() {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleLogin,
+                use_fedcm_for_prompt: false
+            });
+            googleReady = true;
+        }
+
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.add('open');
+            // Render the real Google button inside modal
+            const container = document.getElementById('google-btn-container');
+            container.innerHTML = '';
+            if (googleReady) {
+                google.accounts.id.renderButton(container, {
+                    type: 'standard',
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    width: 280
+                });
+            } else {
+                // Retry once Google loads
+                setTimeout(() => {
+                    if (typeof google !== 'undefined') {
+                        initGoogle();
+                        google.accounts.id.renderButton(container, {
+                            type: 'standard', theme: 'outline', size: 'large', width: 280
+                        });
+                    }
+                }, 1000);
+            }
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.remove('open');
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('login-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeLoginModal();
+        });
 
         // ── Auth ──
         function handleGoogleLogin(response) {
+            closeLoginModal();
             fetch(WORKER_URL + '/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -508,10 +531,6 @@
             document.getElementById('comment-login-prompt').style.display = 'block';
             showCustomAlert('Signed out successfully.');
         }
-
-        document.getElementById('login-btn').addEventListener('click', () => {
-            google.accounts.id.prompt();
-        });
 
         document.getElementById('user-avatar').addEventListener('click', () => {
             document.getElementById('user-dropdown').classList.toggle('open');
@@ -571,8 +590,7 @@
             const text = document.getElementById('comment-input').value.trim();
             if (!text || !currentUser) return;
             const btn = document.getElementById('comment-submit');
-            btn.disabled = true;
-            btn.textContent = 'Posting...';
+            btn.disabled = true; btn.textContent = 'Posting...';
             try {
                 await fetch(WORKER_URL + '/comments', {
                     method: 'POST',
@@ -582,21 +600,16 @@
                 document.getElementById('comment-input').value = '';
                 document.getElementById('comment-char').textContent = '0 / 500';
                 await loadComments();
-            } catch(e) {
-                showCustomAlert('Could not post comment. Try again.');
-            }
-            btn.disabled = false;
-            btn.textContent = 'Post Comment';
+            } catch(e) { showCustomAlert('Could not post comment. Try again.'); }
+            btn.disabled = false; btn.textContent = 'Post Comment';
         });
 
         function escapeHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
-
         function formatTime(ts) {
             if (!ts) return '';
-            const d = new Date(ts);
-            return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
         // ── Original Scripts ──
@@ -612,9 +625,7 @@
             document.getElementById('current-time').textContent = now.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
             const h = now.getHours();
             const greetEl = document.getElementById('dynamic-greeting');
-            if (greetEl) {
-                greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : h >= 12 && h < 17 ? 'Good Afternoon' : h >= 17 && h < 21 ? "It's Evening" : 'Good Night';
-            }
+            if (greetEl) greetEl.textContent = h >= 5 && h < 12 ? 'Good Morning' : h >= 12 && h < 17 ? 'Good Afternoon' : h >= 17 && h < 21 ? "It's Evening" : 'Good Night';
             const origin = new Date('2026-03-13');
             const ms = Math.max(0, new Date().setHours(0,0,0,0) - origin.setHours(0,0,0,0));
             const ageEl = document.getElementById('site-age');
@@ -658,8 +669,7 @@
 
         function showCustomAlert(msg) {
             const box = document.getElementById('custom-alert');
-            box.textContent = msg;
-            box.style.display = 'block';
+            box.textContent = msg; box.style.display = 'block';
             setTimeout(() => box.style.display = 'none', 3000);
         }
 
@@ -670,28 +680,20 @@
         document.getElementById('warn-btn').addEventListener('click', () => showCustomAlert("i warn you don't click it"));
         document.getElementById('contact-us-btn').addEventListener('click', () => { toggleMenu(); showCustomAlert("Please don't disturb we are busy now"); });
 
-        // ── AI Chat Widget ──
-        const chatBtn    = document.getElementById('ai-chat-btn');
+        // ── AI Chat ──
+        const chatBtn = document.getElementById('ai-chat-btn');
         const chatWindow = document.getElementById('ai-chat-window');
-        const chatClose  = document.getElementById('ai-chat-close');
-        const chatInput  = document.getElementById('ai-chat-input');
-        const chatSend   = document.getElementById('ai-chat-send');
-        const chatMsgs   = document.getElementById('ai-chat-messages');
+        const chatClose = document.getElementById('ai-chat-close');
+        const chatInput = document.getElementById('ai-chat-input');
+        const chatSend = document.getElementById('ai-chat-send');
+        const chatMsgs = document.getElementById('ai-chat-messages');
 
-        chatBtn.addEventListener('click', () => {
-            chatWindow.classList.toggle('open');
-            if (chatWindow.classList.contains('open')) chatInput.focus();
-        });
+        chatBtn.addEventListener('click', () => { chatWindow.classList.toggle('open'); if (chatWindow.classList.contains('open')) chatInput.focus(); });
         chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
 
         function renderMarkdown(text) {
-            return text
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                .replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>');
+            return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/^#{1,3} (.+)$/gm, '<strong>$1</strong>').replace(/\n/g, '<br>');
         }
-
         function appendMsg(text, role) {
             const div = document.createElement('div');
             div.className = `chat-msg ${role}`;
@@ -700,47 +702,30 @@
             chatMsgs.scrollTop = chatMsgs.scrollHeight;
             return div;
         }
-
         function showTyping() {
             const div = document.createElement('div');
-            div.className = 'chat-msg ai typing';
-            div.id = 'typing-indicator';
+            div.className = 'chat-msg ai typing'; div.id = 'typing-indicator';
             div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-            chatMsgs.appendChild(div);
-            chatMsgs.scrollTop = chatMsgs.scrollHeight;
+            chatMsgs.appendChild(div); chatMsgs.scrollTop = chatMsgs.scrollHeight;
         }
-
-        function removeTyping() {
-            const el = document.getElementById('typing-indicator');
-            if (el) el.remove();
-        }
+        function removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
 
         async function sendMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
-            chatInput.value = '';
-            chatSend.disabled = true;
-            appendMsg(text, 'user');
-            showTyping();
+            chatInput.value = ''; chatSend.disabled = true;
+            appendMsg(text, 'user'); showTyping();
             try {
                 const res = await fetch(WORKER_URL + '/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: text,
-                        userId: currentUser ? currentUser.id : null
-                    })
+                    body: JSON.stringify({ prompt: text, userId: currentUser ? currentUser.id : null })
                 });
                 const data = await res.json();
                 removeTyping();
-                const reply = data.response || data.result?.response || "Sorry, I couldn't get a response. Try again!";
-                appendMsg(reply, 'ai');
-            } catch (err) {
-                removeTyping();
-                appendMsg("⚠️ Something went wrong. Please try again in a moment.", 'ai');
-            }
-            chatSend.disabled = false;
-            chatInput.focus();
+                appendMsg(data.response || data.result?.response || "Sorry, I couldn't get a response. Try again!", 'ai');
+            } catch(err) { removeTyping(); appendMsg("⚠️ Something went wrong. Please try again in a moment.", 'ai'); }
+            chatSend.disabled = false; chatInput.focus();
         }
 
         chatSend.addEventListener('click', sendMessage);
