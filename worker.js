@@ -66,12 +66,41 @@ export default {
       }
     }
 
+    // CHAT HISTORY - GET
+    if (path === '/chat/history' && request.method === 'GET') {
+      const userId = url.searchParams.get('userId');
+      if (!userId) {
+        return new Response(JSON.stringify({ error: 'No userId provided' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      try {
+        const chats = await env.DB.prepare(
+          'SELECT message, reply, created_at FROM chat_history WHERE user_id = ? ORDER BY created_at ASC LIMIT 50'
+        ).bind(userId).all();
+        return new Response(JSON.stringify({ history: chats.results }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
     // CHAT ROUTE
     if (path === '/chat' && request.method === 'POST') {
       try {
         const body = await request.json();
         const prompt = body.prompt || body.message;
         const userId = body.userId || null;
+        const history = body.history || [];
+
+        if (!userId) {
+          return new Response(JSON.stringify({ error: 'You must be signed in to use the chat.' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
 
         if (!prompt) {
           return new Response(JSON.stringify({ error: 'No message provided' }), {
@@ -79,22 +108,21 @@ export default {
           });
         }
 
-        const aiResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: prompt }
-          ]
-        });
+        // Build messages with conversation history for context
+        const messages = [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...history.slice(-10), // last 10 exchanges for context, avoids token limit
+          { role: 'user', content: prompt }
+        ];
+
+        const aiResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages });
 
         const reply = aiResult?.response ?? "Sorry, I couldn't generate a response.";
 
-        if (userId) {
-          await env.DB.prepare(
-            'INSERT INTO chat_history (user_id, message, reply) VALUES (?, ?, ?)'
-          ).bind(userId, prompt, reply).run();
-        }
+        await env.DB.prepare(
+          'INSERT INTO chat_history (user_id, message, reply) VALUES (?, ?, ?)'
+        ).bind(userId, prompt, reply).run();
 
-        // ✅ THE FIX: returns { response } so frontend data.response works
         return new Response(JSON.stringify({ response: reply }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
