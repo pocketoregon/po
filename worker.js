@@ -108,14 +108,17 @@ export default {
           });
         }
 
-        // Build messages with conversation history for context
         const messages = [
           { role: 'system', content: SYSTEM_PROMPT },
-          ...history.slice(-10), // last 10 exchanges for context, avoids token limit
+          ...history.slice(-10),
           { role: 'user', content: prompt }
         ];
 
-        const aiResult = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages });
+        // ✅ FIXED: faster model + max_tokens to avoid timeout
+        const aiResult = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
+          messages,
+          max_tokens: 256
+        });
 
         const reply = aiResult?.response ?? "Sorry, I couldn't generate a response.";
 
@@ -255,11 +258,13 @@ export default {
     try {
       const body = await request.json();
       const prompt = body.prompt;
-      const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      // ✅ FIXED: faster model + max_tokens here too
+      const response = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt }
-        ]
+        ],
+        max_tokens: 256
       });
       return new Response(JSON.stringify(response), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
