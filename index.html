@@ -3,10 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PocketOregon | Precision Solutions</title>
+    <title>Pocket verse</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        html {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #ffffff;
@@ -254,7 +265,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="gl-card" id="card-comic">
-                    <h3 class="gl-card-title outfit-font">Pocketverse Comic Project</h3>
+                    <h3 class="gl-card-title outfit-font">Pocket Verse</h3>
                     <p class="gl-card-date">03/12/2026</p>
                     <p class="gl-card-desc">Our creative team is currently sketching out the lore and character designs for the first installment of the Pocketverse saga.</p>
                 </div>
@@ -307,7 +318,8 @@
             }
             const origin = new Date('2026-03-13');
             const ms = Math.max(0, new Date().setHours(0,0,0,0) - origin.setHours(0,0,0,0));
-            document.getElementById('site-age').textContent = `Age: ${Math.floor(ms / 86400000)} days`;
+            const ageEl = document.getElementById('site-age');
+            if (ageEl) ageEl.textContent = `Age: ${Math.floor(ms / 86400000)} days`;
         }
 
         function getCenter(el) {
