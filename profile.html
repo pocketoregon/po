@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — PocketOregon</title>
+    <meta name="robots" content="noindex">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; }
+        .outfit { font-family: 'Outfit', sans-serif; }
+        #loading-screen {
+            position: fixed; inset: 0; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; transition: opacity 0.3s ease;
+        }
+        .spinner {
+            width: 32px; height: 32px; border: 3px solid #e5e7eb;
+            border-top-color: #1f1e24; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .avatar-circle {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: #1f1e24; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.75rem; font-weight: 800; flex-shrink: 0;
+        }
+        .role-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 999px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .role-admin { background: #ede9fe; color: #7c3aed; }
+        .role-reader { background: #f3f4f6; color: #6b7280; }
+        .stat-pill {
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 0.75rem 1.25rem; text-align: center;
+        }
+        .stat-num { font-size: 1.5rem; font-weight: 800; color: #1f1e24; }
+        .stat-label { font-size: 0.75rem; color: #9ca3af; margin-top: 2px; }
+        .comment-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 1rem 1.25rem; margin-bottom: 0.75rem;
+            transition: box-shadow 0.15s ease;
+        }
+        .comment-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .comment-text { font-size: 0.9rem; color: #374151; line-height: 1.55; margin-top: 4px; }
+        .comment-meta { font-size: 0.75rem; color: #9ca3af; }
+        .delete-btn {
+            background: none; border: none; cursor: pointer;
+            color: #d1d5db; font-size: 0.78rem; font-weight: 600;
+            padding: 2px 6px; border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+            display: flex; align-items: center; gap: 3px;
+        }
+        .delete-btn:hover { color: #dc2626; background: #fee2e2; }
+        .not-yours-note {
+            background: #fef9c3; border: 1px solid #fde68a;
+            border-radius: 8px; padding: 0.875rem 1.25rem;
+            font-size: 0.85rem; color: #92400e; text-align: center;
+        }
+        #custom-alert {
+            display: none; position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%); background: #1f1e24; color: #fff;
+            padding: 12px 24px; border-radius: 8px; z-index: 700;
+            font-size: 0.875rem;
+        }
+        .error-state {
+            text-align: center; padding: 4rem 2rem;
+        }
+        .error-state h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .error-state p { color: #6b7280; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div id="loading-screen">
+    <div class="spinner"></div>
+</div>
+
+<div id="custom-alert"></div>
+
+<!-- Nav -->
+<nav style="background:white;border-bottom:1px solid #e5e7eb;" class="sticky top-0 z-50">
+    <div class="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 group">
+            <svg class="text-orange-600" style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
+            </svg>
+            <span class="outfit font-bold text-gray-900 text-base group-hover:text-orange-600 transition-colors">PocketOregon</span>
+        </a>
+        <a href="/" class="text-sm text-gray-500 hover:text-gray-900 transition-colors">← Back to site</a>
+    </div>
+</nav>
+
+<!-- Main content -->
+<main id="profile-main" style="display:none;" class="max-w-3xl mx-auto px-4 py-10">
+
+    <!-- Profile header -->
+    <div class="bg-white border border-gray-200 rounded-xl p-6 mb-6 flex items-start gap-5">
+        <div id="profile-avatar" class="avatar-circle">?</div>
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 flex-wrap">
+                <h1 id="profile-name" class="outfit font-bold text-2xl text-gray-900">—</h1>
+                <span id="profile-role-badge" class="role-badge role-reader">reader</span>
+            </div>
+            <p id="profile-email" class="text-gray-400 text-sm mt-1">—</p>
+            <p id="profile-joined" class="text-gray-400 text-xs mt-1">Member since —</p>
+        </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="stat-pill">
+            <div id="stat-comments" class="stat-num">—</div>
+            <div class="stat-label">Comments</div>
+        </div>
+        <div class="stat-pill">
+            <div id="stat-chats" class="stat-num">—</div>
+            <div class="stat-label">AI Chats</div>
+        </div>
+    </div>
+
+    <!-- Not-your-profile notice -->
+    <div id="viewing-notice" class="not-yours-note mb-6" style="display:none;">
+        👀 You're viewing someone else's profile. You can only delete your own comments.
+    </div>
+
+    <!-- Comments -->
+    <div>
+        <h2 class="outfit font-bold text-lg text-gray-900 mb-4">Comments</h2>
+        <div id="comments-list">
+            <div class="text-gray-400 text-sm text-center py-8">Loading comments...</div>
+        </div>
+    </div>
+</main>
+
+<!-- Error state -->
+<div id="error-state" style="display:none;" class="max-w-3xl mx-auto px-4 py-10">
+    <div class="error-state">
+        <svg class="mx-auto mb-4 text-gray-300" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+        </svg>
+        <h2>Profile not found</h2>
+        <p id="error-msg">This user doesn't exist or the link is invalid.</p>
+        <a href="/" class="inline-block mt-6 text-sm font-semibold text-gray-900 underline underline-offset-2">Go back home</a>
+    </div>
+</div>
+
+<script>
+    const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+
+    // Get userId from URL: /profile.html?id=3
+    const params = new URLSearchParams(window.location.search);
+    const profileUserId = params.get('id');
+
+    // Current logged-in user
+    let currentUser = null;
+    try {
+        const saved = localStorage.getItem('po_user');
+        if (saved) currentUser = JSON.parse(saved);
+    } catch(e) {}
+
+    function hideLoading() {
+        const ls = document.getElementById('loading-screen');
+        ls.style.opacity = '0';
+        setTimeout(() => ls.style.display = 'none', 300);
+    }
+
+    function showCustomAlert(msg) {
+        const box = document.getElementById('custom-alert');
+        box.textContent = msg; box.style.display = 'block';
+        setTimeout(() => box.style.display = 'none', 3000);
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatDate(ts) {
+        if (!ts) return '—';
+        return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getInitials(name) {
+        if (!name) return '?';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    async function deleteComment(commentId) {
+        if (!currentUser) { showCustomAlert('Sign in to delete comments.'); return; }
+        if (!confirm('Delete this comment?')) return;
+
+        try {
+            const body = {};
+            if (currentUser.role === 'admin') {
+                body.adminEmail = currentUser.email;
+            } else {
+                body.userId = currentUser.id;
+            }
+
+            const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Comment deleted.');
+                const card = document.getElementById('comment-' + commentId);
+                if (card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-4px)';
+                    card.style.transition = 'opacity 0.25s, transform 0.25s';
+                    setTimeout(() => card.remove(), 260);
+                }
+                // Update count
+                const countEl = document.getElementById('stat-comments');
+                const current = parseInt(countEl.textContent) || 0;
+                if (current > 0) countEl.textContent = current - 1;
+            } else {
+                showCustomAlert(data.error || 'Could not delete comment.');
+            }
+        } catch(e) {
+            showCustomAlert('Network error. Try again.');
+        }
+    }
+
+    function renderComments(comments, isOwnProfile) {
+        const list = document.getElementById('comments-list');
+        if (!comments || comments.length === 0) {
+            list.innerHTML = '<div class="text-gray-400 text-sm text-center py-8">No comments yet.</div>';
+            return;
+        }
+
+        list.innerHTML = comments.map(c => {
+            // Show delete if own profile OR if current user is admin
+            const canDelete = currentUser && (
+                isOwnProfile ||
+                currentUser.role === 'admin' ||
+                String(currentUser.id) === String(c.user_id)
+            );
+
+            return `
+            <div class="comment-card" id="comment-${c.id}">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <span class="comment-meta">${escapeHtml(c.chapter || 'general')} · ${formatDate(c.created_at)}</span>
+                        <p class="comment-text">${escapeHtml(c.text)}</p>
+                    </div>
+                    ${canDelete ? `
+                    <button class="delete-btn flex-shrink-0" onclick="deleteComment(${c.id})" title="Delete comment">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                        Delete
+                    </button>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function loadProfile() {
+        if (!profileUserId) {
+            hideLoading();
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-msg').textContent = 'No user ID in URL. Try /profile.html?id=YOUR_ID';
+            return;
+        }
+
+        try {
+            const res = await fetch(`${WORKER_URL}/profile?userId=${profileUserId}`);
+            const data = await res.json();
+
+            if (data.error || !data.user) {
+                hideLoading();
+                document.getElementById('error-state').style.display = 'block';
+                document.getElementById('error-msg').textContent = data.error || 'User not found.';
+                return;
+            }
+
+            const { user, comments, chatCount } = data;
+            const isOwnProfile = currentUser && String(currentUser.id) === String(user.id);
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
+            // Update page title
+            document.title = `${user.name || 'User'} — PocketOregon`;
+
+            // Fill in profile header
+            document.getElementById('profile-avatar').textContent = getInitials(user.name);
+            document.getElementById('profile-name').textContent = user.name || 'Anonymous';
+            document.getElementById('profile-joined').textContent = 'Member since ' + formatDate(user.created_at);
+
+            // Show email only to self or admin
+            if (isOwnProfile || isAdmin) {
+                document.getElementById('profile-email').textContent = user.email || '';
+            } else {
+                document.getElementById('profile-email').textContent = '';
+            }
+
+            // Role badge
+            const badge = document.getElementById('profile-role-badge');
+            badge.textContent = user.role || 'reader';
+            badge.className = 'role-badge ' + (user.role === 'admin' ? 'role-admin' : 'role-reader');
+
+            // Stats
+            document.getElementById('stat-comments').textContent = comments.length;
+            document.getElementById('stat-chats').textContent = chatCount;
+
+            // Not-your-profile notice (only if logged in but viewing someone else)
+            if (currentUser && !isOwnProfile && !isAdmin) {
+                document.getElementById('viewing-notice').style.display = 'block';
+            }
+
+            // Render comments
+            renderComments(comments, isOwnProfile || isAdmin);
+
+            // Show main content
+            document.getElementById('profile-main').style.display = 'block';
+            hideLoading();
+
+        } catch(e) {
+            hideLoading();
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-msg').textContent = 'Network error loading profile.';
+        }
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>
