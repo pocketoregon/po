@@ -26,7 +26,7 @@
         .stat-label { font-size:0.875rem; color:#9ca3af; margin-top:4px; }
         table { width:100%; border-collapse:collapse; }
         th { text-align:left; font-size:0.75rem; font-weight:600; color:#9ca3af; text-transform:uppercase; padding:10px 12px; border-bottom:1px solid #e5e7eb; }
-        td { padding:10px 12px; font-size:0.875rem; border-bottom:1px solid #f3f4f6; }
+        td { padding:10px 12px; font-size:0.875rem; border-bottom:1px solid #f3f4f6; vertical-align:top; }
         tr:last-child td { border-bottom:none; }
         .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.75rem; font-weight:600; }
         .badge-admin { background:#ede9fe; color:#7c3aed; }
@@ -36,9 +36,69 @@
         .btn-dark:hover { background:#374151; }
         .btn-red { background:#fee2e2; color:#dc2626; }
         .btn-red:hover { background:#fecaca; }
+        .btn-sm { padding:5px 12px; font-size:0.8rem; }
+        /* Tabs */
+        .tab-bar { display:flex; gap:4px; border-bottom:2px solid #e5e7eb; margin-bottom:2rem; }
+        .tab-btn {
+            padding:10px 18px; font-size:0.9rem; font-weight:600; cursor:pointer;
+            border:none; background:none; color:#6b7280; border-bottom:2px solid transparent;
+            margin-bottom:-2px; transition:color 0.15s, border-color 0.15s;
+        }
+        .tab-btn.active { color:#1f1e24; border-bottom-color:#1f1e24; }
+        .tab-btn:hover:not(.active) { color:#374151; }
+        .tab-panel { display:none; }
+        .tab-panel.active { display:block; }
+        /* Content editor */
+        .content-field-label { font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:4px; display:block; }
+        .content-field-input {
+            width:100%; border:1px solid #e5e7eb; border-radius:6px;
+            padding:8px 12px; font-size:0.875rem; font-family:'Inter',sans-serif;
+            outline:none; color:#1f1e24; transition:border-color 0.15s;
+            background:white; resize:vertical;
+        }
+        .content-field-input:focus { border-color:#1f1e24; }
+        .content-save-btn {
+            background:#1f1e24; color:white; border:none; border-radius:6px;
+            padding:7px 16px; font-size:0.8rem; font-weight:600; cursor:pointer;
+            transition:background 0.15s; white-space:nowrap;
+        }
+        .content-save-btn:hover { background:#374151; }
+        .content-save-btn:disabled { background:#9ca3af; cursor:not-allowed; }
+        /* Card editor */
+        .card-item {
+            background:white; border:1px solid #e5e7eb; border-radius:8px;
+            padding:1rem 1.25rem; margin-bottom:0.75rem;
+            display:flex; align-items:flex-start; gap:12px;
+        }
+        .card-item-info { flex:1; min-width:0; }
+        .card-item-title { font-weight:700; font-size:0.9rem; color:#1f1e24; }
+        .card-item-date { font-size:0.75rem; color:#9ca3af; margin-top:2px; }
+        .card-item-body { font-size:0.8rem; color:#6b7280; margin-top:4px; line-height:1.4; }
+        .add-card-form {
+            background:white; border:1px dashed #d1d5db; border-radius:8px;
+            padding:1.25rem; margin-top:1rem;
+        }
+        .add-card-form input, .add-card-form textarea {
+            width:100%; border:1px solid #e5e7eb; border-radius:6px;
+            padding:7px 11px; font-size:0.875rem; font-family:'Inter',sans-serif;
+            outline:none; color:#1f1e24; transition:border-color 0.15s; margin-bottom:8px;
+        }
+        .add-card-form input:focus, .add-card-form textarea:focus { border-color:#1f1e24; }
+        .save-indicator {
+            display:inline-block; font-size:0.75rem; color:#10b981;
+            opacity:0; transition:opacity 0.3s; margin-left:8px;
+        }
+        .save-indicator.show { opacity:1; }
+        #custom-alert {
+            display:none; position:fixed; top:20px; left:50%;
+            transform:translateX(-50%); background:#1f1e24; color:#fff;
+            padding:12px 24px; border-radius:8px; z-index:700; font-size:0.875rem;
+        }
     </style>
 </head>
 <body>
+
+<div id="custom-alert"></div>
 
 <!-- Gate: shown before auth check -->
 <div id="gate">
@@ -89,72 +149,157 @@
             </div>
         </div>
 
-        <!-- Users Table -->
-        <div class="bg-white border border-gray-200 rounded-8 rounded-lg mb-8">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 class="outfit font-bold text-lg">Users</h2>
-                <button onclick="loadDashboard()" class="btn btn-dark text-xs">↻ Refresh</button>
+        <!-- Tab bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('data')">Data</button>
+            <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
+        </div>
+
+        <!-- ═══ DATA TAB ═══ -->
+        <div id="tab-data" class="tab-panel active">
+
+            <!-- Users Table -->
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="outfit font-bold text-lg">Users</h2>
+                    <button onclick="loadDashboard()" class="btn btn-dark text-xs">↻ Refresh</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Profile</th></tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Joined</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-table-body">
-                        <tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr>
-                    </tbody>
-                </table>
+
+            <!-- Recent Comments -->
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="outfit font-bold text-lg">Recent Comments</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr><th>User</th><th>Comment</th><th>Chapter</th><th>Date</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="comments-table-body">
+                            <tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Chats -->
+            <div class="bg-white border border-gray-200 rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="outfit font-bold text-lg">Recent AI Chats</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr><th>User ID</th><th>Message</th><th>Reply</th><th>Date</th></tr>
+                        </thead>
+                        <tbody id="chats-table-body">
+                            <tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- Recent Comments -->
-        <div class="bg-white border border-gray-200 rounded-lg mb-8">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h2 class="outfit font-bold text-lg">Recent Comments</h2>
-            </div>
-            <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Comment</th>
-                            <th>Chapter</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody id="comments-table-body">
-                        <tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <!-- ═══ CONTENT EDITOR TAB ═══ -->
+        <div id="tab-content" class="tab-panel">
 
-        <!-- Recent Chats -->
-        <div class="bg-white border border-gray-200 rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h2 class="outfit font-bold text-lg">Recent AI Chats</h2>
+            <!-- Hero Text -->
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="outfit font-bold text-lg">Hero Section</h2>
+                    <p class="text-xs text-gray-400 mt-1">Edit the big headline and subtitle shown at the top of the homepage.</p>
+                </div>
+                <div class="px-6 py-5 space-y-5">
+                    <div>
+                        <label class="content-field-label">Hero Title</label>
+                        <div class="flex gap-3 items-start">
+                            <input id="edit-hero-title" type="text" class="content-field-input" placeholder="Pocket's private spaces" />
+                            <button class="content-save-btn" onclick="saveContent('hero_title', 'edit-hero-title', 'save-hero-title')">Save</button>
+                        </div>
+                        <span id="save-hero-title" class="save-indicator">✓ Saved</span>
+                    </div>
+                    <div>
+                        <label class="content-field-label">Hero Subtitle</label>
+                        <div class="flex gap-3 items-start">
+                            <textarea id="edit-hero-subtitle" class="content-field-input" rows="3" placeholder="This site is a home of multiple fun projects..."></textarea>
+                            <button class="content-save-btn" onclick="saveContent('hero_subtitle', 'edit-hero-subtitle', 'save-hero-subtitle')">Save</button>
+                        </div>
+                        <span id="save-hero-subtitle" class="save-indicator">✓ Saved</span>
+                    </div>
+                </div>
             </div>
-            <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Message</th>
-                            <th>Reply</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody id="chats-table-body">
-                        <tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr>
-                    </tbody>
-                </table>
+
+            <!-- Community Section Text -->
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="outfit font-bold text-lg">Community Section</h2>
+                    <p class="text-xs text-gray-400 mt-1">Edit the heading and subtitle above the comments area.</p>
+                </div>
+                <div class="px-6 py-5 space-y-5">
+                    <div>
+                        <label class="content-field-label">Section Title</label>
+                        <div class="flex gap-3 items-start">
+                            <input id="edit-community-title" type="text" class="content-field-input" placeholder="Community" />
+                            <button class="content-save-btn" onclick="saveContent('community_title', 'edit-community-title', 'save-community-title')">Save</button>
+                        </div>
+                        <span id="save-community-title" class="save-indicator">✓ Saved</span>
+                    </div>
+                    <div>
+                        <label class="content-field-label">Section Subtitle</label>
+                        <div class="flex gap-3 items-start">
+                            <input id="edit-community-subtitle" type="text" class="content-field-input" placeholder="Share your thoughts about the Pocketverse." />
+                            <button class="content-save-btn" onclick="saveContent('community_subtitle', 'edit-community-subtitle', 'save-community-subtitle')">Save</button>
+                        </div>
+                        <span id="save-community-subtitle" class="save-indicator">✓ Saved</span>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Cards Manager -->
+            <div class="bg-white border border-gray-200 rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="outfit font-bold text-lg">Homepage Cards</h2>
+                        <p class="text-xs text-gray-400 mt-1">Add, edit, or remove the project cards shown on the homepage.</p>
+                    </div>
+                    <button class="btn btn-dark btn-sm" onclick="toggleAddCardForm()">+ Add Card</button>
+                </div>
+
+                <div class="px-6 py-5">
+                    <!-- Existing cards list -->
+                    <div id="cards-admin-list">
+                        <div class="text-gray-400 text-sm text-center py-4">Loading cards...</div>
+                    </div>
+
+                    <!-- Add card form (hidden by default) -->
+                    <div id="add-card-form" class="add-card-form" style="display:none;">
+                        <p class="text-sm font-semibold text-gray-700 mb-3">New Card</p>
+                        <input id="new-card-title" type="text" placeholder="Card title *" maxlength="80" />
+                        <input id="new-card-date" type="text" placeholder="Date label (e.g. 03/15/2026)" maxlength="40" />
+                        <textarea id="new-card-body" rows="3" placeholder="Card description..." maxlength="400"></textarea>
+                        <input id="new-card-link" type="text" placeholder="Button text (optional — leave blank for no button)" maxlength="40" />
+                        <input id="new-card-order" type="number" placeholder="Sort order (0 = first)" min="0" value="0" />
+                        <div class="flex gap-2 mt-1">
+                            <button class="btn btn-dark btn-sm" onclick="addCard()">Add Card</button>
+                            <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="toggleAddCardForm()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /tab-content -->
+
     </main>
 </div>
 
@@ -168,6 +313,30 @@
     const WORKER_URL = 'https://po.pocketoregon.workers.dev';
     const ADMIN_EMAIL = 'pocketoregon@gmail.com';
 
+    function showCustomAlert(msg) {
+        const box = document.getElementById('custom-alert');
+        box.textContent = msg; box.style.display = 'block';
+        setTimeout(() => box.style.display = 'none', 3000);
+    }
+
+    function esc(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function fmt(ts) {
+        if (!ts) return '—';
+        return new Date(ts).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' });
+    }
+
+    // ── TABS ──────────────────────────────────────────────────────────
+    function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        event.target.classList.add('active');
+        if (name === 'content') loadContentEditor();
+    }
+
+    // ── AUTH ─────────────────────────────────────────────────────────
     function handleAdminLogin(response) {
         fetch(WORKER_URL + '/auth', {
             method: 'POST',
@@ -196,8 +365,8 @@
         loadDashboard();
     }
 
+    // ── DASHBOARD DATA ────────────────────────────────────────────────
     async function loadDashboard() {
-        // Site age
         const origin = new Date('2026-03-13');
         const days = Math.floor((Date.now() - origin) / 86400000);
         document.getElementById('stat-age').textContent = days;
@@ -213,7 +382,6 @@
             const comments = await commentsRes.json();
             const chats = await chatsRes.json();
 
-            // Stats
             document.getElementById('stat-users').textContent = users.length || 0;
             document.getElementById('stat-comments').textContent = comments.length || 0;
             document.getElementById('stat-chats').textContent = chats.length || 0;
@@ -225,43 +393,253 @@
                     <td class="text-gray-500">${esc(u.email)}</td>
                     <td><span class="badge badge-${u.role}">${u.role}</span></td>
                     <td class="text-gray-400">${fmt(u.created_at)}</td>
+                    <td><a href="profile.html?id=${u.id}" class="text-xs text-indigo-600 hover:underline font-medium">View →</a></td>
                 </tr>
-            `).join('') || '<tr><td colspan="4" class="text-center text-gray-400 py-4">No users yet.</td></tr>';
+            `).join('') || '<tr><td colspan="5" class="text-center text-gray-400 py-4">No users yet.</td></tr>';
 
-            // Comments table
+            // Comments table — with Delete button for each
             document.getElementById('comments-table-body').innerHTML = (comments.length ? comments : []).map(c => `
-                <tr>
-                    <td class="font-medium">${esc(c.name || 'User #' + c.user_id)}</td>
-                    <td class="text-gray-600 max-w-xs truncate">${esc(c.text)}</td>
+                <tr id="admin-comment-row-${c.id}">
+                    <td class="font-medium">
+                        <a href="profile.html?id=${c.user_id}" class="hover:underline text-indigo-600">${esc(c.name || 'User #' + c.user_id)}</a>
+                    </td>
+                    <td class="text-gray-600 max-w-xs" style="max-width:220px;word-break:break-word;">${esc(c.text)}</td>
                     <td class="text-gray-400">${esc(c.chapter)}</td>
                     <td class="text-gray-400">${fmt(c.created_at)}</td>
+                    <td>
+                        <button class="btn btn-red btn-sm" onclick="adminDeleteComment(${c.id})">Delete</button>
+                    </td>
                 </tr>
-            `).join('') || '<tr><td colspan="4" class="text-center text-gray-400 py-4">No comments yet.</td></tr>';
+            `).join('') || '<tr><td colspan="5" class="text-center text-gray-400 py-4">No comments yet.</td></tr>';
 
             // Chats table
             document.getElementById('chats-table-body').innerHTML = (chats.length ? chats : []).map(c => `
                 <tr>
                     <td class="text-gray-400">#${c.user_id || '—'}</td>
-                    <td class="text-gray-600 max-w-xs truncate">${esc(c.message)}</td>
-                    <td class="text-gray-400 max-w-xs truncate">${esc(c.reply)}</td>
+                    <td class="text-gray-600" style="max-width:180px;word-break:break-word;">${esc(c.message)}</td>
+                    <td class="text-gray-400" style="max-width:180px;word-break:break-word;">${esc(c.reply)}</td>
                     <td class="text-gray-400">${fmt(c.created_at)}</td>
                 </tr>
             `).join('') || '<tr><td colspan="4" class="text-center text-gray-400 py-4">No chats yet.</td></tr>';
 
         } catch(e) {
-            document.getElementById('users-table-body').innerHTML = '<tr><td colspan="4" class="text-center text-red-400 py-4">Error loading data.</td></tr>';
+            document.getElementById('users-table-body').innerHTML = '<tr><td colspan="5" class="text-center text-red-400 py-4">Error loading data.</td></tr>';
         }
     }
 
-    function esc(str) {
-        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-    function fmt(ts) {
-        if (!ts) return '—';
-        return new Date(ts).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' });
+    // ── ADMIN DELETE COMMENT ──────────────────────────────────────────
+    async function adminDeleteComment(commentId) {
+        if (!confirm('Delete this comment? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminEmail: ADMIN_EMAIL })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const row = document.getElementById('admin-comment-row-' + commentId);
+                if (row) row.remove();
+                showCustomAlert('Comment deleted.');
+                // Decrement stat
+                const el = document.getElementById('stat-comments');
+                const n = parseInt(el.textContent) || 0;
+                if (n > 0) el.textContent = n - 1;
+            } else {
+                showCustomAlert(data.error || 'Could not delete.');
+            }
+        } catch(e) {
+            showCustomAlert('Network error.');
+        }
     }
 
-    // On load: check if already logged in
+    // ── CONTENT EDITOR ────────────────────────────────────────────────
+    async function loadContentEditor() {
+        try {
+            const res = await fetch(WORKER_URL + '/content');
+            const data = await res.json();
+            const c = data.content || {};
+
+            const defaults = {
+                hero_title: "Pocket's private spaces",
+                hero_subtitle: "This site is a home of multiple fun projects that would be taken in future. Stay connected with us.",
+                community_title: "Community",
+                community_subtitle: "Share your thoughts about the Pocketverse."
+            };
+
+            document.getElementById('edit-hero-title').value = c.hero_title || defaults.hero_title;
+            document.getElementById('edit-hero-subtitle').value = c.hero_subtitle || defaults.hero_subtitle;
+            document.getElementById('edit-community-title').value = c.community_title || defaults.community_title;
+            document.getElementById('edit-community-subtitle').value = c.community_subtitle || defaults.community_subtitle;
+        } catch(e) {}
+
+        loadCardsAdmin();
+    }
+
+    async function saveContent(key, inputId, indicatorId) {
+        const value = document.getElementById(inputId).value;
+        const btn = event.target;
+        btn.disabled = true; btn.textContent = 'Saving...';
+        try {
+            const res = await fetch(WORKER_URL + '/content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Email': ADMIN_EMAIL },
+                body: JSON.stringify({ key, value })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const ind = document.getElementById(indicatorId);
+                ind.classList.add('show');
+                setTimeout(() => ind.classList.remove('show'), 2500);
+            } else {
+                showCustomAlert(data.error || 'Save failed.');
+            }
+        } catch(e) {
+            showCustomAlert('Network error.');
+        }
+        btn.disabled = false; btn.textContent = 'Save';
+    }
+
+    // ── CARDS ADMIN ───────────────────────────────────────────────────
+    let adminCards = [];
+
+    async function loadCardsAdmin() {
+        try {
+            const res = await fetch(WORKER_URL + '/cards');
+            const data = await res.json();
+            adminCards = data.cards || [];
+            renderCardsAdmin();
+        } catch(e) {
+            document.getElementById('cards-admin-list').innerHTML = '<p class="text-red-400 text-sm">Error loading cards.</p>';
+        }
+    }
+
+    function renderCardsAdmin() {
+        const list = document.getElementById('cards-admin-list');
+        if (adminCards.length === 0) {
+            list.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No cards yet. Add one below.</p>';
+            return;
+        }
+        list.innerHTML = adminCards.map((card, i) => `
+            <div class="card-item" id="card-admin-item-${card.id}">
+                <div class="card-item-info">
+                    <div class="card-item-title">${esc(card.title)}</div>
+                    <div class="card-item-date">${esc(card.date || '')}${card.link_text ? ' · Button: "' + esc(card.link_text) + '"' : ''}</div>
+                    <div class="card-item-body">${esc(card.body || '')}</div>
+                </div>
+                <div class="flex flex-col gap-2 flex-shrink-0">
+                    <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;font-size:0.78rem;" onclick="editCardInline(${card.id})">Edit</button>
+                    <button class="btn btn-red btn-sm" style="font-size:0.78rem;" onclick="deleteCard(${card.id})">Delete</button>
+                </div>
+            </div>
+            <div id="edit-card-form-${card.id}" style="display:none;" class="add-card-form mb-2">
+                <p class="text-sm font-semibold text-gray-700 mb-3">Editing: ${esc(card.title)}</p>
+                <input id="ec-title-${card.id}" type="text" placeholder="Title *" value="${esc(card.title)}" maxlength="80" />
+                <input id="ec-date-${card.id}" type="text" placeholder="Date label" value="${esc(card.date || '')}" maxlength="40" />
+                <textarea id="ec-body-${card.id}" rows="3" placeholder="Description..." maxlength="400">${esc(card.body || '')}</textarea>
+                <input id="ec-link-${card.id}" type="text" placeholder="Button text (leave blank for none)" value="${esc(card.link_text || '')}" maxlength="40" />
+                <input id="ec-order-${card.id}" type="number" placeholder="Sort order" value="${card.sort_order || 0}" min="0" />
+                <div class="flex gap-2 mt-1">
+                    <button class="btn btn-dark btn-sm" onclick="saveCard(${card.id})">Save Changes</button>
+                    <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="editCardInline(${card.id})">Cancel</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function editCardInline(cardId) {
+        const form = document.getElementById('edit-card-form-' + cardId);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveCard(cardId) {
+        const title = document.getElementById('ec-title-' + cardId).value.trim();
+        if (!title) { showCustomAlert('Title is required.'); return; }
+        const body = {
+            title,
+            date: document.getElementById('ec-date-' + cardId).value.trim(),
+            body: document.getElementById('ec-body-' + cardId).value.trim(),
+            link_text: document.getElementById('ec-link-' + cardId).value.trim(),
+            sort_order: parseInt(document.getElementById('ec-order-' + cardId).value) || 0
+        };
+        try {
+            const res = await fetch(`${WORKER_URL}/cards/${cardId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Email': ADMIN_EMAIL },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Card updated!');
+                loadCardsAdmin();
+            } else {
+                showCustomAlert(data.error || 'Save failed.');
+            }
+        } catch(e) {
+            showCustomAlert('Network error.');
+        }
+    }
+
+    async function deleteCard(cardId) {
+        if (!confirm('Delete this card from the homepage?')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/cards/${cardId}`, {
+                method: 'DELETE',
+                headers: { 'X-Admin-Email': ADMIN_EMAIL }
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Card deleted.');
+                loadCardsAdmin();
+            } else {
+                showCustomAlert(data.error || 'Delete failed.');
+            }
+        } catch(e) {
+            showCustomAlert('Network error.');
+        }
+    }
+
+    function toggleAddCardForm() {
+        const form = document.getElementById('add-card-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        if (form.style.display === 'block') {
+            document.getElementById('new-card-title').focus();
+        }
+    }
+
+    async function addCard() {
+        const title = document.getElementById('new-card-title').value.trim();
+        if (!title) { showCustomAlert('Title is required.'); return; }
+        const body = {
+            title,
+            date: document.getElementById('new-card-date').value.trim(),
+            body: document.getElementById('new-card-body').value.trim(),
+            link_text: document.getElementById('new-card-link').value.trim(),
+            sort_order: parseInt(document.getElementById('new-card-order').value) || 0
+        };
+        try {
+            const res = await fetch(WORKER_URL + '/cards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Email': ADMIN_EMAIL },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Card added!');
+                // Reset form
+                ['new-card-title','new-card-date','new-card-body','new-card-link'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('new-card-order').value = '0';
+                toggleAddCardForm();
+                loadCardsAdmin();
+            } else {
+                showCustomAlert(data.error || 'Add failed.');
+            }
+        } catch(e) {
+            showCustomAlert('Network error.');
+        }
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────────
     window.addEventListener('load', () => {
         const saved = localStorage.getItem('po_user');
         if (saved) {
