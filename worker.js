@@ -17,6 +17,14 @@ RULES:
 - Answer general questions too, you are a general assistant`;
 
 const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://pocketoregon.site',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Email, X-User-Id',
+  'Access-Control-Allow-Credentials': 'true',
+  'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+};
+
+const corsHeadersWildcard = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Email, X-User-Id',
@@ -99,7 +107,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+    if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders, status: 204 });
 
     // CARD PAGE
     const cardMatch = path.match(/^\/card\/(\d+)$/);
@@ -121,7 +129,10 @@ export default {
         const email=data.email, name=data.name, role=email===ADMIN_EMAIL?'admin':'reader';
         await env.DB.prepare('INSERT OR IGNORE INTO users (email,name,role) VALUES (?,?,?)').bind(email,name,role).run();
         const user = await env.DB.prepare('SELECT * FROM users WHERE email=?').bind(email).first();
-        return new Response(JSON.stringify({user}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+        const sessionToken = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 7*24*60*60*1000).toISOString();
+        await env.DB.prepare('INSERT INTO sessions (token, user_id, email, expires_at) VALUES (?, ?, ?, ?)').bind(sessionToken, user.id, email, expiresAt).run();
+        return new Response(JSON.stringify({user, sessionToken}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 

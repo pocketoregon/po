@@ -166,7 +166,7 @@
     </div>
 
     <script>
-        const WORKER_URL = 'https://po-worker.pocketoregon.workers.dev';
+        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
         const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
 
         function handleCredentialResponse(response) {
@@ -177,12 +177,15 @@
             })
             .then(res => res.json())
             .then(data => {
-                if (data.user) {
+                if (data.user && data.sessionToken) {
                     localStorage.setItem('po_user', JSON.stringify(data.user));
+                    localStorage.setItem('po_token', data.sessionToken);
                     // Check if there's a return URL
                     const params = new URLSearchParams(window.location.search);
                     const redirect = params.get('redirect') || '/';
                     window.location.href = redirect;
+                } else {
+                    console.error('Auth failed:', data.error || 'No session token returned');
                 }
             })
             .catch(err => console.error('Auth error:', err));

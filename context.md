@@ -1,5 +1,5 @@
 # PocketOregon Site - Full Context File
-# Last updated: March 17, 2026
+# Last updated: March 17, 2026 (Auth Fixes)
 # NOTE TO AI: Always ask the user to paste the current file contents before making any changes. Never edit blindly based on memory.
 
 ## SITE INFO
@@ -93,6 +93,7 @@ enabled = true
 Implemented March 2026 — replaced raw Google ID trust model.
 
 ### Layer 1 — Session Tokens
+- Worker now sends `Cross-Origin-Opener-Policy: same-origin-allow-popups` header and `Access-Control-Allow-Credentials: true` for auth endpoints to resolve COOP and CORS issues.
 - On OAuth login, worker generates crypto.randomUUID() token, stores in sessions table with 7-day expiry
 - Token returned to client as sessionToken alongside user object
 - Client stores token in localStorage as po_session (NOT the Google ID)
@@ -111,7 +112,7 @@ Implemented March 2026 — replaced raw Google ID trust model.
 ### What changed per file
 - worker.js: sessions table logic, validateToken()/requireAuth()/requireAdmin() helpers, all routes updated
 - index.html: stores po_session, sends Bearer token for chat/history/comments/delete, calls /auth/logout on sign-out. Redirects to signin.html for login.
-- signin.html: Handles Google login, stores po_session, redirects back to source page. Features animated background.
+- signin.html: Handles Google login, stores po_user and po_token (sessionToken), redirects back to source page. Features animated background.
 - admin.html: stores po_session, sends Bearer token on all admin fetches, init() requires po_session to exist
 - profile.html: stores po_session (login flow updated). **Privacy update: Email hidden from public view.**
 - notes/index.html: sends Bearer token for all notes operations, replaced X-User-Id header everywhere, init() requires po_session
