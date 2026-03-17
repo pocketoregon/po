@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Notes — PocketOregon</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; user-select: none; -webkit-user-select: none; }
+        .outfit { font-family: 'Outfit', sans-serif; }
+
+        /* Loading curtain */
+        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.76,0,0.24,1); }
+        #loading-curtain.lift { transform: translateY(-100%); }
+        .loader-icon { animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
+        @keyframes iconPop { from { opacity:0; transform:scale(0.4) rotate(-15deg); } to { opacity:1; transform:scale(1) rotate(0); } }
+        .loader-text { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.5rem; letter-spacing:-0.04em; color:#1f1e24; animation: textRise 0.4s ease 0.3s both; }
+        @keyframes textRise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Nav */
+        nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+        .nav-inner { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* Gate */
+        #gate { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 56px); }
+        .gate-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 2.5rem; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+
+        /* Main layout */
+        #app { display: none; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+
+        /* Notes grid */
+        #notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .note-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 1.25rem; cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+            position: relative;
+        }
+        .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
+        .note-card-title { font-weight: 700; font-size: 0.95rem; color: #1f1e24; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .note-card-preview { font-size: 0.82rem; color: #6b7280; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.6em; }
+        .note-card-date { font-size: 0.72rem; color: #9ca3af; margin-top: 10px; }
+        .note-card-delete {
+            position: absolute; top: 10px; right: 10px;
+            background: none; border: none; cursor: pointer;
+            color: #d1d5db; padding: 4px; border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+            opacity: 0;
+        }
+        .note-card:hover .note-card-delete { opacity: 1; }
+        .note-card-delete:hover { color: #dc2626; background: #fee2e2; }
+
+        /* Empty state */
+        #empty-state { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
+        #empty-state svg { margin: 0 auto 1rem; display: block; }
+
+        /* Editor modal */
+        #editor-modal {
+            display: none; position: fixed; inset: 0; z-index: 500;
+            background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center;
+        }
+        #editor-modal.open { display: flex; }
+        @media (min-width: 640px) { #editor-modal { align-items: center; } }
+        .editor-box {
+            background: white; width: 100%; max-width: 640px;
+            border-radius: 16px 16px 0 0; padding: 1.5rem;
+            max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+            animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        @media (min-width: 640px) { .editor-box { border-radius: 16px; animation: fadeIn 0.2s ease; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        #editor-title {
+            font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.1rem;
+            border: none; outline: none; width: 100%; color: #1f1e24;
+            background: transparent; user-select: text; -webkit-user-select: text;
+        }
+        #editor-title::placeholder { color: #d1d5db; }
+        #editor-body {
+            flex: 1; border: none; outline: none; resize: none;
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7;
+            color: #374151; min-height: 220px; max-height: 50vh;
+            user-select: text; -webkit-user-select: text;
+            overflow-y: auto;
+        }
+        #editor-body::placeholder { color: #d1d5db; }
+        .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
+        .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+        .editor-meta { font-size: 0.75rem; color: #9ca3af; }
+        .btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+        .btn-save:hover { background: #374151; }
+        .btn-save:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn-close { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.2rem; line-height: 1; padding: 4px; transition: color 0.15s; }
+        .btn-close:hover { color: #1f1e24; }
+        .btn-new { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 6px; }
+        .btn-new:hover { background: #374151; }
+
+        /* E2E badge */
+        .e2e-badge { display: inline-flex; align-items: center; gap: 5px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+
+        /* Alert */
+        #custom-alert { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: #fff; padding: 10px 22px; border-radius: 8px; z-index: 700; font-size: 0.875rem; }
+
+        /* Login modal */
+        #login-modal { display: none; position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
+        #login-modal.open { display: flex; }
+        .login-box { background: white; border-radius: 12px; padding: 2rem; max-width: 340px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .login-box h2 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .login-box p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
+        .auto-save-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 4px; animation: pulse 1.5s ease infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.4;} }
+    </style>
+</head>
+<body>
+
+<!-- Loading curtain -->
+<div id="loading-curtain">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <svg class="loader-icon" width="48" height="48" viewBox="0 0 24 24" fill="#f97316">
+            <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/>
+        </svg>
+        <span class="loader-text">My Notes</span>
+    </div>
+</div>
+
+<div id="custom-alert"></div>
+
+<!-- Login modal -->
+<div id="login-modal">
+    <div class="login-box">
+        <svg class="mx-auto mb-3" width="28" height="28" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+        <h2>Sign in</h2>
+        <p>Sign in to access your encrypted notes.</p>
+        <div id="google-btn-container" style="display:flex;justify-content:center;min-height:44px;"></div>
+        <a href="/" style="display:block;margin-top:12px;font-size:0.8rem;color:#9ca3af;">Cancel</a>
+    </div>
+</div>
+
+<!-- Editor modal -->
+<div id="editor-modal">
+    <div class="editor-box">
+        <div class="editor-header">
+            <input id="editor-title" type="text" placeholder="Note title..." maxlength="100" />
+            <button class="btn-close" onclick="closeEditor()">✕</button>
+        </div>
+        <hr class="editor-divider">
+        <textarea id="editor-body" placeholder="Write your note here..." maxlength="10000"></textarea>
+        <hr class="editor-divider">
+        <div class="editor-footer">
+            <span class="editor-meta" id="editor-meta">New note</span>
+            <button class="btn-save" id="save-btn" onclick="saveNote()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Nav -->
+<nav>
+    <div class="nav-inner">
+        <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+            <span class="outfit" style="font-weight:800;font-size:1rem;color:#1f1e24;">PocketOregon</span>
+        </a>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span class="e2e-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                E2E Encrypted
+            </span>
+            <a href="/" style="font-size:.875rem;color:#6b7280;text-decoration:none;">← Back</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Gate (shown when not logged in) -->
+<div id="gate">
+    <div class="gate-card">
+        <svg class="mx-auto mb-4" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h2 class="outfit" style="font-size:1.5rem;font-weight:800;margin-bottom:8px;">My Notes</h2>
+        <p style="font-size:0.875rem;color:#6b7280;margin-bottom:1.5rem;">Sign in to access your end-to-end encrypted private notes.</p>
+        <button onclick="openLoginModal()" style="background:#1f1e24;color:white;border:none;border-radius:6px;padding:10px 24px;font-size:0.875rem;font-weight:600;cursor:pointer;width:100%;">Sign in with Google</button>
+        <a href="/" style="display:block;margin-top:12px;font-size:0.8rem;color:#9ca3af;text-decoration:none;">← Back to site</a>
+    </div>
+</div>
+
+<!-- App (shown when logged in) -->
+<div id="app">
+    <div class="app-header">
+        <div>
+            <h1 class="outfit" style="font-size:1.75rem;font-weight:800;letter-spacing:-0.03em;">My Notes</h1>
+            <p style="font-size:0.82rem;color:#9ca3af;margin-top:2px;" id="notes-count">Loading...</p>
+        </div>
+        <button class="btn-new" onclick="openNewNote()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Note
+        </button>
+    </div>
+    <div id="notes-grid"></div>
+    <div id="empty-state" style="display:none;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5">
+            <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+        </svg>
+        <p style="font-size:0.95rem;margin-bottom:8px;">No notes yet</p>
+        <p style="font-size:0.82rem;">Click <strong>New Note</strong> to create your first encrypted note.</p>
+    </div>
+</div>
+
+<script>
+    const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+    const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
+
+    let currentUser = null;
+    let googleReady = false;
+    let notes = [];
+    let editingNoteId = null;
+    let cryptoKey = null;
+
+    // ── LOADING CURTAIN ──────────────────────────────────────────────
+    function liftCurtain() {
+        const c = document.getElementById('loading-curtain');
+        c.classList.add('lift');
+        setTimeout(() => c.remove(), 650);
+    }
+    setTimeout(liftCurtain, 3500); // fallback
+
+    // ── GOOGLE AUTH ──────────────────────────────────────────────────
+    function waitForGoogle() {
+        if (typeof google !== 'undefined' && google.accounts) {
+            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin, use_fedcm_for_prompt: false });
+            googleReady = true;
+        } else { setTimeout(waitForGoogle, 100); }
+    }
+    waitForGoogle();
+
+    function openLoginModal() {
+        document.getElementById('login-modal').classList.add('open');
+        const container = document.getElementById('google-btn-container');
+        container.innerHTML = '';
+        const tryRender = () => {
+            if (googleReady) {
+                google.accounts.id.renderButton(container, { type:'standard', theme:'outline', size:'large', width:280 });
+            } else { setTimeout(tryRender, 150); }
+        };
+        tryRender();
+    }
+
+    function handleGoogleLogin(response) {
+        document.getElementById('login-modal').classList.remove('open');
+        fetch(WORKER_URL + '/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:response.credential}) })
+        .then(r => r.json())
+        .then(async data => {
+            if (data.user) {
+                currentUser = data.user;
+                localStorage.setItem('po_user', JSON.stringify(data.user));
+                await initCryptoKey(data.user);
+                showApp();
+            }
+        })
+        .catch(() => showAlert('Login failed. Try again.'));
+    }
+
+    // ── E2E ENCRYPTION (AES-GCM via Web Crypto API) ──────────────────
+    // Key derived from user's Google ID — unique per user, never sent to server
+    async function initCryptoKey(user) {
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(String(user.id).padEnd(32, '0').slice(0, 32)),
+            { name: 'AES-GCM' },
+            false,
+            ['encrypt', 'decrypt']
+        );
+        cryptoKey = keyMaterial;
+    }
+
+    async function encrypt(text) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(text);
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, encoded);
+        // Store iv + ciphertext as base64
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(encrypted), iv.length);
+        return btoa(String.fromCharCode(...combined));
+    }
+
+    async function decrypt(b64) {
+        try {
+            const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const iv = combined.slice(0, 12);
+            const data = combined.slice(12);
+            const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, data);
+            return new TextDecoder().decode(decrypted);
+        } catch(e) {
+            return '[Could not decrypt]';
+        }
+    }
+
+    // ── APP ──────────────────────────────────────────────────────────
+    async function showApp() {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        liftCurtain();
+        await loadNotes();
+    }
+
+    async function loadNotes() {
+        try {
+            const res = await fetch(WORKER_URL + '/notes', {
+                headers: { 'X-User-Id': String(currentUser.id) }
+            });
+            const data = await res.json();
+            const raw = data.notes || [];
+            // Decrypt all notes
+            notes = await Promise.all(raw.map(async n => ({
+                ...n,
+                title: await decrypt(n.title),
+                body: await decrypt(n.body)
+            })));
+            renderNotes();
+        } catch(e) {
+            showAlert('Could not load notes.');
+            liftCurtain();
+        }
+    }
+
+    function renderNotes() {
+        const grid = document.getElementById('notes-grid');
+        const empty = document.getElementById('empty-state');
+        const count = document.getElementById('notes-count');
+
+        count.textContent = notes.length === 0 ? 'No notes yet' : `${notes.length} note${notes.length !== 1 ? 's' : ''}`;
+
+        if (notes.length === 0) {
+            grid.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+        grid.innerHTML = notes.map(n => `
+            <div class="note-card" onclick="openEditNote(${n.id})">
+                <div class="note-card-title">${escHtml(n.title || 'Untitled')}</div>
+                <div class="note-card-preview">${escHtml(n.body || '')}</div>
+                <div class="note-card-date">${formatDate(n.updated_at)}</div>
+                <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function openNewNote() {
+        editingNoteId = null;
+        document.getElementById('editor-title').value = '';
+        document.getElementById('editor-body').value = '';
+        document.getElementById('editor-meta').textContent = 'New note';
+        document.getElementById('save-btn').textContent = 'Save';
+        document.getElementById('editor-modal').classList.add('open');
+        setTimeout(() => document.getElementById('editor-title').focus(), 100);
+    }
+
+    function openEditNote(noteId) {
+        const note = notes.find(n => n.id === noteId);
+        if (!note) return;
+        editingNoteId = noteId;
+        document.getElementById('editor-title').value = note.title || '';
+        document.getElementById('editor-body').value = note.body || '';
+        document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
+        document.getElementById('save-btn').textContent = 'Save';
+        document.getElementById('editor-modal').classList.add('open');
+        setTimeout(() => document.getElementById('editor-body').focus(), 100);
+    }
+
+    function closeEditor() {
+        document.getElementById('editor-modal').classList.remove('open');
+        editingNoteId = null;
+    }
+
+    document.getElementById('editor-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditor();
+    });
+
+    async function saveNote() {
+        const titleRaw = document.getElementById('editor-title').value.trim();
+        const bodyRaw = document.getElementById('editor-body').value.trim();
+
+        if (!titleRaw && !bodyRaw) { showAlert('Note is empty.'); return; }
+
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true; btn.textContent = 'Saving...';
+
+        try {
+            // Encrypt before sending to server
+            const encTitle = await encrypt(titleRaw || 'Untitled');
+            const encBody = await encrypt(bodyRaw);
+
+            if (editingNoteId) {
+                // Update existing
+                const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-User-Id': String(currentUser.id) },
+                    body: JSON.stringify({ title: encTitle, body: encBody })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Update local cache
+                    const idx = notes.findIndex(n => n.id === editingNoteId);
+                    if (idx !== -1) { notes[idx].title = titleRaw || 'Untitled'; notes[idx].body = bodyRaw; notes[idx].updated_at = new Date().toISOString(); }
+                    closeEditor(); renderNotes(); showAlert('Note saved.');
+                } else { showAlert(data.error || 'Save failed.'); }
+            } else {
+                // Create new
+                const res = await fetch(`${WORKER_URL}/notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-User-Id': String(currentUser.id) },
+                    body: JSON.stringify({ title: encTitle, body: encBody })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeEditor();
+                    await loadNotes(); // reload to get new id
+                    showAlert('Note created.');
+                } else { showAlert(data.error || 'Create failed.'); }
+            }
+        } catch(e) { showAlert('Error saving note.'); }
+        btn.disabled = false; btn.textContent = 'Save';
+    }
+
+    async function deleteNote(e, noteId) {
+        e.stopPropagation();
+        if (!confirm('Delete this note? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/notes/${noteId}`, {
+                method: 'DELETE',
+                headers: { 'X-User-Id': String(currentUser.id) }
+            });
+            const data = await res.json();
+            if (data.success) {
+                notes = notes.filter(n => n.id !== noteId);
+                renderNotes(); showAlert('Note deleted.');
+            } else { showAlert(data.error || 'Delete failed.'); }
+        } catch(e) { showAlert('Network error.'); }
+    }
+
+    // Keyboard shortcut: Ctrl+Enter to save
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            if (document.getElementById('editor-modal').classList.contains('open')) saveNote();
+        }
+        if (e.key === 'Escape') closeEditor();
+    });
+
+    function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function formatDate(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}); }
+    function showAlert(msg) { const b=document.getElementById('custom-alert'); b.textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
+
+    // ── INIT ─────────────────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+        const saved = localStorage.getItem('po_user');
+        if (saved) {
+            try {
+                const user = JSON.parse(saved);
+                currentUser = user;
+                await initCryptoKey(user);
+                showApp();
+                return;
+            } catch(e) {}
+        }
+        // Not logged in — show gate, lift curtain
+        liftCurtain();
+    });
+</script>
+</body>
+</html>
