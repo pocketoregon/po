@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin — PocketOregon</title>
-
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#ffffff">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
@@ -37,73 +34,38 @@
         .btn-red { background:#fee2e2; color:#dc2626; }
         .btn-red:hover { background:#fecaca; }
         .btn-sm { padding:5px 12px; font-size:0.8rem; }
-        /* Tabs */
         .tab-bar { display:flex; gap:4px; border-bottom:2px solid #e5e7eb; margin-bottom:2rem; }
-        .tab-btn {
-            padding:10px 18px; font-size:0.9rem; font-weight:600; cursor:pointer;
-            border:none; background:none; color:#6b7280; border-bottom:2px solid transparent;
-            margin-bottom:-2px; transition:color 0.15s, border-color 0.15s;
-        }
+        .tab-btn { padding:10px 18px; font-size:0.9rem; font-weight:600; cursor:pointer; border:none; background:none; color:#6b7280; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color 0.15s, border-color 0.15s; }
         .tab-btn.active { color:#1f1e24; border-bottom-color:#1f1e24; }
         .tab-btn:hover:not(.active) { color:#374151; }
         .tab-panel { display:none; }
         .tab-panel.active { display:block; }
-        /* Content editor */
         .content-field-label { font-size:0.8rem; font-weight:600; color:#374151; margin-bottom:4px; display:block; }
-        .content-field-input {
-            width:100%; border:1px solid #e5e7eb; border-radius:6px;
-            padding:8px 12px; font-size:0.875rem; font-family:'Inter',sans-serif;
-            outline:none; color:#1f1e24; transition:border-color 0.15s;
-            background:white; resize:vertical;
-        }
+        .content-field-input { width:100%; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; font-size:0.875rem; font-family:'Inter',sans-serif; outline:none; color:#1f1e24; transition:border-color 0.15s; background:white; resize:vertical; }
         .content-field-input:focus { border-color:#1f1e24; }
-        .content-save-btn {
-            background:#1f1e24; color:white; border:none; border-radius:6px;
-            padding:7px 16px; font-size:0.8rem; font-weight:600; cursor:pointer;
-            transition:background 0.15s; white-space:nowrap;
-        }
+        .content-save-btn { background:#1f1e24; color:white; border:none; border-radius:6px; padding:7px 16px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:background 0.15s; white-space:nowrap; }
         .content-save-btn:hover { background:#374151; }
         .content-save-btn:disabled { background:#9ca3af; cursor:not-allowed; }
-        /* Card editor */
-        .card-item {
-            background:white; border:1px solid #e5e7eb; border-radius:8px;
-            padding:1rem 1.25rem; margin-bottom:0.75rem;
-            display:flex; align-items:flex-start; gap:12px;
-        }
+        .card-item { background:white; border:1px solid #e5e7eb; border-radius:8px; padding:1rem 1.25rem; margin-bottom:0.75rem; display:flex; align-items:flex-start; gap:12px; }
         .card-item-info { flex:1; min-width:0; }
         .card-item-title { font-weight:700; font-size:0.9rem; color:#1f1e24; }
         .card-item-date { font-size:0.75rem; color:#9ca3af; margin-top:2px; }
         .card-item-body { font-size:0.8rem; color:#6b7280; margin-top:4px; line-height:1.4; }
-        .add-card-form {
-            background:white; border:1px dashed #d1d5db; border-radius:8px;
-            padding:1.25rem; margin-top:1rem;
-        }
-        .add-card-form input, .add-card-form textarea {
-            width:100%; border:1px solid #e5e7eb; border-radius:6px;
-            padding:7px 11px; font-size:0.875rem; font-family:'Inter',sans-serif;
-            outline:none; color:#1f1e24; transition:border-color 0.15s; margin-bottom:8px;
-        }
+        .add-card-form { background:white; border:1px dashed #d1d5db; border-radius:8px; padding:1.25rem; margin-top:1rem; }
+        .add-card-form input, .add-card-form textarea { width:100%; border:1px solid #e5e7eb; border-radius:6px; padding:7px 11px; font-size:0.875rem; font-family:'Inter',sans-serif; outline:none; color:#1f1e24; transition:border-color 0.15s; margin-bottom:8px; }
         .add-card-form input:focus, .add-card-form textarea:focus { border-color:#1f1e24; }
-        .save-indicator {
-            display:inline-block; font-size:0.75rem; color:#10b981;
-            opacity:0; transition:opacity 0.3s; margin-left:8px;
-        }
+        .save-indicator { display:inline-block; font-size:0.75rem; color:#10b981; opacity:0; transition:opacity 0.3s; margin-left:8px; }
         .save-indicator.show { opacity:1; }
-        #custom-alert {
-            display:none; position:fixed; top:20px; left:50%;
-            transform:translateX(-50%); background:#1f1e24; color:#fff;
-            padding:12px 24px; border-radius:8px; z-index:700; font-size:0.875rem;
-        }
+        #custom-alert { display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#1f1e24; color:#fff; padding:12px 24px; border-radius:8px; z-index:700; font-size:0.875rem; }
     </style>
 </head>
 <body>
 
 <div id="custom-alert"></div>
 
-<!-- Gate: shown before auth check -->
 <div id="gate">
     <div class="card">
-        <svg class="mx-auto mb-4 text-orange-500" width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+        <svg class="mx-auto mb-4" width="40" height="40" viewBox="0 0 24 24" fill="#f97316">
             <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
         </svg>
         <h1 class="outfit text-2xl font-bold mb-2">Admin Panel</h1>
@@ -113,11 +75,10 @@
     </div>
 </div>
 
-<!-- Admin Dashboard: shown after auth -->
 <div id="dashboard" style="display:none;">
     <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <svg class="text-orange-500" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#f97316">
                 <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
             </svg>
             <span class="outfit font-bold text-lg">PocketOregon Admin</span>
@@ -129,36 +90,20 @@
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 py-10">
-        <!-- Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <div class="stat-card">
-                <div id="stat-users" class="stat-num">—</div>
-                <div class="stat-label">Total Users</div>
-            </div>
-            <div class="stat-card">
-                <div id="stat-comments" class="stat-num">—</div>
-                <div class="stat-label">Comments</div>
-            </div>
-            <div class="stat-card">
-                <div id="stat-chats" class="stat-num">—</div>
-                <div class="stat-label">AI Chats</div>
-            </div>
-            <div class="stat-card">
-                <div id="stat-age" class="stat-num">—</div>
-                <div class="stat-label">Site Age (days)</div>
-            </div>
+            <div class="stat-card"><div id="stat-users" class="stat-num">—</div><div class="stat-label">Total Users</div></div>
+            <div class="stat-card"><div id="stat-comments" class="stat-num">—</div><div class="stat-label">Comments</div></div>
+            <div class="stat-card"><div id="stat-chats" class="stat-num">—</div><div class="stat-label">AI Chats</div></div>
+            <div class="stat-card"><div id="stat-age" class="stat-num">—</div><div class="stat-label">Site Age (days)</div></div>
         </div>
 
-        <!-- Tab bar -->
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('data')">Data</button>
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
         </div>
 
-        <!-- ═══ DATA TAB ═══ -->
+        <!-- DATA TAB -->
         <div id="tab-data" class="tab-panel active">
-
-            <!-- Users Table -->
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 class="outfit font-bold text-lg">Users</h2>
@@ -166,55 +111,33 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table>
-                        <thead>
-                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Profile</th></tr>
-                        </thead>
-                        <tbody id="users-table-body">
-                            <tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr>
-                        </tbody>
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Profile</th></tr></thead>
+                        <tbody id="users-table-body"><tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Recent Comments -->
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h2 class="outfit font-bold text-lg">Recent Comments</h2>
-                </div>
+                <div class="px-6 py-4 border-b border-gray-100"><h2 class="outfit font-bold text-lg">Recent Comments</h2></div>
                 <div class="overflow-x-auto">
                     <table>
-                        <thead>
-                            <tr><th>User</th><th>Comment</th><th>Chapter</th><th>Date</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="comments-table-body">
-                            <tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr>
-                        </tbody>
+                        <thead><tr><th>User</th><th>Comment</th><th>Chapter</th><th>Date</th><th>Action</th></tr></thead>
+                        <tbody id="comments-table-body"><tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Recent Chats -->
             <div class="bg-white border border-gray-200 rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h2 class="outfit font-bold text-lg">Recent AI Chats</h2>
-                </div>
+                <div class="px-6 py-4 border-b border-gray-100"><h2 class="outfit font-bold text-lg">Recent AI Chats</h2></div>
                 <div class="overflow-x-auto">
                     <table>
-                        <thead>
-                            <tr><th>User ID</th><th>Message</th><th>Reply</th><th>Date</th></tr>
-                        </thead>
-                        <tbody id="chats-table-body">
-                            <tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr>
-                        </tbody>
+                        <thead><tr><th>User ID</th><th>Message</th><th>Reply</th><th>Date</th></tr></thead>
+                        <tbody id="chats-table-body"><tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ═══ CONTENT EDITOR TAB ═══ -->
+        <!-- CONTENT EDITOR TAB -->
         <div id="tab-content" class="tab-panel">
-
-            <!-- Hero Text -->
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h2 class="outfit font-bold text-lg">Hero Section</h2>
@@ -239,8 +162,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Community Section Text -->
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h2 class="outfit font-bold text-lg">Community Section</h2>
@@ -265,8 +186,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Cards Manager -->
             <div class="bg-white border border-gray-200 rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
@@ -275,14 +194,8 @@
                     </div>
                     <button class="btn btn-dark btn-sm" onclick="toggleAddCardForm()">+ Add Card</button>
                 </div>
-
                 <div class="px-6 py-5">
-                    <!-- Existing cards list -->
-                    <div id="cards-admin-list">
-                        <div class="text-gray-400 text-sm text-center py-4">Loading cards...</div>
-                    </div>
-
-                    <!-- Add card form (hidden by default) -->
+                    <div id="cards-admin-list"><div class="text-gray-400 text-sm text-center py-4">Loading cards...</div></div>
                     <div id="add-card-form" class="add-card-form" style="display:none;">
                         <p class="text-sm font-semibold text-gray-700 mb-3">New Card</p>
                         <input id="new-card-title" type="text" placeholder="Card title *" maxlength="80" />
@@ -297,9 +210,7 @@
                     </div>
                 </div>
             </div>
-
-        </div><!-- /tab-content -->
-
+        </div>
     </main>
 </div>
 
@@ -318,16 +229,16 @@
         box.textContent = msg; box.style.display = 'block';
         setTimeout(() => box.style.display = 'none', 3000);
     }
+    function esc(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function fmt(ts) { if (!ts) return '—'; return new Date(ts).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' }); }
 
-    function esc(str) {
-        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-    function fmt(ts) {
-        if (!ts) return '—';
-        return new Date(ts).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' });
+    // ── SESSION HELPER ───────────────────────────────────────────────
+    function authHeader() {
+        const token = localStorage.getItem('po_session');
+        return token ? { 'Authorization': 'Bearer ' + token } : {};
     }
 
-    // ── TABS ──────────────────────────────────────────────────────────
+    // ── TABS ─────────────────────────────────────────────────────────
     function switchTab(name) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -337,6 +248,7 @@
     }
 
     // ── AUTH ─────────────────────────────────────────────────────────
+    // CHANGED: store sessionToken from response
     function handleAdminLogin(response) {
         fetch(WORKER_URL + '/auth', {
             method: 'POST',
@@ -345,8 +257,9 @@
         })
         .then(r => r.json())
         .then(data => {
-            if (data.user && data.user.email === ADMIN_EMAIL) {
+            if (data.user && data.user.email === ADMIN_EMAIL && data.sessionToken) {
                 localStorage.setItem('po_user', JSON.stringify(data.user));
+                localStorage.setItem('po_session', data.sessionToken); // ← NEW
                 showDashboard(data.user);
             } else {
                 document.getElementById('gate-msg').textContent = '⛔ Access denied. This panel is restricted.';
@@ -366,16 +279,17 @@
     }
 
     // ── DASHBOARD DATA ────────────────────────────────────────────────
+    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function loadDashboard() {
         const origin = new Date('2026-03-13');
-        const days = Math.floor((Date.now() - origin) / 86400000);
-        document.getElementById('stat-age').textContent = days;
+        document.getElementById('stat-age').textContent = Math.floor((Date.now() - origin) / 86400000);
 
         try {
+            const headers = { ...authHeader() };
             const [usersRes, commentsRes, chatsRes] = await Promise.all([
-                fetch(WORKER_URL + '/admin/users', { headers: { 'X-Admin-Email': ADMIN_EMAIL } }),
-                fetch(WORKER_URL + '/admin/comments', { headers: { 'X-Admin-Email': ADMIN_EMAIL } }),
-                fetch(WORKER_URL + '/admin/chats', { headers: { 'X-Admin-Email': ADMIN_EMAIL } })
+                fetch(WORKER_URL + '/admin/users', { headers }),
+                fetch(WORKER_URL + '/admin/comments', { headers }),
+                fetch(WORKER_URL + '/admin/chats', { headers })
             ]);
 
             const users = await usersRes.json();
@@ -386,7 +300,6 @@
             document.getElementById('stat-comments').textContent = comments.length || 0;
             document.getElementById('stat-chats').textContent = chats.length || 0;
 
-            // Users table
             document.getElementById('users-table-body').innerHTML = (users.length ? users : []).map(u => `
                 <tr>
                     <td class="font-medium">${esc(u.name || '—')}</td>
@@ -397,22 +310,16 @@
                 </tr>
             `).join('') || '<tr><td colspan="5" class="text-center text-gray-400 py-4">No users yet.</td></tr>';
 
-            // Comments table — with Delete button for each
             document.getElementById('comments-table-body').innerHTML = (comments.length ? comments : []).map(c => `
                 <tr id="admin-comment-row-${c.id}">
-                    <td class="font-medium">
-                        <a href="profile.html?id=${c.user_id}" class="hover:underline text-indigo-600">${esc(c.name || 'User #' + c.user_id)}</a>
-                    </td>
+                    <td class="font-medium"><a href="profile.html?id=${c.user_id}" class="hover:underline text-indigo-600">${esc(c.name || 'User #' + c.user_id)}</a></td>
                     <td class="text-gray-600 max-w-xs" style="max-width:220px;word-break:break-word;">${esc(c.text)}</td>
                     <td class="text-gray-400">${esc(c.chapter)}</td>
                     <td class="text-gray-400">${fmt(c.created_at)}</td>
-                    <td>
-                        <button class="btn btn-red btn-sm" onclick="adminDeleteComment(${c.id})">Delete</button>
-                    </td>
+                    <td><button class="btn btn-red btn-sm" onclick="adminDeleteComment(${c.id})">Delete</button></td>
                 </tr>
             `).join('') || '<tr><td colspan="5" class="text-center text-gray-400 py-4">No comments yet.</td></tr>';
 
-            // Chats table
             document.getElementById('chats-table-body').innerHTML = (chats.length ? chats : []).map(c => `
                 <tr>
                     <td class="text-gray-400">#${c.user_id || '—'}</td>
@@ -428,29 +335,26 @@
     }
 
     // ── ADMIN DELETE COMMENT ──────────────────────────────────────────
+    // CHANGED: Authorization: Bearer, no body needed
     async function adminDeleteComment(commentId) {
         if (!confirm('Delete this comment? This cannot be undone.')) return;
         try {
             const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminEmail: ADMIN_EMAIL })
+                headers: { 'Content-Type': 'application/json', ...authHeader() }
             });
             const data = await res.json();
             if (data.success) {
                 const row = document.getElementById('admin-comment-row-' + commentId);
                 if (row) row.remove();
                 showCustomAlert('Comment deleted.');
-                // Decrement stat
                 const el = document.getElementById('stat-comments');
                 const n = parseInt(el.textContent) || 0;
                 if (n > 0) el.textContent = n - 1;
             } else {
                 showCustomAlert(data.error || 'Could not delete.');
             }
-        } catch(e) {
-            showCustomAlert('Network error.');
-        }
+        } catch(e) { showCustomAlert('Network error.'); }
     }
 
     // ── CONTENT EDITOR ────────────────────────────────────────────────
@@ -459,23 +363,21 @@
             const res = await fetch(WORKER_URL + '/content');
             const data = await res.json();
             const c = data.content || {};
-
             const defaults = {
                 hero_title: "Pocket's private spaces",
                 hero_subtitle: "This site is a home of multiple fun projects that would be taken in future. Stay connected with us.",
                 community_title: "Community",
                 community_subtitle: "Share your thoughts about the Pocketverse."
             };
-
             document.getElementById('edit-hero-title').value = c.hero_title || defaults.hero_title;
             document.getElementById('edit-hero-subtitle').value = c.hero_subtitle || defaults.hero_subtitle;
             document.getElementById('edit-community-title').value = c.community_title || defaults.community_title;
             document.getElementById('edit-community-subtitle').value = c.community_subtitle || defaults.community_subtitle;
         } catch(e) {}
-
         loadCardsAdmin();
     }
 
+    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function saveContent(key, inputId, indicatorId) {
         const value = document.getElementById(inputId).value;
         const btn = event.target;
@@ -483,7 +385,7 @@
         try {
             const res = await fetch(WORKER_URL + '/content', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Email': ADMIN_EMAIL },
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
                 body: JSON.stringify({ key, value })
             });
             const data = await res.json();
@@ -491,12 +393,8 @@
                 const ind = document.getElementById(indicatorId);
                 ind.classList.add('show');
                 setTimeout(() => ind.classList.remove('show'), 2500);
-            } else {
-                showCustomAlert(data.error || 'Save failed.');
-            }
-        } catch(e) {
-            showCustomAlert('Network error.');
-        }
+            } else { showCustomAlert(data.error || 'Save failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
         btn.disabled = false; btn.textContent = 'Save';
     }
 
@@ -516,11 +414,8 @@
 
     function renderCardsAdmin() {
         const list = document.getElementById('cards-admin-list');
-        if (adminCards.length === 0) {
-            list.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No cards yet. Add one below.</p>';
-            return;
-        }
-        list.innerHTML = adminCards.map((card, i) => `
+        if (adminCards.length === 0) { list.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No cards yet. Add one below.</p>'; return; }
+        list.innerHTML = adminCards.map((card) => `
             <div class="card-item" id="card-admin-item-${card.id}">
                 <div class="card-item-info">
                     <div class="card-item-title">${esc(card.title)}</div>
@@ -552,6 +447,7 @@
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 
+    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function saveCard(cardId) {
         const title = document.getElementById('ec-title-' + cardId).value.trim();
         if (!title) { showCustomAlert('Title is required.'); return; }
@@ -565,48 +461,36 @@
         try {
             const res = await fetch(`${WORKER_URL}/cards/${cardId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Email': ADMIN_EMAIL },
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
                 body: JSON.stringify(body)
             });
             const data = await res.json();
-            if (data.success) {
-                showCustomAlert('Card updated!');
-                loadCardsAdmin();
-            } else {
-                showCustomAlert(data.error || 'Save failed.');
-            }
-        } catch(e) {
-            showCustomAlert('Network error.');
-        }
+            if (data.success) { showCustomAlert('Card updated!'); loadCardsAdmin(); }
+            else { showCustomAlert(data.error || 'Save failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
     }
 
+    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function deleteCard(cardId) {
         if (!confirm('Delete this card from the homepage?')) return;
         try {
             const res = await fetch(`${WORKER_URL}/cards/${cardId}`, {
                 method: 'DELETE',
-                headers: { 'X-Admin-Email': ADMIN_EMAIL }
+                headers: { ...authHeader() }
             });
             const data = await res.json();
-            if (data.success) {
-                showCustomAlert('Card deleted.');
-                loadCardsAdmin();
-            } else {
-                showCustomAlert(data.error || 'Delete failed.');
-            }
-        } catch(e) {
-            showCustomAlert('Network error.');
-        }
+            if (data.success) { showCustomAlert('Card deleted.'); loadCardsAdmin(); }
+            else { showCustomAlert(data.error || 'Delete failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
     }
 
     function toggleAddCardForm() {
         const form = document.getElementById('add-card-form');
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        if (form.style.display === 'block') {
-            document.getElementById('new-card-title').focus();
-        }
+        if (form.style.display === 'block') document.getElementById('new-card-title').focus();
     }
 
+    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function addCard() {
         const title = document.getElementById('new-card-title').value.trim();
         if (!title) { showCustomAlert('Title is required.'); return; }
@@ -620,29 +504,26 @@
         try {
             const res = await fetch(WORKER_URL + '/cards', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Email': ADMIN_EMAIL },
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
                 body: JSON.stringify(body)
             });
             const data = await res.json();
             if (data.success) {
                 showCustomAlert('Card added!');
-                // Reset form
                 ['new-card-title','new-card-date','new-card-body','new-card-link'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('new-card-order').value = '0';
                 toggleAddCardForm();
                 loadCardsAdmin();
-            } else {
-                showCustomAlert(data.error || 'Add failed.');
-            }
-        } catch(e) {
-            showCustomAlert('Network error.');
-        }
+            } else { showCustomAlert(data.error || 'Add failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
     }
 
     // ── INIT ─────────────────────────────────────────────────────────
+    // CHANGED: also check po_session exists before trusting saved user
     window.addEventListener('load', () => {
         const saved = localStorage.getItem('po_user');
-        if (saved) {
+        const token = localStorage.getItem('po_session');
+        if (saved && token) {
             try {
                 const user = JSON.parse(saved);
                 if (user.email === ADMIN_EMAIL) {
