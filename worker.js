@@ -374,6 +374,16 @@ export default {
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
+    // ADMIN COMMENTS
+    if (path === '/admin/comments' && request.method === 'GET') {
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      try {
+        const comments=await env.DB.prepare('SELECT * FROM comments ORDER BY created_at DESC LIMIT 100').all();
+        return new Response(JSON.stringify(comments.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
+    }
+
     // ADMIN CHATS
     if (path === '/admin/chats' && request.method === 'GET') {
       const user = await validateToken(request, env);
