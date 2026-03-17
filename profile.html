@@ -299,10 +299,12 @@
             document.getElementById('profile-joined').textContent = 'Member since ' + formatDate(user.created_at);
 
             // Show email only to self or admin
+            const emailEl = document.getElementById('profile-email');
             if (isOwnProfile || isAdmin) {
-                document.getElementById('profile-email').textContent = user.email || '';
+                emailEl.textContent = user.email || '';
+                emailEl.style.display = 'block';
             } else {
-                document.getElementById('profile-email').textContent = '';
+                emailEl.style.display = 'none';
             }
 
             // Role badge
