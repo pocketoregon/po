@@ -35,6 +35,62 @@
         ::-webkit-scrollbar { display: none; }
         html { -ms-overflow-style: none; scrollbar-width: none; }
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1e24; scroll-behavior: smooth; user-select: none; -webkit-user-select: none; }
+
+        /* ── LOADING CURTAIN ───────────────────────────── */
+        #loading-curtain {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #ffffff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 20px;
+            transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        #loading-curtain.lift {
+            transform: translateY(-100%);
+        }
+        .loader-logo-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+        }
+        /* Icon: draw-in animation */
+        .loader-icon {
+            width: 56px; height: 56px;
+            animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+        }
+        @keyframes iconPop {
+            from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+            to   { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        /* Text: slide up */
+        .loader-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.75rem;
+            letter-spacing: -0.04em;
+            color: #1f1e24;
+            animation: textRise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.35s both;
+        }
+        @keyframes textRise {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        /* Dot pulse row */
+        .loader-dots {
+            display: flex; gap: 6px; margin-top: 4px;
+            animation: textRise 0.4s ease 0.55s both;
+        }
+        .loader-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #e5e7eb;
+            animation: dotBounce 1.3s ease-in-out infinite;
+        }
+        .loader-dot:nth-child(1) { animation-delay: 0s; }
+        .loader-dot:nth-child(2) { animation-delay: 0.18s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.36s; }
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: translateY(0); background: #e5e7eb; }
+            40% { transform: translateY(-8px); background: #f97316; }
+        }
+        /* ── END LOADING CURTAIN ──────────────────────── */
+
         .hero-title { font-family: 'Outfit', sans-serif; letter-spacing: -0.04em; background: linear-gradient(135deg, #111827 0%, #374151 50%, #111827 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 8s linear infinite; }
         .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
         @keyframes shine { to { background-position: 200% center; } }
@@ -140,6 +196,21 @@
     </style>
 </head>
 <body class="antialiased">
+
+    <!-- ── LOADING CURTAIN ── -->
+    <div id="loading-curtain">
+        <div class="loader-logo-wrap">
+            <svg class="loader-icon text-orange-500" viewBox="0 0 24 24" fill="currentColor" style="color:#f97316;">
+                <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
+            </svg>
+            <span class="loader-text">PocketOregon</span>
+            <div class="loader-dots">
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+            </div>
+        </div>
+    </div>
 
     <div id="custom-alert"></div>
 
@@ -328,6 +399,34 @@
         let conversationHistory = [];
         let historyLoaded = false;
 
+        // ── LOADING CURTAIN ──────────────────────────────────────────
+        const LOAD_TIMEOUT = 5000; // lift curtain after 5s even if DB fails
+        let loadedFlags = { content: false, cards: false, comments: false };
+        let curtainLifted = false;
+
+        function tryLiftCurtain() {
+            if (curtainLifted) return;
+            if (loadedFlags.content && loadedFlags.cards && loadedFlags.comments) {
+                liftCurtain();
+            }
+        }
+
+        function liftCurtain() {
+            if (curtainLifted) return;
+            curtainLifted = true;
+            // Small delay so content is painted before curtain moves
+            setTimeout(() => {
+                const curtain = document.getElementById('loading-curtain');
+                curtain.classList.add('lift');
+                // Remove from DOM after animation
+                setTimeout(() => curtain.remove(), 750);
+            }, 120);
+        }
+
+        // Fallback: lift after timeout regardless
+        setTimeout(liftCurtain, LOAD_TIMEOUT);
+        // ── END LOADING CURTAIN ──────────────────────────────────────
+
         const CONTENT_DEFAULTS = {
             hero_title: "Pocket's private spaces",
             hero_subtitle: "This site is a home of multiple fun projects that would be taken in future. Stay connected with us.",
@@ -364,7 +463,6 @@
         }
 
         function closeLoginModal() { document.getElementById('login-modal').classList.remove('open'); }
-
         document.getElementById('login-modal').addEventListener('click', function(e) { if (e.target === this) closeLoginModal(); });
 
         function handleGoogleLogin(response) {
@@ -425,6 +523,8 @@
                 document.getElementById('community-title').textContent = c.community_title || CONTENT_DEFAULTS.community_title;
                 document.getElementById('community-subtitle').textContent = c.community_subtitle || CONTENT_DEFAULTS.community_subtitle;
             } catch(e) {}
+            loadedFlags.content = true;
+            tryLiftCurtain();
         }
 
         async function loadCards() {
@@ -434,6 +534,8 @@
                 const cards = (data.cards && data.cards.length > 0) ? data.cards : CARDS_DEFAULT;
                 renderCards(cards);
             } catch(e) { renderCards(CARDS_DEFAULT); }
+            loadedFlags.cards = true;
+            tryLiftCurtain();
         }
 
         function renderCards(cards) {
@@ -443,17 +545,10 @@
                 return;
             }
             grid.innerHTML = cards.map(card => {
-                // Site age: detected if date contains "Origin"
                 const isSiteInfo = card.date && card.date.includes('Origin');
                 const dateHtml = isSiteInfo
-                    ? `<div class="gl-card-date flex flex-wrap gap-2">
-                            <span>${escapeHtml(card.date)}</span>
-                            <span class="text-gray-400">|</span>
-                            <span id="site-age" class="text-orange-600">Age: calculating...</span>
-                       </div>`
+                    ? `<div class="gl-card-date flex flex-wrap gap-2"><span>${escapeHtml(card.date)}</span><span class="text-gray-400">|</span><span id="site-age" class="text-orange-600">Age: calculating...</span></div>`
                     : `<p class="gl-card-date">${escapeHtml(card.date || '')}</p>`;
-
-                // Button: links to /card/:id if page has content, else shows warning
                 const hasPage = card.page_content && card.page_content.trim().length > 0;
                 const isDbCard = card.id && !String(card.id).startsWith('default');
                 const linkHtml = card.link_text
@@ -461,22 +556,11 @@
                         ? `<a href="/card/${card.id}" class="gl-card-link">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></a>`
                         : `<button class="gl-card-link" onclick="showCustomAlert('i warn you don\\'t click it')">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></button>`
                     : '';
-
-                // Card title links to detail page for DB cards
                 const titleEl = isDbCard
                     ? `<a href="/card/${card.id}" class="gl-card-title outfit-font hover:text-orange-600 transition-colors" style="text-decoration:none;display:block;color:#333238;">${escapeHtml(card.title)}</a>`
                     : `<h3 class="gl-card-title outfit-font">${escapeHtml(card.title)}</h3>`;
-
-                return `
-                <div class="gl-card">
-                    ${titleEl}
-                    ${dateHtml}
-                    <p class="gl-card-desc">${escapeHtml(card.body || '')}</p>
-                    ${linkHtml}
-                </div>`;
+                return `<div class="gl-card">${titleEl}${dateHtml}<p class="gl-card-desc">${escapeHtml(card.body || '')}</p>${linkHtml}</div>`;
             }).join('');
-
-            // Recalculate site age
             const ageEl = document.getElementById('site-age');
             if (ageEl) {
                 const origin = new Date('2026-03-13');
@@ -493,29 +577,19 @@
                 const list = document.getElementById('comments-list');
                 if (!data.comments || data.comments.length === 0) {
                     list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No comments yet. Be the first!</div>';
-                    return;
+                } else {
+                    list.innerHTML = data.comments.map(c => {
+                        const isOwn = currentUser && String(currentUser.id) === String(c.user_id);
+                        const isAdmin = currentUser && currentUser.role === 'admin';
+                        const canDelete = isOwn || isAdmin;
+                        return `<div class="comment-card" id="site-comment-${c.id}"><div class="flex items-start justify-between gap-3"><div class="flex-1 min-w-0"><div><span class="comment-author" onclick="window.location.href='profile.html?id=${c.user_id}'">${escapeHtml(c.name || 'Anonymous')}</span><span class="comment-time">${formatTime(c.created_at)}</span></div><p class="comment-text">${escapeHtml(c.text)}</p></div>${canDelete ? `<button class="comment-delete-btn" onclick="deleteComment(${c.id})" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>` : ''}</div></div>`;
+                    }).join('');
                 }
-                list.innerHTML = data.comments.map(c => {
-                    const isOwn = currentUser && String(currentUser.id) === String(c.user_id);
-                    const isAdmin = currentUser && currentUser.role === 'admin';
-                    const canDelete = isOwn || isAdmin;
-                    return `
-                    <div class="comment-card" id="site-comment-${c.id}">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <div>
-                                    <span class="comment-author" onclick="window.location.href='profile.html?id=${c.user_id}'">${escapeHtml(c.name || 'Anonymous')}</span>
-                                    <span class="comment-time">${formatTime(c.created_at)}</span>
-                                </div>
-                                <p class="comment-text">${escapeHtml(c.text)}</p>
-                            </div>
-                            ${canDelete ? `<button class="comment-delete-btn" onclick="deleteComment(${c.id})" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>` : ''}
-                        </div>
-                    </div>`;
-                }).join('');
             } catch(e) {
                 document.getElementById('comments-list').innerHTML = '<div class="text-gray-400 text-sm text-center py-6">Could not load comments.</div>';
             }
+            loadedFlags.comments = true;
+            tryLiftCurtain();
         }
 
         async function deleteComment(commentId) {
@@ -534,7 +608,6 @@
         }
 
         document.getElementById('comment-input').addEventListener('input', function() { document.getElementById('comment-char').textContent = this.value.length + ' / 500'; });
-
         document.getElementById('comment-submit').addEventListener('click', async () => {
             const text = document.getElementById('comment-input').value.trim();
             if (!text || !currentUser) return;
