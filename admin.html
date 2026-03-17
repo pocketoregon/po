@@ -234,7 +234,7 @@
 
     // ── SESSION HELPER ───────────────────────────────────────────────
     function authHeader() {
-        const token = localStorage.getItem('po_session');
+        const token = localStorage.getItem('po_token');
         return token ? { 'Authorization': 'Bearer ' + token } : {};
     }
 
@@ -259,7 +259,7 @@
         .then(data => {
             if (data.user && data.user.email === ADMIN_EMAIL && data.sessionToken) {
                 localStorage.setItem('po_user', JSON.stringify(data.user));
-                localStorage.setItem('po_session', data.sessionToken); // ← NEW
+                localStorage.setItem('po_token', data.sessionToken);
                 showDashboard(data.user);
             } else {
                 document.getElementById('gate-msg').textContent = '⛔ Access denied. This panel is restricted.';
@@ -522,7 +522,7 @@
     // CHANGED: also check po_session exists before trusting saved user
     window.addEventListener('load', () => {
         const saved = localStorage.getItem('po_user');
-        const token = localStorage.getItem('po_session');
+        const token = localStorage.getItem('po_token');
         if (saved && token) {
             try {
                 const user = JSON.parse(saved);

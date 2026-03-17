@@ -102,6 +102,20 @@ footer p{color:#6b7280;font-size:.75rem;}footer span{color:white;font-family:'Ou
 </body></html>`;
 }
 
+async function validateToken(request, env) {
+  const auth = request.headers.get('Authorization');
+  if (!auth || !auth.startsWith('Bearer ')) return null;
+  const token = auth.split('Bearer ')[1];
+  const session = await env.DB.prepare('SELECT user_id, email, expires_at FROM sessions WHERE token = ?').bind(token).first();
+  if (!session) return null;
+  if (new Date(session.expires_at) < new Date()) {
+    await env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
+    return null;
+  }
+  const user = await env.DB.prepare('SELECT id, email, name, role FROM users WHERE id = ?').bind(session.user_id).first();
+  return user;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -136,6 +150,16 @@ export default {
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
+    // LOGOUT
+    if (path === '/auth/logout' && request.method === 'POST') {
+      const auth = request.headers.get('Authorization');
+      if (auth && auth.startsWith('Bearer ')) {
+        const token = auth.split('Bearer ')[1];
+        await env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
+      }
+      return new Response(JSON.stringify({success:true}), { headers: corsHeaders });
+    }
+
     // PROFILE
     if (path === '/profile' && request.method === 'GET') {
       const userId = url.searchParams.get('userId');
@@ -143,6 +167,13 @@ export default {
       try {
         const user = await env.DB.prepare('SELECT id,name,email,role,created_at FROM users WHERE id=?').bind(userId).first();
         if (!user) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        
+        // Privacy: only show email to owner or admin
+        const requester = await validateToken(request, env);
+        if (!requester || (requester.id !== user.id && requester.role !== 'admin')) {
+          user.email = '[Hidden]';
+        }
+
         const comments = await env.DB.prepare('SELECT id,text,chapter,created_at FROM comments WHERE user_id=? ORDER BY created_at DESC LIMIT 50').bind(userId).all();
         const chatCount = await env.DB.prepare('SELECT COUNT(*) as count FROM chat_history WHERE user_id=?').bind(userId).first();
         return new Response(JSON.stringify({user,comments:comments.results,chatCount:chatCount?.count||0}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -151,25 +182,26 @@ export default {
 
     // CHAT HISTORY
     if (path === '/chat/history' && request.method === 'GET') {
-      const userId = url.searchParams.get('userId');
-      if (!userId) return new Response(JSON.stringify({error:'No userId'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const chats = await env.DB.prepare('SELECT message,reply,created_at FROM chat_history WHERE user_id=? ORDER BY created_at ASC LIMIT 50').bind(userId).all();
+        const chats = await env.DB.prepare('SELECT message,reply,created_at FROM chat_history WHERE user_id=? ORDER BY created_at ASC LIMIT 50').bind(user.id).all();
         return new Response(JSON.stringify({history:chats.results}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
     // CHAT
     if (path === '/chat' && request.method === 'POST') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Sign in required.'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const body = await request.json();
-        const prompt=body.prompt||body.message, userId=body.userId||null, history=body.history||[];
-        if (!userId) return new Response(JSON.stringify({error:'Sign in required.'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        const prompt=body.prompt||body.message, history=body.history||[];
         if (!prompt) return new Response(JSON.stringify({error:'No message.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
         const messages=[{role:'system',content:SYSTEM_PROMPT},...history.slice(-10),{role:'user',content:prompt}];
         const aiResult = await env.AI.run('@cf/meta/llama-3.2-1b-instruct',{messages,max_tokens:256});
         const reply = aiResult?.response??"Sorry, I couldn't generate a response.";
-        await env.DB.prepare('INSERT INTO chat_history (user_id,message,reply) VALUES (?,?,?)').bind(userId,prompt,reply).run();
+        await env.DB.prepare('INSERT INTO chat_history (user_id,message,reply) VALUES (?,?,?)').bind(user.id,prompt,reply).run();
         return new Response(JSON.stringify({response:reply}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -178,34 +210,36 @@ export default {
     if (path === '/comments' && request.method === 'GET') {
       try {
         const chapter=url.searchParams.get('chapter')||'general';
-        const comments = await env.DB.prepare(`SELECT comments.id,comments.text,comments.created_at,comments.chapter,comments.user_id,users.name,users.email FROM comments JOIN users ON comments.user_id=users.id WHERE comments.chapter=? ORDER BY comments.created_at DESC LIMIT 50`).bind(chapter).all();
+        const comments = await env.DB.prepare(`SELECT comments.id,comments.text,comments.created_at,comments.chapter,comments.user_id,users.name FROM comments JOIN users ON comments.user_id=users.id WHERE comments.chapter=? ORDER BY comments.created_at DESC LIMIT 50`).bind(chapter).all();
         return new Response(JSON.stringify({comments:comments.results}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
     // COMMENTS POST
     if (path === '/comments' && request.method === 'POST') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const {userId,chapter,text}=await request.json();
-        if (!userId||!text) return new Response(JSON.stringify({error:'Missing fields'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        await env.DB.prepare('INSERT INTO comments (user_id,chapter,text) VALUES (?,?,?)').bind(userId,chapter||'general',text).run();
+        const {chapter,text}=await request.json();
+        if (!text) return new Response(JSON.stringify({error:'Missing fields'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        await env.DB.prepare('INSERT INTO comments (user_id,chapter,text) VALUES (?,?,?)').bind(user.id,chapter||'general',text).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
     // COMMENTS DELETE
     if (path.startsWith('/comments/') && request.method === 'DELETE') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const commentId=path.split('/comments/')[1];
-        const {userId,adminEmail}=await request.json();
-        if (adminEmail===ADMIN_EMAIL) {
-          await env.DB.prepare('DELETE FROM comments WHERE id=?').bind(commentId).run();
-          return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-        }
-        if (!userId) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
         const comment=await env.DB.prepare('SELECT user_id FROM comments WHERE id=?').bind(commentId).first();
         if (!comment) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        if (String(comment.user_id)!==String(userId)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        
+        if (user.role !== 'admin' && String(comment.user_id) !== String(user.id)) {
+          return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        }
+        
         await env.DB.prepare('DELETE FROM comments WHERE id=?').bind(commentId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
@@ -222,7 +256,8 @@ export default {
 
     // CONTENT POST
     if (path === '/content' && request.method === 'POST') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const {key,value}=await request.json();
         if (!key) return new Response(JSON.stringify({error:'Missing key'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -241,7 +276,8 @@ export default {
 
     // CARDS POST
     if (path === '/cards' && request.method === 'POST') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const {title,body,date,link_text,sort_order,page_content}=await request.json();
         if (!title) return new Response(JSON.stringify({error:'Missing title'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -252,7 +288,8 @@ export default {
 
     // CARDS PUT
     if (path.startsWith('/cards/') && request.method === 'PUT') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const cardId=path.split('/cards/')[1];
         const {title,body,date,link_text,sort_order,page_content}=await request.json();
@@ -263,7 +300,8 @@ export default {
 
     // CARDS DELETE
     if (path.startsWith('/cards/') && request.method === 'DELETE') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const cardId=path.split('/cards/')[1];
         await env.DB.prepare('DELETE FROM cards WHERE id=?').bind(cardId).run();
@@ -271,52 +309,51 @@ export default {
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // ── NOTES GET (all notes for user) ──────────────────────────────
+    // NOTES GET
     if (path === '/notes' && request.method === 'GET') {
-      const userId = request.headers.get('X-User-Id');
-      if (!userId) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const notes = await env.DB.prepare('SELECT id,title,body,created_at,updated_at FROM notes WHERE user_id=? ORDER BY updated_at DESC').bind(userId).all();
+        const notes = await env.DB.prepare('SELECT id,title,body,created_at,updated_at FROM notes WHERE user_id=? ORDER BY updated_at DESC').bind(user.id).all();
         return new Response(JSON.stringify({notes:notes.results}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // ── NOTES POST (create note) ─────────────────────────────────────
+    // NOTES POST
     if (path === '/notes' && request.method === 'POST') {
-      const userId = request.headers.get('X-User-Id');
-      if (!userId) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const {title,body} = await request.json();
-        const result = await env.DB.prepare('INSERT INTO notes (user_id,title,body) VALUES (?,?,?)').bind(userId,title||'',body||'').run();
+        const result = await env.DB.prepare('INSERT INTO notes (user_id,title,body) VALUES (?,?,?)').bind(user.id,title||'',body||'').run();
         return new Response(JSON.stringify({success:true,id:result.meta?.last_row_id}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // ── NOTES PUT (update note) ──────────────────────────────────────
+    // NOTES PUT
     if (path.startsWith('/notes/') && request.method === 'PUT') {
-      const userId = request.headers.get('X-User-Id');
-      if (!userId) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const noteId = path.split('/notes/')[1];
         const {title,body} = await request.json();
-        // Verify ownership
         const note = await env.DB.prepare('SELECT user_id FROM notes WHERE id=?').bind(noteId).first();
         if (!note) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        if (String(note.user_id)!==String(userId)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        if (String(note.user_id)!==String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
         await env.DB.prepare('UPDATE notes SET title=?,body=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title||'',body||'',noteId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // ── NOTES DELETE ─────────────────────────────────────────────────
+    // NOTES DELETE
     if (path.startsWith('/notes/') && request.method === 'DELETE') {
-      const userId = request.headers.get('X-User-Id');
-      if (!userId) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const noteId = path.split('/notes/')[1];
         const note = await env.DB.prepare('SELECT user_id FROM notes WHERE id=?').bind(noteId).first();
         if (!note) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        if (String(note.user_id)!==String(userId)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        if (String(note.user_id)!==String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
         await env.DB.prepare('DELETE FROM notes WHERE id=?').bind(noteId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
@@ -324,7 +361,8 @@ export default {
 
     // ADMIN USERS
     if (path === '/admin/users' && request.method === 'GET') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const users=await env.DB.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
         return new Response(JSON.stringify(users.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -333,7 +371,8 @@ export default {
 
     // ADMIN COMMENTS
     if (path === '/admin/comments' && request.method === 'GET') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const comments=await env.DB.prepare('SELECT comments.*,users.name,users.email FROM comments JOIN users ON comments.user_id=users.id ORDER BY comments.created_at DESC LIMIT 100').all();
         return new Response(JSON.stringify(comments.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -342,7 +381,8 @@ export default {
 
     // ADMIN CHATS
     if (path === '/admin/chats' && request.method === 'GET') {
-      if (request.headers.get('X-Admin-Email')!==ADMIN_EMAIL) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const chats=await env.DB.prepare('SELECT * FROM chat_history ORDER BY created_at DESC LIMIT 100').all();
         return new Response(JSON.stringify(chats.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});

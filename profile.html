@@ -167,8 +167,12 @@
     let currentUser = null;
     try {
         const saved = localStorage.getItem('po_user');
-        if (saved) currentUser = JSON.parse(saved);
+        const token = localStorage.getItem('po_token');
+        if (saved && token) currentUser = JSON.parse(saved);
     } catch(e) {}
+
+    function getToken() { return localStorage.getItem('po_token') || ''; }
+    function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
 
     function hideLoading() {
         const ls = document.getElementById('loading-screen');
@@ -201,17 +205,9 @@
         if (!confirm('Delete this comment?')) return;
 
         try {
-            const body = {};
-            if (currentUser.role === 'admin') {
-                body.adminEmail = currentUser.email;
-            } else {
-                body.userId = currentUser.id;
-            }
-
             const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                headers: authHeaders()
             });
             const data = await res.json();
             if (data.success) {
@@ -276,7 +272,9 @@
         }
 
         try {
-            const res = await fetch(`${WORKER_URL}/profile?userId=${profileUserId}`);
+            const res = await fetch(`${WORKER_URL}/profile?userId=${profileUserId}`, {
+                headers: authHeaders()
+            });
             const data = await res.json();
 
             if (data.error || !data.user) {

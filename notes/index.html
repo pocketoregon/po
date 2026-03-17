@@ -176,7 +176,7 @@
 
     // ── SESSION HELPER ───────────────────────────────────────────────
     function authHeader() {
-        const token = localStorage.getItem('po_session');
+        const token = localStorage.getItem('po_token');
         return token ? { 'Authorization': 'Bearer ' + token } : {};
     }
 
@@ -209,7 +209,7 @@
             if (data.user && data.sessionToken) {
                 currentUser = data.user;
                 localStorage.setItem('po_user', JSON.stringify(data.user));
-                localStorage.setItem('po_session', data.sessionToken); // ← NEW
+                localStorage.setItem('po_token', data.sessionToken);
                 await initCryptoKey(data.user);
                 showApp();
             } else { showAlert('Login failed. Try again.'); }
@@ -403,7 +403,7 @@
     // CHANGED: also require po_session to exist before trusting saved user
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
-        const token = localStorage.getItem('po_session');
+        const token = localStorage.getItem('po_token');
         if (saved && token) {
             try {
                 const user = JSON.parse(saved);

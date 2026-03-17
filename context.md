@@ -1,5 +1,5 @@
 # PocketOregon Site - Full Context File
-# Last updated: March 17, 2026 (Auth Fixes)
+# Last updated: March 17, 2026 (Database & Session Fixes)
 # NOTE TO AI: Always ask the user to paste the current file contents before making any changes. Never edit blindly based on memory.
 
 ## SITE INFO
@@ -50,8 +50,8 @@ enabled = true
 - sessions (token TEXT PRIMARY KEY, user_id, email, expires_at) — session tokens, 7-day expiry
 
 ## FILES IN REPO
-- index.html — main site with comments, AI chat, dynamic cards/content, loading curtain. "Sign in" redirects to signin.html.
-- signin.html — **NEW** Dedicated sign-in page with Google authentication and Manus-style animated background.
+- index.html — main site with comments, AI chat, dynamic cards/content, loading curtain.
+- signin.html — Dedicated sign-in page with Google authentication.
 - admin.html — admin panel (protected by pocketoregon@gmail.com)
 - profile.html — per-user profile page at /profile.html?id=USER_ID (Email hidden from public)
 - notes/index.html — private notes app at /notes (E2E encrypted)
@@ -71,156 +71,83 @@ enabled = true
 - GET  /profile?userId= — user profile data + comments + chat count (public)
 - POST /chat — AI chatbot (requires Bearer token)
 - GET  /chat/history — fetch chat history (requires Bearer token)
-- GET  /comments?chapter=general — fetch comments (public, includes user_id for delete buttons)
+- GET  /comments?chapter=general — fetch comments (public)
 - POST /comments — post a comment (requires Bearer token)
 - DELETE /comments/:id — delete comment (own or admin, requires Bearer token)
 - GET  /content — fetch homepage text blocks (public)
-- POST /content — admin update text block (requires Bearer token + admin email)
+- POST /content — admin update text block (requires Bearer token + admin role)
 - GET  /cards — fetch homepage cards (public)
-- POST /cards — admin add card (requires Bearer token + admin email)
-- PUT  /cards/:id — admin update card (requires Bearer token + admin email)
-- DELETE /cards/:id — admin delete card (requires Bearer token + admin email)
+- POST /cards — admin add card (requires Bearer token + admin role)
+- PUT  /cards/:id — admin update card (requires Bearer token + admin role)
+- DELETE /cards/:id — admin delete card (requires Bearer token + admin role)
 - GET  /card/:id — serves full HTML card detail page (clean URL, Worker-rendered)
 - GET  /notes — fetch user's notes (requires Bearer token)
 - POST /notes — create note (requires Bearer token)
 - PUT  /notes/:id — update note (requires Bearer token, ownership verified)
 - DELETE /notes/:id — delete note (requires Bearer token, ownership verified)
-- GET  /admin/users — admin only (requires Bearer token + admin email)
-- GET  /admin/comments — admin only (requires Bearer token + admin email)
-- GET  /admin/chats — admin only (requires Bearer token + admin email)
+- GET  /admin/users — admin only (requires Bearer token + admin role)
+- GET  /admin/comments — admin only (requires Bearer token + admin role)
+- GET  /admin/chats — admin only (requires Bearer token + admin role)
 
 ## SECURITY ARCHITECTURE (Two-Layer)
 Implemented March 2026 — replaced raw Google ID trust model.
 
 ### Layer 1 — Session Tokens
-- Worker now sends `Cross-Origin-Opener-Policy: same-origin-allow-popups` header and `Access-Control-Allow-Credentials: true` for auth endpoints to resolve COOP and CORS issues.
-- On OAuth login, worker generates crypto.randomUUID() token, stores in sessions table with 7-day expiry
-- Token returned to client as sessionToken alongside user object
-- Client stores token in localStorage as po_session (NOT the Google ID)
-- Every authenticated request sends Authorization: Bearer <token>
-- Worker validates token via validateToken() helper: checks D1, checks expiry, returns {userId, email, role}
-- Expired tokens are deleted from D1 automatically on next use
-- Raw Google ID is NEVER trusted from the client
+- Worker sends `Cross-Origin-Opener-Policy: same-origin-allow-popups` and `Access-Control-Allow-Credentials: true` for auth endpoints.
+- On OAuth login, worker generates crypto.randomUUID() token, stores in sessions table with 7-day expiry.
+- Token returned to client as sessionToken alongside user object.
+- Client stores token in localStorage as **po_token**.
+- Every authenticated request sends Authorization: Bearer <token>.
+- Worker validates token via **validateToken()** helper: checks D1, checks expiry, returns {id, email, name, role}.
+- Expired tokens are deleted from D1 automatically on next use.
+- Raw Google ID is NEVER trusted from the client.
 
-### Layer 2 — Admin Gate
-- Admin routes call requireAdmin() which runs both checks in sequence:
-  1. validateToken() — must have valid, unexpired session
-  2. session.email === ADMIN_EMAIL — must be pocketoregon@gmail.com
-- No valid token → 401. Valid token but wrong email → 403.
-- X-Admin-Email header is completely gone — was fakeable, now removed
-
-### What changed per file
-- worker.js: sessions table logic, validateToken()/requireAuth()/requireAdmin() helpers, all routes updated
-- index.html: stores po_session, sends Bearer token for chat/history/comments/delete, calls /auth/logout on sign-out. Redirects to signin.html for login.
-- signin.html: Handles Google login, stores po_user and po_token (sessionToken), redirects back to source page. Features animated background.
-- admin.html: stores po_session, sends Bearer token on all admin fetches, init() requires po_session to exist
-- profile.html: stores po_session (login flow updated). **Privacy update: Email hidden from public view.**
-- notes/index.html: sends Bearer token for all notes operations, replaced X-User-Id header everywhere, init() requires po_session
+### Layer 2 — Role-Based Access
+- Protected routes call **validateToken()** to ensure a valid session exists.
+- Admin-only routes check if **user.role === 'admin'** (linked to pocketoregon@gmail.com).
+- Ownership checks are performed for deleting comments or managing notes (user.id must match resource owner).
 
 ## WHAT IS WORKING ✅
 - Google OAuth login with session token (7-day expiry)
 - Secure sign-out via /auth/logout (token deleted from D1)
 - User profile pages at /profile.html?id=USER_ID
-- Profile shows: avatar, name, role badge, join date, comment count, chat count, comments
 - **Privacy: User emails are only visible to the owner and admins.**
 - Comment deletion: users delete own, admin deletes any (both via Bearer token)
-- Admin panel: Data tab + Content Editor tab
-- Content Editor: edit hero title, hero subtitle, community title, community subtitle
-- Content Editor: add/edit/delete homepage cards with page_content field
-- Cards load dynamically from D1 (fallback to hardcoded defaults if DB empty)
-- Site age auto-calculated on card with date containing "Origin"
-- Card titles link to /card/:id (Worker-rendered detail page)
-- Card buttons link to /card/:id if page_content exists, else show warning toast
-- Worker serves card detail pages at clean URL /card/1 etc.
-- AI chat (login required), chat history with date dividers
-- Comments with delete buttons, clicking name goes to profile
-- "My Profile" and "📝 My Notes" in nav dropdown
+- Admin panel: Data tab (Users/Comments/Chats) + Content Editor tab (Homepage text/Cards)
 - Notes app at /notes — E2E encrypted using AES-GCM (Web Crypto API)
-  - Notes encrypted in browser using user's Google ID as key before sending to DB
-  - DB stores only ciphertext — server never sees plaintext
-  - Create, edit, delete notes
-- Loading curtain on homepage (white screen with logo animation, lifts when DB loaded)
-- Admin: view users/comments/chats, delete any comment, view profiles
-- SEO, Google Search Console verified, sitemap submitted
-- Favicon fully set up
-- DNS on Cloudflare, HTTP/3 (QUIC) disabled
+- Homepage: dynamic cards/content, AI chat, loading curtain, SEO verification.
 
 ## ⚠️ DEPLOYMENT RULES — FOLLOW STRICTLY EVERY TIME
 
-### HTML files (index.html, admin.html, profile.html, notes/index.html, signin.html):
-- Edit directly in GitHub web editor
-- Commit → GitHub Pages auto-deploys in ~2 minutes
-- This does NOT affect the worker ✅
+### HTML files:
+- Edit in GitHub repo → Commit → GitHub Pages auto-deploys in ~2 minutes.
 
 ### worker.js — SPECIAL PROCEDURE:
-1. Edit worker.js in GitHub (keeps repo in sync)
-2. Go to Cloudflare → Workers & Pages → po → Edit code
-3. Select all → paste new worker.js → Deploy
-- GitHub and Cloudflare are DISCONNECTED — GitHub commits do NOT auto-deploy worker
-- Worker only updates when you manually paste + deploy in Cloudflare editor
-- NEVER reconnect GitHub to the Worker — it causes silent overwrites
+1. Edit worker.js in GitHub (keeps repo in sync).
+2. Go to Cloudflare → Workers & Pages → po → Edit code.
+3. Select all → paste new worker.js → Deploy.
+- GitHub and Cloudflare are DISCONNECTED — GitHub commits do NOT auto-deploy worker.
+- Worker only updates when you manually paste + deploy in Cloudflare editor.
 
-### If worker routes stop working:
-1. Go to Cloudflare → Workers & Pages → po → Edit code
-2. Check if the routes are still there (search for /notes or /cards)
-3. If missing — paste the latest worker.js from GitHub and deploy
-4. This happens when someone accidentally reconnects GitHub auto-deploy
-
-### When adding new features that touch auth:
-- Always use requireAuth() or requireAdmin() helpers — never trust raw headers from client
-- Never re-introduce X-User-Id or X-Admin-Email headers — these are gone for security reasons
-- Session token is always read from Authorization: Bearer header server-side
-
-## DNS SETUP (IMPORTANT)
-- A records for pocketoregon.site → DNS only (grey cloud, NOT proxied)
-  - Must stay unproxied — Cloudflare proxy IPs blocked by developer's local ISP
-- CNAME www → DNS only (grey cloud)
-- Worker api.pocketoregon.site → Proxied (orange cloud) — required for Worker custom domain
-- HTTP/3 (QUIC) disabled in Cloudflare Speed → Optimization
+## DNS SETUP
+- A records for pocketoregon.site → DNS only (grey cloud, NOT proxied).
+- Worker api.pocketoregon.site → Proxied (orange cloud).
+- HTTP/3 (QUIC) disabled in Cloudflare Speed → Optimization.
 
 ## ISP / NETWORK NOTES
-- Developer is in Pakistan (Multan)
-- Local ISP blocks Cloudflare proxy IPs completely
-- api.pocketoregon.site is fully blocked locally (proxied through Cloudflare)
-- workers.dev works most of the time, occasionally intermittent GET request issues
-- All visitors outside Pakistan have zero issues
-- WORKER_URL must stay as workers.dev — api.pocketoregon.site breaks locally
+- api.pocketoregon.site is fully blocked locally in Pakistan (proxied through Cloudflare).
+- WORKER_URL must stay as workers.dev — api.pocketoregon.site breaks locally.
 
 ## SEO STATUS
 - Google Search Console: verified ✅
 - Sitemap submitted ✅
-- Verification meta tag in index.html: c2grpbLzoBR-Am_bH3hYVo9qQx82XdOSz6hm2tb-yK0
 - robots.txt: allows all except /admin.html
 
-## MOBILE NAV
-- Greeting + clock hidden on mobile, shown in hamburger menu
-- Nav height: h-14 mobile, h-16 desktop
-- Sign in button: icon-only under 400px
-- Travelling logo animation disabled on mobile, static logo shown inline
-
 ## CLOUDFLARE FREE TIER LIMITS
-- Workers AI: ~10,000 neurons/day (~600-700 chat messages)
+- Workers AI: ~10,000 neurons/day
 - Workers requests: 100k/day
 - D1 reads: 5M/day
 - Resets: midnight UTC
-
-## KNOWN ISSUES / NOTES
-- Repo must stay PUBLIC or GitHub Pages breaks
-- Google verification meta tag must stay in index.html
-- google7b31ba0e9c0ccb1a.html must stay in repo root
-- Favicon files must stay in repo ROOT — paths are root-relative
-- DNS A records must stay DNS only (not proxied) — proxied breaks site for local ISP
-- Worker at api.pocketoregon.site must stay Proxied or Worker custom domain stops working
-- site.webmanifest must stay in repo root
-- GitHub auto-deploy for Worker is DISCONNECTED — keep it that way
-- sessions table must exist in D1 or all logins will fail (created via D1 console SQL)
-
-## NEXT THINGS TO BUILD (planned)
-- Chapters page
-- Story content / lore pages
-- Character profiles
-- More admin controls (ban users etc.)
-- Update sitemap.xml when new pages added
 
 ## NO NODE.JS — all edits via GitHub web editor + Cloudflare dashboard
 ## EVERYTHING MUST STAY 100% FREE
