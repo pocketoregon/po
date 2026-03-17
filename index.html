@@ -50,7 +50,6 @@
         .loader-logo-wrap {
             display: flex; flex-direction: column; align-items: center; gap: 16px;
         }
-        /* Icon: draw-in animation */
         .loader-icon {
             width: 56px; height: 56px;
             animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
@@ -59,7 +58,6 @@
             from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
             to   { opacity: 1; transform: scale(1) rotate(0deg); }
         }
-        /* Text: slide up */
         .loader-text {
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
@@ -72,7 +70,6 @@
             from { opacity: 0; transform: translateY(14px); }
             to   { opacity: 1; transform: translateY(0); }
         }
-        /* Dot pulse row */
         .loader-dots {
             display: flex; gap: 6px; margin-top: 4px;
             animation: textRise 0.4s ease 0.55s both;
@@ -400,31 +397,28 @@
         let conversationHistory = [];
         let historyLoaded = false;
 
+        // ── TOKEN HELPER ─────────────────────────────────────────────
+        function getToken() { return localStorage.getItem('po_token') || ''; }
+        function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
+
         // ── LOADING CURTAIN ──────────────────────────────────────────
-        const LOAD_TIMEOUT = 5000; // lift curtain after 5s even if DB fails
+        const LOAD_TIMEOUT = 5000;
         let loadedFlags = { content: false, cards: false, comments: false };
         let curtainLifted = false;
 
         function tryLiftCurtain() {
             if (curtainLifted) return;
-            if (loadedFlags.content && loadedFlags.cards && loadedFlags.comments) {
-                liftCurtain();
-            }
+            if (loadedFlags.content && loadedFlags.cards && loadedFlags.comments) liftCurtain();
         }
-
         function liftCurtain() {
             if (curtainLifted) return;
             curtainLifted = true;
-            // Small delay so content is painted before curtain moves
             setTimeout(() => {
                 const curtain = document.getElementById('loading-curtain');
                 curtain.classList.add('lift');
-                // Remove from DOM after animation
                 setTimeout(() => curtain.remove(), 750);
             }, 120);
         }
-
-        // Fallback: lift after timeout regardless
         setTimeout(liftCurtain, LOAD_TIMEOUT);
         // ── END LOADING CURTAIN ──────────────────────────────────────
 
@@ -466,15 +460,17 @@
         function closeLoginModal() { document.getElementById('login-modal').classList.remove('open'); }
         document.getElementById('login-modal').addEventListener('click', function(e) { if (e.target === this) closeLoginModal(); });
 
+        // ── CHANGED: saves sessionToken, no more raw userId sent to worker ──
         function handleGoogleLogin(response) {
             closeLoginModal();
             showCustomAlert('Signing you in...');
             fetch(WORKER_URL + '/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: response.credential }) })
             .then(r => r.json())
             .then(data => {
-                if (data.user) {
+                if (data.user && data.sessionToken) {
                     currentUser = data.user;
                     localStorage.setItem('po_user', JSON.stringify(data.user));
+                    localStorage.setItem('po_token', data.sessionToken);
                     updateAuthUI(data.user);
                     loadComments();
                     showCustomAlert('Welcome, ' + data.user.name + '!');
@@ -498,9 +494,15 @@
 
         function goToProfile() { if (currentUser) window.location.href = 'profile.html?id=' + currentUser.id; }
 
+        // ── CHANGED: calls /auth/logout, clears token ────────────────
         function signOut() {
+            const token = getToken();
+            if (token) {
+                fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+            }
             currentUser = null; conversationHistory = []; historyLoaded = false;
             localStorage.removeItem('po_user');
+            localStorage.removeItem('po_token');
             document.getElementById('login-btn').style.display = 'flex';
             document.getElementById('user-area').style.display = 'none';
             document.getElementById('user-dropdown').classList.remove('open');
@@ -593,12 +595,15 @@
             tryLiftCurtain();
         }
 
+        // ── CHANGED: uses Bearer token, no userId/adminEmail in body ─
         async function deleteComment(commentId) {
             if (!currentUser) return;
             if (!confirm('Delete this comment?')) return;
             try {
-                const body = currentUser.role === 'admin' ? { adminEmail: currentUser.email } : { userId: currentUser.id };
-                const res = await fetch(`${WORKER_URL}/comments/${commentId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: authHeaders()
+                });
                 const data = await res.json();
                 if (data.success) {
                     showCustomAlert('Comment deleted.');
@@ -609,13 +614,19 @@
         }
 
         document.getElementById('comment-input').addEventListener('input', function() { document.getElementById('comment-char').textContent = this.value.length + ' / 500'; });
+
+        // ── CHANGED: uses Bearer token, no userId in body ────────────
         document.getElementById('comment-submit').addEventListener('click', async () => {
             const text = document.getElementById('comment-input').value.trim();
             if (!text || !currentUser) return;
             const btn = document.getElementById('comment-submit');
             btn.disabled = true; btn.textContent = 'Posting...';
             try {
-                await fetch(WORKER_URL + '/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: currentUser.id, chapter: 'general', text }) });
+                await fetch(WORKER_URL + '/comments', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ chapter: 'general', text })
+                });
                 document.getElementById('comment-input').value = '';
                 document.getElementById('comment-char').textContent = '0 / 500';
                 await loadComments();
@@ -682,11 +693,12 @@
         function showChatLoginGate() { document.getElementById('chat-login-gate').style.display = 'flex'; document.getElementById('ai-chat-messages').style.display = 'none'; document.getElementById('ai-chat-input-row').style.display = 'none'; }
         function showChatForLoggedIn() { document.getElementById('chat-login-gate').style.display = 'none'; document.getElementById('ai-chat-messages').style.display = 'flex'; document.getElementById('ai-chat-input-row').style.display = 'flex'; }
 
+        // ── CHANGED: uses Bearer token, no ?userId= in URL ───────────
         async function loadChatHistory() {
             if (!currentUser || historyLoaded) return;
             const msgs = document.getElementById('ai-chat-messages');
             try {
-                const res = await fetch(`${WORKER_URL}/chat/history?userId=${currentUser.id}`);
+                const res = await fetch(`${WORKER_URL}/chat/history`, { headers: { 'Authorization': 'Bearer ' + getToken() } });
                 const data = await res.json();
                 if (!data.history || data.history.length === 0) {
                     msgs.innerHTML = '<div class="chat-msg ai">Hey! I\'m the PocketOregon AI assistant. Ask me anything about this site, the Pocketverse story, or anything else! 👋</div>';
@@ -730,13 +742,18 @@
         function showTyping() { const div = document.createElement('div'); div.className = 'chat-msg ai typing'; div.id = 'typing-indicator'; div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>'; chatMsgs.appendChild(div); chatMsgs.scrollTop = chatMsgs.scrollHeight; }
         function removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
 
+        // ── CHANGED: uses Bearer token, no userId in body ────────────
         async function sendMessage() {
             if (!currentUser) { openLoginModal(); return; }
             const text = chatInput.value.trim(); if (!text) return;
             chatInput.value = ''; chatSend.disabled = true;
             appendMsg(text, 'user'); showTyping();
             try {
-                const res = await fetch(WORKER_URL + '/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: text, userId: currentUser.id, history: conversationHistory.slice(-10) }) });
+                const res = await fetch(WORKER_URL + '/chat', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ prompt: text, history: conversationHistory.slice(-10) })
+                });
                 const data = await res.json(); removeTyping();
                 if (data.error) { appendMsg('⚠️ ' + data.error, 'ai'); }
                 else {
@@ -761,9 +778,13 @@
         chatSend.addEventListener('click', sendMessage);
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
 
+        // ── CHANGED: restores token alongside user on page load ──────
         window.addEventListener('load', () => {
             const saved = localStorage.getItem('po_user');
-            if (saved) { try { const user = JSON.parse(saved); currentUser = user; updateAuthUI(user); } catch(e) {} }
+            const savedToken = localStorage.getItem('po_token');
+            if (saved && savedToken) {
+                try { const user = JSON.parse(saved); currentUser = user; updateAuthUI(user); } catch(e) {}
+            }
             loadPageContent(); loadCards(); loadComments(); updateClock(); positionLogo();
         });
 
