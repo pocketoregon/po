@@ -162,6 +162,24 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="outfit font-bold text-lg">AI Integration</h2>
+                    <p class="text-xs text-gray-400 mt-1">Control the system instructions for the integrated AI assistant.</p>
+                </div>
+                <div class="px-6 py-5 space-y-5">
+                    <div>
+                        <label class="content-field-label">System Instruction (System Prompt)</label>
+                        <div class="flex gap-3 items-start">
+                            <textarea id="edit-ai-instruction" class="content-field-input" rows="8" placeholder="Enter AI system instructions here..."></textarea>
+                            <button class="content-save-btn" onclick="saveContent('ai_system_instruction', 'edit-ai-instruction', 'save-ai-instruction')">Save</button>
+                        </div>
+                        <span id="save-ai-instruction" class="save-indicator">✓ Saved</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h2 class="outfit font-bold text-lg">Community Section</h2>
@@ -186,6 +204,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="bg-white border border-gray-200 rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
@@ -248,96 +267,102 @@
     }
 
     // ── AUTH ─────────────────────────────────────────────────────────
-    // CHANGED: store sessionToken from response
     function handleAdminLogin(response) {
+        const token = response.credential;
+        document.getElementById('gate-msg').textContent = 'Authenticating...';
         fetch(WORKER_URL + '/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: response.credential })
+            body: JSON.stringify({ token })
         })
-        .then(r => r.json())
+        .then(res => res.json())
         .then(data => {
-            if (data.user && data.user.email === ADMIN_EMAIL && data.sessionToken) {
+            if (data.user && data.user.role === 'admin') {
                 localStorage.setItem('po_user', JSON.stringify(data.user));
                 localStorage.setItem('po_token', data.sessionToken);
                 showDashboard(data.user);
             } else {
-                document.getElementById('gate-msg').textContent = '⛔ Access denied. This panel is restricted.';
-                document.getElementById('gate-login-btn').style.display = 'none';
+                document.getElementById('gate-msg').textContent = 'Access denied. Admin only.';
             }
         })
         .catch(() => {
-            document.getElementById('gate-msg').textContent = 'Login failed. Please try again.';
+            document.getElementById('gate-msg').textContent = 'Error during sign in.';
         });
     }
 
     function showDashboard(user) {
         document.getElementById('gate').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('admin-name').textContent = user.name || user.email;
+        document.getElementById('admin-name').textContent = user.name;
         loadDashboard();
     }
 
-    // ── DASHBOARD DATA ────────────────────────────────────────────────
-    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function loadDashboard() {
-        const origin = new Date('2026-03-13');
-        document.getElementById('stat-age').textContent = Math.floor((Date.now() - origin) / 86400000);
-
         try {
-            const headers = { ...authHeader() };
-            const [usersRes, commentsRes, chatsRes] = await Promise.all([
-                fetch(WORKER_URL + '/admin/users', { headers }),
-                fetch(WORKER_URL + '/admin/comments', { headers }),
-                fetch(WORKER_URL + '/admin/chats', { headers })
-            ]);
+            const resUsers = await fetch(WORKER_URL + '/admin/users', { headers: authHeader() });
+            const users = await resUsers.json();
+            renderUsers(users);
 
-            const users = await usersRes.json();
-            const comments = await commentsRes.json();
-            const chats = await chatsRes.json();
+            const resComments = await fetch(WORKER_URL + '/admin/comments', { headers: authHeader() });
+            const comments = await resComments.json();
+            renderComments(comments);
+
+            const resChats = await fetch(WORKER_URL + '/admin/chats', { headers: authHeader() });
+            const chats = await resChats.json();
+            renderChats(chats);
 
             document.getElementById('stat-users').textContent = users.length || 0;
             document.getElementById('stat-comments').textContent = comments.length || 0;
             document.getElementById('stat-chats').textContent = chats.length || 0;
+            const age = Math.floor((Date.now() - new Date('2026-03-13')) / 86400000);
+            document.getElementById('stat-age').textContent = age;
 
-            document.getElementById('users-table-body').innerHTML = (users.length ? users : []).map(u => `
-                <tr>
-                    <td class="font-medium">${esc(u.name || '—')}</td>
-                    <td class="text-gray-500">${esc(u.email)}</td>
-                    <td><span class="badge badge-${u.role}">${u.role}</span></td>
-                    <td class="text-gray-400">${fmt(u.created_at)}</td>
-                    <td><a href="profile.html?id=${u.id}" class="text-xs text-indigo-600 hover:underline font-medium">View →</a></td>
-                </tr>
-            `).join('') || '<tr><td colspan="5" class="text-center text-gray-400 py-4">No users yet.</td></tr>';
-
-            document.getElementById('comments-table-body').innerHTML = (comments.length ? comments : []).map(c => `
-                <tr id="admin-comment-row-${c.id}">
-                    <td class="font-medium"><a href="profile.html?id=${c.user_id}" class="hover:underline text-indigo-600">${esc(c.name || 'User #' + c.user_id)}</a></td>
-                    <td class="text-gray-600 max-w-xs" style="max-width:220px;word-break:break-word;">${esc(c.text)}</td>
-                    <td class="text-gray-400">${esc(c.chapter)}</td>
-                    <td class="text-gray-400">${fmt(c.created_at)}</td>
-                    <td><button class="btn btn-red btn-sm" onclick="adminDeleteComment(${c.id})">Delete</button></td>
-                </tr>
-            `).join('') || '<tr><td colspan="5" class="text-center text-gray-400 py-4">No comments yet.</td></tr>';
-
-            document.getElementById('chats-table-body').innerHTML = (chats.length ? chats : []).map(c => `
-                <tr>
-                    <td class="text-gray-400">#${c.user_id || '—'}</td>
-                    <td class="text-gray-600" style="max-width:180px;word-break:break-word;">${esc(c.message)}</td>
-                    <td class="text-gray-400" style="max-width:180px;word-break:break-word;">${esc(c.reply)}</td>
-                    <td class="text-gray-400">${fmt(c.created_at)}</td>
-                </tr>
-            `).join('') || '<tr><td colspan="4" class="text-center text-gray-400 py-4">No chats yet.</td></tr>';
-
-        } catch(e) {
-            document.getElementById('users-table-body').innerHTML = '<tr><td colspan="5" class="text-center text-red-400 py-4">Error loading data.</td></tr>';
-        }
+        } catch(e) { console.error(e); }
     }
 
-    // ── ADMIN DELETE COMMENT ──────────────────────────────────────────
-    // CHANGED: Authorization: Bearer, no body needed
-    async function adminDeleteComment(commentId) {
-        if (!confirm('Delete this comment? This cannot be undone.')) return;
+    function renderUsers(users) {
+        const body = document.getElementById('users-table-body');
+        if (!users || users.error) { body.innerHTML = '<tr><td colspan="5" class="text-center text-red-400">Error loading users.</td></tr>'; return; }
+        body.innerHTML = users.map(u => `
+            <tr>
+                <td><div class="font-semibold">${esc(u.name)}</div></td>
+                <td class="text-gray-500">${esc(u.email)}</td>
+                <td><span class="badge badge-${u.role}">${u.role}</span></td>
+                <td class="text-gray-400">${fmt(u.created_at)}</td>
+                <td><a href="/profile.html?id=${u.id}" class="text-orange-600 hover:underline" target="_blank">View</a></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderComments(comments) {
+        const body = document.getElementById('comments-table-body');
+        if (!comments || comments.error) { body.innerHTML = '<tr><td colspan="5" class="text-center text-red-400">Error loading comments.</td></tr>'; return; }
+        body.innerHTML = comments.map(c => `
+            <tr id="admin-comment-row-${c.id}">
+                <td class="font-medium">${esc(c.name || 'User #' + c.user_id)}</td>
+                <td class="max-w-xs truncate">${esc(c.text)}</td>
+                <td><span class="text-xs bg-gray-100 px-2 py-1 rounded">${esc(c.chapter)}</span></td>
+                <td class="text-gray-400 text-xs">${fmt(c.created_at)}</td>
+                <td><button onclick="deleteComment(${c.id})" class="text-red-500 hover:underline text-xs">Delete</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderChats(chats) {
+        const body = document.getElementById('chats-table-body');
+        if (!chats || chats.error) { body.innerHTML = '<tr><td colspan="4" class="text-center text-red-400">Error loading chats.</td></tr>'; return; }
+        body.innerHTML = chats.map(c => `
+            <tr>
+                <td class="text-xs text-gray-400">#${c.user_id}</td>
+                <td class="max-w-xs truncate text-xs">${esc(c.message)}</td>
+                <td class="max-w-xs truncate text-xs text-gray-500">${esc(c.reply)}</td>
+                <td class="text-gray-400 text-[10px]">${fmt(c.created_at)}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteComment(commentId) {
+        if (!confirm('Delete this comment?')) return;
         try {
             const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
                 method: 'DELETE',
@@ -367,17 +392,18 @@
                 hero_title: "Pocket's private spaces",
                 hero_subtitle: "This site is a home of multiple fun projects that would be taken in future. Stay connected with us.",
                 community_title: "Community",
-                community_subtitle: "Share your thoughts about the Pocketverse."
+                community_subtitle: "Share your thoughts about the Pocketverse.",
+                ai_system_instruction: "You are the official AI assistant for PocketOregon — a creative fiction website about the Pocketverse saga. Here is everything you know about this site:\nSITE INFO:\n- Site name: PocketOregon\n- Origin date: March 13, 2026\n- Purpose: A home for creative fiction projects, primarily the Pocketverse saga\n- The Pocketverse is a fiction story universe currently in development\nCURRENT PROJECTS:\n- Pocket Verse: Character designs and lore are being sketched out (started 03/12/2026)\n- Chapters: Chapter release dates coming soon (expected 03/18/2026)\nRULES:\n- Be friendly, helpful and concise\n- If asked about chapters or releases, say they are coming soon\n- Answer general questions too, you are a general assistant"
             };
             document.getElementById('edit-hero-title').value = c.hero_title || defaults.hero_title;
             document.getElementById('edit-hero-subtitle').value = c.hero_subtitle || defaults.hero_subtitle;
             document.getElementById('edit-community-title').value = c.community_title || defaults.community_title;
             document.getElementById('edit-community-subtitle').value = c.community_subtitle || defaults.community_subtitle;
+            document.getElementById('edit-ai-instruction').value = c.ai_system_instruction || defaults.ai_system_instruction;
         } catch(e) {}
         loadCardsAdmin();
     }
 
-    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function saveContent(key, inputId, indicatorId) {
         const value = document.getElementById(inputId).value;
         const btn = event.target;
@@ -447,7 +473,6 @@
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
 
-    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function saveCard(cardId) {
         const title = document.getElementById('ec-title-' + cardId).value.trim();
         if (!title) { showCustomAlert('Title is required.'); return; }
@@ -470,7 +495,6 @@
         } catch(e) { showCustomAlert('Network error.'); }
     }
 
-    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function deleteCard(cardId) {
         if (!confirm('Delete this card from the homepage?')) return;
         try {
@@ -490,7 +514,6 @@
         if (form.style.display === 'block') document.getElementById('new-card-title').focus();
     }
 
-    // CHANGED: Authorization: Bearer instead of X-Admin-Email
     async function addCard() {
         const title = document.getElementById('new-card-title').value.trim();
         if (!title) { showCustomAlert('Title is required.'); return; }
@@ -518,8 +541,6 @@
         } catch(e) { showCustomAlert('Network error.'); }
     }
 
-    // ── INIT ─────────────────────────────────────────────────────────
-    // CHANGED: also check po_session exists before trusting saved user
     window.addEventListener('load', () => {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');

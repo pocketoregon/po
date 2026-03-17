@@ -1,5 +1,5 @@
 # PocketOregon Site - Full Context File
-# Last updated: March 17, 2026 (Database & Session Fixes)
+# Last updated: March 17, 2026 (Added AI System Instruction Control)
 # NOTE TO AI: Always ask the user to paste the current file contents before making any changes. Never edit blindly based on memory.
 
 ## SITE INFO
@@ -44,7 +44,7 @@ enabled = true
 - users (id, email, name, role, created_at)
 - chat_history (id, user_id, message, reply, created_at)
 - comments (id, user_id, chapter, text, created_at)
-- content (key, value, updated_at) — homepage text blocks editable from admin
+- content (key, value, updated_at) — homepage text blocks editable from admin (Now includes 'ai_system_instruction')
 - cards (id, title, body, date, link_text, sort_order, page_content, created_at) — homepage cards
 - notes (id, user_id, title, body, created_at, updated_at) — E2E encrypted user notes
 - sessions (token TEXT PRIMARY KEY, user_id, email, expires_at) — session tokens, 7-day expiry
@@ -69,7 +69,7 @@ enabled = true
 - POST /auth — Google OAuth login → returns user + sessionToken
 - POST /auth/logout — deletes session token from D1
 - GET  /profile?userId= — user profile data + comments + chat count (public)
-- POST /chat — AI chatbot (requires Bearer token)
+- POST /chat — AI chatbot (requires Bearer token, uses dynamic system instruction from DB)
 - GET  /chat/history — fetch chat history (requires Bearer token)
 - GET  /comments?chapter=general — fetch comments (public)
 - POST /comments — post a comment (requires Bearer token)
@@ -113,7 +113,8 @@ Implemented March 2026 — replaced raw Google ID trust model.
 - User profile pages at /profile.html?id=USER_ID
 - **Privacy: User emails are only visible to the owner and admins.**
 - Comment deletion: users delete own, admin deletes any (both via Bearer token)
-- Admin panel: Data tab (Users/Comments/Chats) + Content Editor tab (Homepage text/Cards)
+- Admin panel: Data tab (Users/Comments/Chats) + Content Editor tab (Homepage text/Cards/AI Instructions)
+- AI System Instruction Control: Admin can update AI behavior dynamically via Content Editor.
 - Notes app at /notes — E2E encrypted using AES-GCM (Web Crypto API)
 - Homepage: dynamic cards/content, AI chat, loading curtain, SEO verification.
 

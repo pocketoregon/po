@@ -2,7 +2,7 @@ const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.goo
 const ADMIN_EMAIL = 'pocketoregon@gmail.com';
 const SITE_URL = 'https://pocketoregon.site';
 
-const SYSTEM_PROMPT = `You are the official AI assistant for PocketOregon — a creative fiction website about the Pocketverse saga. Here is everything you know about this site:
+const DEFAULT_SYSTEM_PROMPT = `You are the official AI assistant for PocketOregon — a creative fiction website about the Pocketverse saga. Here is everything you know about this site:
 SITE INFO:
 - Site name: PocketOregon
 - Origin date: March 13, 2026
@@ -198,7 +198,12 @@ export default {
         const body = await request.json();
         const prompt=body.prompt||body.message, history=body.history||[];
         if (!prompt) return new Response(JSON.stringify({error:'No message.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        const messages=[{role:'system',content:SYSTEM_PROMPT},...history.slice(-10),{role:'user',content:prompt}];
+        
+        // Dynamic system prompt from content table
+        const customPromptRow = await env.DB.prepare('SELECT value FROM content WHERE key = ?').bind('ai_system_instruction').first();
+        const systemPrompt = customPromptRow?.value || DEFAULT_SYSTEM_PROMPT;
+        
+        const messages=[{role:'system',content:systemPrompt},...history.slice(-10),{role:'user',content:prompt}];
         const aiResult = await env.AI.run('@cf/meta/llama-3.2-1b-instruct',{messages,max_tokens:256});
         const reply = aiResult?.response??"Sorry, I couldn't generate a response.";
         await env.DB.prepare('INSERT INTO chat_history (user_id,message,reply) VALUES (?,?,?)').bind(user.id,prompt,reply).run();
@@ -369,16 +374,6 @@ export default {
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // ADMIN COMMENTS
-    if (path === '/admin/comments' && request.method === 'GET') {
-      const user = await validateToken(request, env);
-      if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
-      try {
-        const comments=await env.DB.prepare('SELECT comments.*,users.name,users.email FROM comments JOIN users ON comments.user_id=users.id ORDER BY comments.created_at DESC LIMIT 100').all();
-        return new Response(JSON.stringify(comments.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
-    }
-
     // ADMIN CHATS
     if (path === '/admin/chats' && request.method === 'GET') {
       const user = await validateToken(request, env);
@@ -389,11 +384,7 @@ export default {
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // DEFAULT
-    try {
-      const body=await request.json();
-      const response=await env.AI.run('@cf/meta/llama-3.2-1b-instruct',{messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:body.prompt}],max_tokens:256});
-      return new Response(JSON.stringify(response),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-    } catch(e){return new Response('PocketOregon Worker is running!',{headers:corsHeaders});}
-  }
+    // FALLBACK
+    return new Response('Not found', { status: 404 });
+  },
 };
