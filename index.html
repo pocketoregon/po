@@ -548,11 +548,9 @@
                     : `<p class="gl-card-date">${escapeHtml(card.date || '')}</p>`;
                 const hasPage = card.page_content && card.page_content.trim().length > 0;
                 const isDbCard = card.id && !String(card.id).startsWith('default');
-                const linkHtml = card.link_text
-                    ? (hasPage && isDbCard)
-                        ? `<a href="/card/${card.id}" class="gl-card-link">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></a>`
-                        : `<button class="gl-card-link" onclick="showCustomAlert('i warn you don\\'t click it')">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></button>`
-                    : '';
+                const linkHtml = (card.link_text && card.link_url)
+    ? `<a href="${escapeHtml(card.link_url)}" class="gl-card-link">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></a>`
+    : '';
                 const titleEl = isDbCard
                     ? `<a href="/card/${card.id}" class="gl-card-title outfit-font hover:text-orange-600 transition-colors" style="text-decoration:none;display:block;color:#333238;">${escapeHtml(card.title)}</a>`
                     : `<h3 class="gl-card-title outfit-font">${escapeHtml(card.title)}</h3>`;
