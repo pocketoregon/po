@@ -220,7 +220,7 @@
                         </div>
                         <div id="user-dropdown" class="user-dropdown">
                             <div class="px-2 py-1 font-bold text-sm border-bottom mb-1">${escHtml(user.name)}</div>
-                            <button onclick="window.location.href='/profile.html?userId=${user.id}'" class="user-dropdown-btn">My Profile</button>
+                            <button onclick="window.location.href='/profile.html?id=${user.id}'" class="user-dropdown-btn">My Profile</button>
                             ${(user.role === 'creator' || user.role === 'admin') ? `<button onclick="window.location.href='/stories/create.html'" class="user-dropdown-btn">Create Story</button>` : ''}
                             ${user.role === 'admin' ? `<button onclick="window.location.href='/admin.html'" class="user-dropdown-btn text-purple-600 font-bold">Admin Panel</button>` : ''}
                             <button onclick="logout()" class="user-dropdown-btn text-red-500">Sign Out</button>
