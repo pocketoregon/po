@@ -24,12 +24,6 @@ const corsHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
 };
 
-const corsHeadersWildcard = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Email, X-User-Id',
-};
-
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -167,13 +161,10 @@ export default {
       try {
         const user = await env.DB.prepare('SELECT id,name,email,role,created_at FROM users WHERE id=?').bind(userId).first();
         if (!user) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        
-        // Privacy: only show email to owner or admin
         const requester = await validateToken(request, env);
         if (!requester || (requester.id !== user.id && requester.role !== 'admin')) {
           user.email = '[Hidden]';
         }
-
         const comments = await env.DB.prepare('SELECT id,text,chapter,created_at FROM comments WHERE user_id=? ORDER BY created_at DESC LIMIT 50').bind(userId).all();
         const chatCount = await env.DB.prepare('SELECT COUNT(*) as count FROM chat_history WHERE user_id=?').bind(userId).first();
         return new Response(JSON.stringify({user,comments:comments.results,chatCount:chatCount?.count||0}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -198,11 +189,8 @@ export default {
         const body = await request.json();
         const prompt=body.prompt||body.message, history=body.history||[];
         if (!prompt) return new Response(JSON.stringify({error:'No message.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        
-        // Dynamic system prompt from content table
         const customPromptRow = await env.DB.prepare('SELECT value FROM content WHERE key = ?').bind('ai_system_instruction').first();
         const systemPrompt = customPromptRow?.value || DEFAULT_SYSTEM_PROMPT;
-        
         const messages=[{role:'system',content:systemPrompt},...history.slice(-10),{role:'user',content:prompt}];
         const aiResult = await env.AI.run('@cf/meta/llama-3.2-1b-instruct',{messages,max_tokens:256});
         const reply = aiResult?.response??"Sorry, I couldn't generate a response.";
@@ -240,11 +228,9 @@ export default {
         const commentId=path.split('/comments/')[1];
         const comment=await env.DB.prepare('SELECT user_id FROM comments WHERE id=?').bind(commentId).first();
         if (!comment) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        
         if (user.role !== 'admin' && String(comment.user_id) !== String(user.id)) {
           return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
         }
-        
         await env.DB.prepare('DELETE FROM comments WHERE id=?').bind(commentId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
@@ -284,21 +270,21 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const {title,body,date,link_text,sort_order,page_content}=await request.json();
+        const {title,body,date,link_text,link_url,sort_order,page_content}=await request.json();
         if (!title) return new Response(JSON.stringify({error:'Missing title'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        const result=await env.DB.prepare('INSERT INTO cards (title,body,date,link_text,sort_order,page_content) VALUES (?,?,?,?,?,?)').bind(title,body||'',date||'',link_text||'',sort_order||0,page_content||'').run();
+        const result=await env.DB.prepare('INSERT INTO cards (title,body,date,link_text,link_url,sort_order,page_content) VALUES (?,?,?,?,?,?,?)').bind(title,body||'',date||'',link_text||'',link_url||'',sort_order||0,page_content||'').run();
         return new Response(JSON.stringify({success:true,id:result.meta?.last_row_id}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
     // CARDS PUT
-    if (path.startsWith('/cards/') && request.method === 'PUT') {
+    if (path.match(/^\/cards\/\d+$/) && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
         const cardId=path.split('/cards/')[1];
-        const {title,body,date,link_text,sort_order,page_content}=await request.json();
-        await env.DB.prepare('UPDATE cards SET title=?,body=?,date=?,link_text=?,sort_order=?,page_content=? WHERE id=?').bind(title,body||'',date||'',link_text||'',sort_order||0,page_content||'',cardId).run();
+        const {title,body,date,link_text,link_url,sort_order,page_content}=await request.json();
+        await env.DB.prepare('UPDATE cards SET title=?,body=?,date=?,link_text=?,link_url=?,sort_order=?,page_content=? WHERE id=?').bind(title,body||'',date||'',link_text||'',link_url||'',sort_order||0,page_content||'',cardId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -402,7 +388,7 @@ export default {
     const storyChapterPostMatch = path.match(/^\/stories\/(\d+)\/chapters$/);
     const adminRoleMatch = path.match(/^\/admin\/users\/(\d+)\/role$/);
 
-    // 4.1 — STORIES: LIST ALL PUBLISHED
+    // STORIES LIST
     if (path === '/stories' && request.method === 'GET') {
       try {
         const genre = url.searchParams.get('genre');
@@ -417,33 +403,29 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.2 — STORIES: GET ONE
+    // STORIES GET ONE
     if (storyMatch && request.method === 'GET') {
       try {
         const storyId = storyMatch[1];
         const story = await env.DB.prepare("SELECT stories.*, users.name as author_name, (SELECT COUNT(*) FROM story_likes WHERE story_id=stories.id) as like_count FROM stories JOIN users ON stories.user_id=users.id WHERE stories.id=?").bind(storyId).first();
         if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         const user = await validateToken(request, env);
         if (story.status === 'draft') {
           if (!user || (user.id !== story.user_id && user.role !== 'admin')) {
             return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
         }
-
         const chapters = await env.DB.prepare("SELECT id, title, chapter_number, created_at FROM chapters WHERE story_id=? ORDER BY chapter_number ASC").bind(storyId).all();
-        
         let is_bookmarked = false;
         if (user) {
           const bookmark = await env.DB.prepare("SELECT id FROM story_bookmarks WHERE story_id=? AND user_id=?").bind(storyId, user.id).first();
           is_bookmarked = !!bookmark;
         }
-
         return new Response(JSON.stringify({ story, chapters: chapters.results, is_bookmarked }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.3 — STORIES: CREATE
+    // STORIES CREATE
     if (path === '/stories' && request.method === 'POST') {
       const user = await validateToken(request, env);
       if (!user || (user.role !== 'creator' && user.role !== 'admin')) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -455,7 +437,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.4 — STORIES: UPDATE
+    // STORIES UPDATE
     if (storyMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -464,14 +446,13 @@ export default {
         const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id=?").bind(storyId).first();
         if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (story.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         const { title, description, genre, status } = await request.json();
         await env.DB.prepare("UPDATE stories SET title=?, description=?, genre=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(title, description, genre, status, storyId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.5 — STORIES: DELETE
+    // STORIES DELETE
     if (storyMatch && request.method === 'DELETE') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -480,7 +461,6 @@ export default {
         const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id=?").bind(storyId).first();
         if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (story.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         await env.DB.prepare("DELETE FROM stories WHERE id=?").bind(storyId).run();
         await env.DB.prepare("DELETE FROM chapters WHERE story_id=?").bind(storyId).run();
         await env.DB.prepare("DELETE FROM story_likes WHERE story_id=?").bind(storyId).run();
@@ -489,28 +469,25 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.6 — CHAPTERS: GET ONE
+    // CHAPTERS GET ONE
     if (chapterMatch && request.method === 'GET') {
       try {
         const chapterId = chapterMatch[1];
         const chapter = await env.DB.prepare("SELECT chapters.*, stories.title as story_title, stories.user_id as story_owner, stories.status as story_status FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!chapter) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         if (chapter.story_status === 'draft') {
           const user = await validateToken(request, env);
           if (!user || (user.id !== chapter.story_owner && user.role !== 'admin')) {
             return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
         }
-
         const prev = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number < ? ORDER BY chapter_number DESC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
         const next = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number > ? ORDER BY chapter_number ASC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
-
         return new Response(JSON.stringify({ chapter, prev, next }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.7 — CHAPTERS: CREATE
+    // CHAPTERS CREATE
     if (storyChapterPostMatch && request.method === 'POST') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -519,7 +496,6 @@ export default {
         const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id=?").bind(storyId).first();
         if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (story.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         let { title, body, chapter_number } = await request.json();
         if (!chapter_number) {
           const max = await env.DB.prepare("SELECT MAX(chapter_number) as max_num FROM chapters WHERE story_id=?").bind(storyId).first();
@@ -531,7 +507,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.8 — CHAPTERS: UPDATE
+    // CHAPTERS UPDATE
     if (chapterMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -540,14 +516,13 @@ export default {
         const owner = await env.DB.prepare("SELECT stories.user_id FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!owner) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (owner.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         const { title, body, chapter_number } = await request.json();
         await env.DB.prepare("UPDATE chapters SET title=?, body=?, chapter_number=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(title, body, chapter_number, chapterId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.9 — CHAPTERS: DELETE
+    // CHAPTERS DELETE
     if (chapterMatch && request.method === 'DELETE') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -556,13 +531,12 @@ export default {
         const owner = await env.DB.prepare("SELECT stories.user_id FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!owner) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (owner.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        
         await env.DB.prepare("DELETE FROM chapters WHERE id=?").bind(chapterId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.10 — LIKE TOGGLE
+    // LIKE TOGGLE
     if (storyLikeMatch && request.method === 'POST') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -581,7 +555,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.11 — BOOKMARK TOGGLE
+    // BOOKMARK TOGGLE
     if (storyBookmarkMatch && request.method === 'POST') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -599,7 +573,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.12 — GET USER BOOKMARKS
+    // USER BOOKMARKS
     if (path === '/user/bookmarks' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -609,7 +583,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.13 — ADMIN: GET ALL STORIES
+    // ADMIN STORIES
     if (path === '/admin/stories' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -619,7 +593,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.14 — ADMIN: UPDATE USER ROLE
+    // ADMIN UPDATE USER ROLE
     if (adminRoleMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -633,7 +607,7 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // 4.15 — CREATOR: GET MY STORIES
+    // MY STORIES
     if (path === '/my/stories' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user || (user.role !== 'creator' && user.role !== 'admin')) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
