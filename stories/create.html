@@ -9,321 +9,639 @@
     <style>
         ::-webkit-scrollbar { display: none; }
         html { -ms-overflow-style: none; scrollbar-width: none; }
-        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1e24; }
-        
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f1e24; }
+
         #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1); }
         #loading-curtain.lift { transform: translateY(-100%); }
         .loader-text { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.75rem; letter-spacing: -0.04em; color: #1f1e24; }
-        
+
         .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
         #main-nav { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #e5e7eb; }
-        .nav-link-sub { color:#333238; font-size:0.9375rem; font-weight:500; padding:6px 12px; border-radius:6px; transition: all 0.3s; }
-        .nav-link-sub:hover { background:rgba(0,0,0,0.04); }
-        
-        .studio-header { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 3rem 1.5rem; border-bottom: 1px solid #f3f4f6; }
-        .studio-header h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-        
-        .form-input { width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 1rem; margin-bottom: 16px; transition: border-color 0.2s; }
-        .form-input:focus { outline: none; border-color: #f97316; }
-        .form-label { font-size: 0.875rem; font-weight: 700; color: #1f1e24; margin-bottom: 8px; display: block; }
-        
-        .chapter-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid #f3f4f6; border-radius: 8px; margin-bottom: 12px; transition: border-color 0.2s; }
-        .chapter-row:hover { border-color: #e5e7eb; }
-        
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; }
+
+        /* ── DASHBOARD ── */
+        #dashboard-view { display: none; }
+        .studio-hero { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 3rem 1.5rem 2.5rem; border-bottom: 1px solid #f3f4f6; }
+        .studio-hero h1 { font-family: 'Outfit', sans-serif; font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; }
+
+        .my-story-card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 16px; transition: box-shadow 0.15s, border-color 0.15s; }
+        .my-story-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-color: #d1d5db; }
+        .my-story-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; color: #1f1e24; margin-bottom: 4px; }
+        .my-story-meta { font-size: 0.8rem; color: #9ca3af; display: flex; gap: 12px; flex-wrap: wrap; }
+        .status-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-published { background: #d1fae5; color: #065f46; }
+        .status-draft { background: #fef3c7; color: #92400e; }
+        .btn-edit { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-edit:hover { background: #374151; }
+        .btn-new-story { background: #f97316; color: white; border: none; border-radius: 8px; padding: 10px 22px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.15s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-new-story:hover { background: #ea580c; }
+        .empty-studio { text-align: center; padding: 5rem 2rem; color: #9ca3af; }
+        .empty-studio h3 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #374151; margin-bottom: 8px; }
+
+        /* ── EDITOR ── */
+        #editor-view { display: none; background: white; }
+        .editor-hero { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 2.5rem 1.5rem 2rem; border-bottom: 1px solid #f3f4f6; }
+        .editor-hero h1 { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; }
+
+        .form-label { font-size: 0.8rem; font-weight: 700; color: #374151; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-input { width: 100%; padding: 10px 14px; border-radius: 7px; border: 1px solid #e5e7eb; font-size: 0.95rem; font-family: 'Inter', sans-serif; color: #1f1e24; background: white; transition: border-color 0.15s; outline: none; }
+        .form-input:focus { border-color: #f97316; }
+        .form-section { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+        .form-section h3 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; color: #1f1e24; }
+
+        .chapter-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; background: #fafafa; transition: border-color 0.15s, background 0.15s; }
+        .chapter-row:hover { border-color: #e5e7eb; background: white; }
+        .chapter-num-badge { width: 28px; height: 28px; border-radius: 50%; background: #f97316; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
+        .chapter-row-title { font-weight: 600; font-size: 0.9rem; flex: 1; }
+
+        /* ── CHAPTER EDITOR OVERLAY ── */
+        #chapter-editor { display: none; position: fixed; inset: 0; background: white; z-index: 300; overflow-y: auto; }
+        .chapter-editor-nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+        .chapter-editor-nav-inner { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* ── AUTH DROPDOWN ── */
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s; }
+        .user-avatar:hover { border-color: #1f1e24; }
         .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 180px; display: none; z-index: 500; }
         .user-dropdown.open { display: block; }
-        .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; }
+        .user-dropdown-name { font-weight: 600; font-size: 0.875rem; padding: 6px 8px; color: #1f1e24; }
+        .user-dropdown-email { font-size: 0.72rem; padding: 0 8px 6px; color: #9ca3af; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px; }
+        .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; transition: background 0.15s; }
         .user-dropdown-btn:hover { background: #f3f4f6; }
-        
-        #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: white; padding: 12px 24px; border-radius: 999px; font-size: 0.875rem; font-weight: 500; z-index: 10000; display: none; }
+
+        #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: white; padding: 12px 24px; border-radius: 999px; font-size: 0.875rem; font-weight: 600; z-index: 10000; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
-    <div id="loading-curtain">
-        <div class="loader-text">PocketOregon</div>
-    </div>
 
-    <nav id="main-nav">
-        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+<div id="loading-curtain">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="#f97316" style="animation: spin 1s linear infinite;">
+        <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/>
+    </svg>
+    <span class="loader-text">Creator Studio</span>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+</div>
+
+<nav id="main-nav">
+    <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
             <a href="/" class="flex items-center gap-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
                 <span class="outfit-font font-extrabold text-lg">PocketOregon</span>
             </a>
-            <div class="flex items-center gap-6">
-                <a href="/stories/" class="nav-link-sub">Stories</a>
-                <div id="auth-section">
-                    <button onclick="window.location.href='/signin.html'" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-semibold">Sign In</button>
+            <span style="color:#e5e7eb;">|</span>
+            <span class="outfit-font font-semibold text-gray-500" style="font-size:0.95rem;">Creator Studio</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/stories/" class="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Browse Stories</a>
+            <div id="auth-area" class="relative"></div>
+        </div>
+    </div>
+</nav>
+
+<!-- ── DASHBOARD VIEW (shown when no ?id in URL) ── -->
+<div id="dashboard-view">
+    <div class="studio-hero">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="flex items-start justify-between flex-wrap gap-4">
+                <div>
+                    <h1>My Stories</h1>
+                    <p class="text-gray-500 mt-1">Manage your stories and chapters.</p>
                 </div>
+                <button class="btn-new-story" onclick="startNewStory()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Story
+                </button>
             </div>
         </div>
-    </nav>
-
-    <div id="creator-view" style="display:none;">
-        <div class="studio-header">
-            <div class="max-w-4xl mx-auto px-6">
-                <h1 id="studio-title">New Story</h1>
-                <p class="text-gray-500">Manage your story details and chapters.</p>
-            </div>
+    </div>
+    <div class="max-w-5xl mx-auto px-6 py-10">
+        <div id="my-stories-list">
+            <div class="text-gray-400 text-sm text-center py-12">Loading your stories...</div>
         </div>
+    </div>
+</div>
 
-        <div class="max-w-4xl mx-auto px-6 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <div class="md:col-span-1">
-                    <h2 class="outfit-font text-xl font-bold mb-6">Story Details</h2>
-                    <form id="story-form">
-                        <label class="form-label">Title</label>
-                        <input id="title" class="form-input" placeholder="My Awesome Story" maxlength="100" required>
-                        
+<!-- ── EDITOR VIEW (shown when ?id in URL or after creating new story) ── -->
+<div id="editor-view">
+    <div class="editor-hero">
+        <div class="max-w-5xl mx-auto px-6">
+            <button onclick="goToDashboard()" class="text-sm font-semibold text-gray-400 hover:text-gray-700 mb-3 flex items-center gap-1 transition-colors">
+                ← My Stories
+            </button>
+            <h1 id="editor-title">New Story</h1>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+
+            <!-- Story Info column -->
+            <div class="md:col-span-2">
+                <form id="story-form">
+                    <div class="form-section">
+                        <h3>Story Details</h3>
+                        <label class="form-label">Title *</label>
+                        <input id="s-title" class="form-input mb-4" placeholder="My Awesome Story" maxlength="100" required>
+
                         <label class="form-label">Genre</label>
-                        <select id="genre" class="form-input">
+                        <select id="s-genre" class="form-input mb-4">
                             <option value="General">General</option>
                             <option value="Fantasy">Fantasy</option>
                             <option value="Sci-Fi">Sci-Fi</option>
                             <option value="Romance">Romance</option>
                             <option value="Thriller">Thriller</option>
                             <option value="Mystery">Mystery</option>
+                            <option value="Horror">Horror</option>
+                            <option value="Adventure">Adventure</option>
                         </select>
-                        
+
                         <label class="form-label">Description</label>
-                        <textarea id="description" class="form-input h-32" placeholder="Tell readers what your story is about..."></textarea>
-                        
+                        <textarea id="s-desc" class="form-input mb-4" rows="4" placeholder="Tell readers what your story is about..." style="resize:vertical;"></textarea>
+
                         <label class="form-label">Status</label>
-                        <select id="status" class="form-input">
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
+                        <select id="s-status" class="form-input mb-5">
+                            <option value="draft">Draft (only you can see)</option>
+                            <option value="published">Published (visible to everyone)</option>
                         </select>
-                        
-                        <button type="submit" class="w-full bg-[#f97316] text-white font-bold py-3 rounded-lg hover:bg-[#ea580c] transition">Save Story</button>
-                        <button type="button" id="delete-story-btn" onclick="deleteStory()" class="w-full text-red-500 text-sm font-bold mt-4" style="display:none;">Delete Story</button>
-                    </form>
+
+                        <button type="submit" id="save-story-btn" class="w-full bg-[#f97316] text-white font-bold py-3 rounded-lg hover:bg-[#ea580c] transition text-sm">
+                            Save Story
+                        </button>
+                        <a id="view-story-link" href="#" target="_blank" class="block text-center mt-3 text-sm text-gray-400 hover:text-gray-700" style="display:none!important;">
+                            View published story →
+                        </a>
+                    </div>
+
+                    <button type="button" id="delete-story-btn" onclick="deleteStory()" class="w-full text-red-400 hover:text-red-600 text-sm font-semibold py-2 transition-colors" style="display:none;">
+                        🗑 Delete entire story
+                    </button>
+                </form>
+            </div>
+
+            <!-- Chapters column -->
+            <div class="md:col-span-3" id="chapters-col">
+                <div id="chapters-locked" class="form-section text-center py-8" style="color:#9ca3af;">
+                    <svg class="mx-auto mb-3" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <p class="font-semibold text-gray-500 mb-1">Save story details first</p>
+                    <p class="text-sm">Then you can add and manage chapters here.</p>
                 </div>
 
-                <div class="md:col-span-2" id="chapter-management" style="display:none;">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="outfit-font text-xl font-bold">Chapters</h2>
-                        <button onclick="openChapterEditor()" class="text-sm bg-[#1f1e24] text-white px-4 py-2 rounded-lg font-bold">Add Chapter</button>
+                <div id="chapters-panel" style="display:none;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="outfit-font font-bold text-lg">Chapters</h3>
+                        <button onclick="openChapterEditor(null)" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition">
+                            + Add Chapter
+                        </button>
                     </div>
                     <div id="chapter-list">
-                        <!-- Chapters loaded here -->
+                        <div class="text-gray-400 text-sm text-center py-6">No chapters yet.</div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
+</div>
 
-    <div id="chapter-editor" style="display:none; position:fixed; inset:0; background:white; z-index:200; overflow-y:auto;">
-        <div class="bg-white border-bottom py-4 sticky top-0 z-40 border-b border-gray-100">
-            <div class="max-w-4xl mx-auto px-6 flex items-center justify-between">
-                <button onclick="closeChapterEditor()" class="text-sm font-bold text-gray-400 hover:text-gray-900">Cancel</button>
-                <h2 class="outfit-font text-lg font-bold">Chapter Editor</h2>
-                <button onclick="saveChapter()" class="bg-[#f97316] text-white px-4 py-2 rounded-lg text-sm font-bold">Save Chapter</button>
+<!-- ── CHAPTER EDITOR FULLSCREEN OVERLAY ── -->
+<div id="chapter-editor">
+    <div class="chapter-editor-nav">
+        <div class="chapter-editor-nav-inner">
+            <button onclick="closeChapterEditor()" class="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors">✕ Close</button>
+            <h2 class="outfit-font font-bold text-base" id="chapter-editor-heading">New Chapter</h2>
+            <button onclick="saveChapter()" class="bg-[#f97316] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#ea580c] transition">Save Chapter</button>
+        </div>
+    </div>
+    <div style="max-width:760px; margin:0 auto; padding:2rem 1.5rem 4rem;">
+        <div class="mb-5">
+            <label class="form-label">Chapter Title *</label>
+            <input id="c-title" class="form-input" placeholder="e.g. Chapter 1: The Beginning" maxlength="150">
+        </div>
+        <div class="mb-5" style="display:flex;gap:12px;">
+            <div style="flex:1;">
+                <label class="form-label">Chapter Number</label>
+                <input id="c-number" type="number" class="form-input" placeholder="Auto-assigned if empty" min="1">
             </div>
         </div>
-        <div class="max-w-4xl mx-auto px-6 py-12">
-            <label class="form-label">Chapter Title</label>
-            <input id="chapter-title" class="form-input" placeholder="Chapter 1: The Beginning">
-            
-            <label class="form-label">Chapter Number</label>
-            <input id="chapter-number" type="number" class="form-input" placeholder="Auto-assign if empty">
-            
-            <label class="form-label">Content</label>
-            <textarea id="chapter-body" class="form-input h-[60vh]" placeholder="Write your chapter here..."></textarea>
-            
-            <button onclick="deleteChapter()" id="delete-chapter-btn" class="text-red-500 text-sm font-bold mt-4" style="display:none;">Delete Chapter</button>
+        <div>
+            <label class="form-label">Chapter Content *</label>
+            <textarea id="c-body" class="form-input" rows="28" placeholder="Write your chapter here...
+
+Use blank lines between paragraphs for best reading experience." style="resize:vertical; min-height:400px; line-height:1.7;"></textarea>
+        </div>
+        <div class="flex items-center justify-between mt-6">
+            <button id="delete-chapter-btn" onclick="deleteChapter()" class="text-red-400 hover:text-red-600 text-sm font-semibold transition-colors" style="display:none;">
+                🗑 Delete chapter
+            </button>
+            <div style="flex:1;"></div>
+            <button onclick="saveChapter()" class="bg-[#f97316] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#ea580c] transition">
+                Save Chapter
+            </button>
         </div>
     </div>
+</div>
 
-    <div id="toast"></div>
+<div id="toast"></div>
 
-    <script>
-        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
-        let currentUser = null;
-        let storyId = new URLSearchParams(window.location.search).get('id');
-        let currentChapterId = null;
+<script>
+    const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+    let currentUser = null;
+    let currentStoryId = new URLSearchParams(window.location.search).get('id');
+    let editingChapterId = null;
 
-        function escHtml(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-        function getToken() { return localStorage.getItem('po_token') || ''; }
-        function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
-        function showToast(msg, isError = false) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.background = isError ? '#ef4444' : '#1f1e24';
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
-        }
+    function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function getToken() { return localStorage.getItem('po_token') || ''; }
+    function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
 
-        async function loadStoryData() {
-            if (!storyId) {
-                document.getElementById('creator-view').style.display = 'block';
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = isError ? '#dc2626' : '#1f1e24';
+        t.style.display = 'block';
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    // ── NAVIGATION ───────────────────────────────────────────────────
+    function goToDashboard() {
+        window.history.pushState({}, '', '/stories/create.html');
+        currentStoryId = null;
+        document.getElementById('editor-view').style.display = 'none';
+        document.getElementById('dashboard-view').style.display = 'block';
+        loadMyStories();
+    }
+
+    function startNewStory() {
+        currentStoryId = null;
+        window.history.pushState({}, '', '/stories/create.html');
+        document.getElementById('dashboard-view').style.display = 'none';
+        document.getElementById('editor-view').style.display = 'block';
+        document.getElementById('editor-title').textContent = 'New Story';
+        document.getElementById('s-title').value = '';
+        document.getElementById('s-genre').value = 'General';
+        document.getElementById('s-desc').value = '';
+        document.getElementById('s-status').value = 'draft';
+        document.getElementById('delete-story-btn').style.display = 'none';
+        document.getElementById('chapters-locked').style.display = 'block';
+        document.getElementById('chapters-panel').style.display = 'none';
+        const vl = document.getElementById('view-story-link');
+        vl.style.display = 'none';
+        document.getElementById('s-title').focus();
+    }
+
+    // ── DASHBOARD: MY STORIES ────────────────────────────────────────
+    async function loadMyStories() {
+        const list = document.getElementById('my-stories-list');
+        list.innerHTML = '<div class="text-gray-400 text-sm text-center py-12">Loading your stories...</div>';
+        try {
+            const res = await fetch(WORKER_URL + '/my/stories', { headers: authHeaders() });
+            const data = await res.json();
+            const stories = data.stories || [];
+            if (stories.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-studio">
+                        <svg class="mx-auto mb-4" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5">
+                            <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                        </svg>
+                        <h3>No stories yet</h3>
+                        <p class="text-sm mb-6">Click "New Story" to write your first one.</p>
+                    </div>`;
                 return;
             }
-            try {
-                const res = await fetch(`${WORKER_URL}/stories/${storyId}`, { headers: authHeaders() });
-                if (res.status === 403) {
-                    showToast('Access denied.', true);
-                    setTimeout(() => window.location.href = '/stories/', 2000);
-                    return;
-                }
-                const data = await res.json();
-                const s = data.story;
-                document.getElementById('studio-title').textContent = 'Editing: ' + s.title;
-                document.getElementById('title').value = s.title;
-                document.getElementById('genre').value = s.genre;
-                document.getElementById('description').value = s.description;
-                document.getElementById('status').value = s.status;
-                document.getElementById('delete-story-btn').style.display = 'block';
-                document.getElementById('chapter-management').style.display = 'block';
-                document.getElementById('creator-view').style.display = 'block';
-
-                const list = document.getElementById('chapter-list');
-                list.innerHTML = data.chapters.map(c => `
-                    <div class="chapter-row">
-                        <div>
-                            <span class="font-bold text-[#f97316] mr-2">${c.chapter_number}.</span>
-                            <span class="font-semibold">${escHtml(c.title)}</span>
+            list.innerHTML = stories.map(s => `
+                <div class="my-story-card mb-3">
+                    <div style="flex:1;min-width:0;">
+                        <div class="my-story-title">${escHtml(s.title)}</div>
+                        <div class="my-story-meta">
+                            <span class="status-pill status-${s.status}">${s.status}</span>
+                            <span>${s.chapter_count} chapter${s.chapter_count !== 1 ? 's' : ''}</span>
+                            <span>${s.like_count} like${s.like_count !== 1 ? 's' : ''}</span>
+                            <span>${escHtml(s.genre)}</span>
                         </div>
-                        <button onclick="openChapterEditor(${c.id})" class="text-xs bg-gray-100 px-3 py-1 rounded font-bold hover:bg-gray-200">Edit</button>
                     </div>
-                `).join('');
-                if (data.chapters.length === 0) list.innerHTML = '<p class="text-gray-400 text-sm">No chapters yet.</p>';
-            } catch (e) { showToast('Error loading story.', true); }
+                    <div class="flex gap-2 flex-shrink-0">
+                        <a href="/stories/read.html?id=${s.id}" target="_blank" style="background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">
+                            View
+                        </a>
+                        <button onclick="openStoryEditor(${s.id})" class="btn-edit">Edit</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            list.innerHTML = '<div class="text-red-400 text-sm text-center py-8">Could not load your stories.</div>';
         }
+    }
 
-        document.getElementById('story-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const body = {
-                title: document.getElementById('title').value,
-                genre: document.getElementById('genre').value,
-                description: document.getElementById('description').value,
-                status: document.getElementById('status').value
-            };
-            try {
-                const method = storyId ? 'PUT' : 'POST';
-                const url = storyId ? `${WORKER_URL}/stories/${storyId}` : `${WORKER_URL}/stories`;
-                const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Story saved!');
-                    if (data.id) window.location.href = `/stories/create.html?id=${data.id}`;
-                    else loadStoryData();
-                } else showToast(data.error || 'Failed to save.', true);
-            } catch (e) { showToast('Network error.', true); }
+    // ── EDITOR: OPEN EXISTING STORY ──────────────────────────────────
+    async function openStoryEditor(id) {
+        currentStoryId = String(id);
+        window.history.pushState({}, '', `/stories/create.html?id=${id}`);
+        document.getElementById('dashboard-view').style.display = 'none';
+        document.getElementById('editor-view').style.display = 'block';
+        await loadStoryIntoEditor(id);
+    }
+
+    async function loadStoryIntoEditor(id) {
+        try {
+            const res = await fetch(`${WORKER_URL}/stories/${id}`, { headers: authHeaders() });
+            if (res.status === 403 || res.status === 404) {
+                showToast('Story not found or access denied.', true);
+                goToDashboard();
+                return;
+            }
+            const data = await res.json();
+            const s = data.story;
+
+            // Ownership check — extra safety on the client
+            if (currentUser && String(s.user_id) !== String(currentUser.id) && currentUser.role !== 'admin') {
+                showToast("You can't edit someone else's story.", true);
+                goToDashboard();
+                return;
+            }
+
+            document.getElementById('editor-title').textContent = 'Editing: ' + s.title;
+            document.getElementById('s-title').value = s.title;
+            document.getElementById('s-genre').value = s.genre;
+            document.getElementById('s-desc').value = s.description || '';
+            document.getElementById('s-status').value = s.status;
+            document.getElementById('delete-story-btn').style.display = 'block';
+
+            const vl = document.getElementById('view-story-link');
+            vl.href = `/stories/read.html?id=${id}`;
+            vl.style.cssText = 'display:block!important;';
+
+            document.getElementById('chapters-locked').style.display = 'none';
+            document.getElementById('chapters-panel').style.display = 'block';
+            renderChapterList(data.chapters || []);
+        } catch(e) {
+            showToast('Error loading story.', true);
+        }
+    }
+
+    function renderChapterList(chapters) {
+        const list = document.getElementById('chapter-list');
+        if (!chapters || chapters.length === 0) {
+            list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No chapters yet. Add your first one!</div>';
+            return;
+        }
+        list.innerHTML = chapters.map(c => `
+            <div class="chapter-row">
+                <div class="chapter-num-badge">${c.chapter_number}</div>
+                <span class="chapter-row-title">${escHtml(c.title)}</span>
+                <button onclick="openChapterEditor(${c.id})" style="background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;">Edit</button>
+            </div>
+        `).join('');
+    }
+
+    // ── STORY FORM SAVE ──────────────────────────────────────────────
+    document.getElementById('story-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('save-story-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const body = {
+            title: document.getElementById('s-title').value.trim(),
+            genre: document.getElementById('s-genre').value,
+            description: document.getElementById('s-desc').value.trim(),
+            status: document.getElementById('s-status').value
         };
 
-        async function openChapterEditor(id = null) {
-            currentChapterId = id;
-            document.getElementById('chapter-editor').style.display = 'block';
-            document.getElementById('chapter-title').value = '';
-            document.getElementById('chapter-number').value = '';
-            document.getElementById('chapter-body').value = '';
-            document.getElementById('delete-chapter-btn').style.display = id ? 'block' : 'none';
-
-            if (id) {
-                try {
-                    const res = await fetch(`${WORKER_URL}/chapters/${id}`, { headers: authHeaders() });
-                    const data = await res.json();
-                    document.getElementById('chapter-title').value = data.chapter.title;
-                    document.getElementById('chapter-number').value = data.chapter.chapter_number;
-                    document.getElementById('chapter-body').value = data.chapter.body;
-                } catch (e) { showToast('Error loading chapter.', true); }
-            }
+        if (!body.title) {
+            showToast('Title is required.', true);
+            btn.disabled = false; btn.textContent = 'Save Story';
+            return;
         }
 
-        function closeChapterEditor() {
-            document.getElementById('chapter-editor').style.display = 'none';
-        }
+        try {
+            const method = currentStoryId ? 'PUT' : 'POST';
+            const url = currentStoryId ? `${WORKER_URL}/stories/${currentStoryId}` : `${WORKER_URL}/stories`;
+            const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+            const data = await res.json();
 
-        async function saveChapter() {
-            const body = {
-                title: document.getElementById('chapter-title').value,
-                chapter_number: parseInt(document.getElementById('chapter-number').value) || null,
-                body: document.getElementById('chapter-body').value
-            };
-            if (!body.title || !body.body) return showToast('Title and content required.', true);
-            try {
-                const method = currentChapterId ? 'PUT' : 'POST';
-                const url = currentChapterId ? `${WORKER_URL}/chapters/${currentChapterId}` : `${WORKER_URL}/stories/${storyId}/chapters`;
-                const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Chapter saved!');
-                    closeChapterEditor();
-                    loadStoryData();
-                } else showToast(data.error || 'Failed to save.', true);
-            } catch (e) { showToast('Network error.', true); }
-        }
-
-        async function deleteChapter() {
-            if (!confirm('Are you sure? This cannot be undone.')) return;
-            try {
-                const res = await fetch(`${WORKER_URL}/chapters/${currentChapterId}`, { method: 'DELETE', headers: authHeaders() });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Chapter deleted.');
-                    closeChapterEditor();
-                    loadStoryData();
+            if (data.success || data.id) {
+                if (!currentStoryId && data.id) {
+                    // New story created — update URL and state without page reload
+                    currentStoryId = String(data.id);
+                    window.history.pushState({}, '', `/stories/create.html?id=${data.id}`);
+                    await loadStoryIntoEditor(data.id);
+                    showToast('Story created! Now add some chapters.');
+                } else {
+                    document.getElementById('editor-title').textContent = 'Editing: ' + body.title;
+                    showToast('Story saved!');
+                    await loadStoryIntoEditor(currentStoryId);
                 }
-            } catch (e) { showToast('Action failed.'); }
-        }
-
-        async function deleteStory() {
-            if (!confirm('Delete entire story and all chapters? THIS CANNOT BE UNDONE.')) return;
-            try {
-                const res = await fetch(`${WORKER_URL}/stories/${storyId}`, { method: 'DELETE', headers: authHeaders() });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Story deleted.');
-                    window.location.href = '/stories/';
-                }
-            } catch (e) { showToast('Action failed.'); }
-        }
-
-        function updateAuthUI(user) {
-            const section = document.getElementById('auth-section');
-            if (user) {
-                section.innerHTML = `
-                    <div class="relative">
-                        <div class="user-avatar" onclick="document.getElementById('user-dropdown').classList.toggle('open')">
-                            ${user.name[0].toUpperCase()}
-                        </div>
-                        <div id="user-dropdown" class="user-dropdown">
-                            <div class="px-2 py-1 font-bold text-sm border-bottom mb-1">${escHtml(user.name)}</div>
-                            <button onclick="window.location.href='/profile.html?userId=${user.id}'" class="user-dropdown-btn">My Profile</button>
-                            <button onclick="window.location.href='/stories/'" class="user-dropdown-btn">Browse Stories</button>
-                            ${user.role === 'admin' ? `<button onclick="window.location.href='/admin.html'" class="user-dropdown-btn text-purple-600 font-bold">Admin Panel</button>` : ''}
-                            <button onclick="logout()" class="user-dropdown-btn text-red-500">Sign Out</button>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('po_user');
-            localStorage.removeItem('po_token');
-            window.location.href = '/';
-        }
-
-        window.addEventListener('load', () => {
-            const saved = localStorage.getItem('po_user');
-            const token = localStorage.getItem('po_token');
-            if (saved && token) {
-                try { 
-                    currentUser = JSON.parse(saved); 
-                    if (currentUser.role !== 'creator' && currentUser.role !== 'admin') {
-                        window.location.href = '/stories/';
-                        return;
-                    }
-                    updateAuthUI(currentUser); 
-                } catch(e) {}
             } else {
-                window.location.href = '/signin.html';
-                return;
+                showToast(data.error || 'Failed to save.', true);
             }
-            loadStoryData();
-            setTimeout(() => document.getElementById('loading-curtain').classList.add('lift'), 500);
+        } catch(e) {
+            showToast('Network error.', true);
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Save Story';
+    });
+
+    // ── DELETE STORY ─────────────────────────────────────────────────
+    async function deleteStory() {
+        if (!confirm('Delete this entire story and all its chapters? This CANNOT be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}`, { method: 'DELETE', headers: authHeaders() });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Story deleted.');
+                goToDashboard();
+            } else {
+                showToast(data.error || 'Delete failed.', true);
+            }
+        } catch(e) { showToast('Network error.', true); }
+    }
+
+    // ── CHAPTER EDITOR ────────────────────────────────────────────────
+    async function openChapterEditor(id) {
+        editingChapterId = id;
+        const overlay = document.getElementById('chapter-editor');
+        document.getElementById('c-title').value = '';
+        document.getElementById('c-number').value = '';
+        document.getElementById('c-body').value = '';
+        document.getElementById('delete-chapter-btn').style.display = id ? 'block' : 'none';
+        document.getElementById('chapter-editor-heading').textContent = id ? 'Edit Chapter' : 'New Chapter';
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+
+        if (id) {
+            try {
+                const res = await fetch(`${WORKER_URL}/chapters/${id}`, { headers: authHeaders() });
+                const data = await res.json();
+                const c = data.chapter;
+                document.getElementById('c-title').value = c.title || '';
+                document.getElementById('c-number').value = c.chapter_number || '';
+                document.getElementById('c-body').value = c.body || '';
+            } catch(e) {
+                showToast('Could not load chapter.', true);
+            }
+        }
+
+        setTimeout(() => document.getElementById('c-title').focus(), 100);
+    }
+
+    function closeChapterEditor() {
+        document.getElementById('chapter-editor').style.display = 'none';
+        document.body.style.overflow = '';
+        editingChapterId = null;
+    }
+
+    async function saveChapter() {
+        const title = document.getElementById('c-title').value.trim();
+        const body = document.getElementById('c-body').value.trim();
+        const num = parseInt(document.getElementById('c-number').value) || null;
+
+        if (!title) { showToast('Chapter title is required.', true); return; }
+        if (!body) { showToast('Chapter content cannot be empty.', true); return; }
+        if (!currentStoryId) { showToast('Save the story first.', true); return; }
+
+        const btn = document.querySelector('#chapter-editor button[onclick="saveChapter()"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+        try {
+            const method = editingChapterId ? 'PUT' : 'POST';
+            const url = editingChapterId
+                ? `${WORKER_URL}/chapters/${editingChapterId}`
+                : `${WORKER_URL}/stories/${currentStoryId}/chapters`;
+            const res = await fetch(url, {
+                method,
+                headers: authHeaders(),
+                body: JSON.stringify({ title, body, chapter_number: num })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(editingChapterId ? 'Chapter updated!' : 'Chapter added!');
+                closeChapterEditor();
+                await loadStoryIntoEditor(currentStoryId);
+            } else {
+                showToast(data.error || 'Failed to save chapter.', true);
+            }
+        } catch(e) {
+            showToast('Network error.', true);
+        }
+
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Chapter'; }
+    }
+
+    async function deleteChapter() {
+        if (!editingChapterId) return;
+        if (!confirm('Delete this chapter? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/chapters/${editingChapterId}`, { method: 'DELETE', headers: authHeaders() });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Chapter deleted.');
+                closeChapterEditor();
+                await loadStoryIntoEditor(currentStoryId);
+            } else {
+                showToast(data.error || 'Delete failed.', true);
+            }
+        } catch(e) { showToast('Network error.', true); }
+    }
+
+    // ── AUTH UI ───────────────────────────────────────────────────────
+    function buildAuthUI(user) {
+        const area = document.getElementById('auth-area');
+        const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?';
+        area.innerHTML = `
+            <div class="user-avatar" onclick="document.getElementById('nav-dropdown').classList.toggle('open')">${initials}</div>
+            <div id="nav-dropdown" class="user-dropdown">
+                <div class="user-dropdown-name">${escHtml(user.name)}</div>
+                <div class="user-dropdown-email">${escHtml(user.email)}</div>
+                <button class="user-dropdown-btn" onclick="window.location.href='/profile.html?id=${user.id}'">👤 My Profile</button>
+                <button class="user-dropdown-btn" onclick="window.location.href='/notes'">📝 My Notes</button>
+                ${user.role === 'admin' ? `<button class="user-dropdown-btn" style="color:#7c3aed;font-weight:600;" onclick="window.location.href='/admin.html'">⚙ Admin Panel</button>` : ''}
+                <button class="user-dropdown-btn" onclick="signOut()" style="color:#dc2626;">Sign out</button>
+            </div>
+        `;
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('nav-dropdown');
+            const av = area.querySelector('.user-avatar');
+            if (dd && av && !av.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('open');
         });
-    </script>
+    }
+
+    function signOut() {
+        const token = getToken();
+        if (token) fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+        localStorage.removeItem('po_user');
+        localStorage.removeItem('po_token');
+        window.location.href = '/';
+    }
+
+    // ── INIT ──────────────────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+        const saved = localStorage.getItem('po_user');
+        const token = localStorage.getItem('po_token');
+
+        if (!saved || !token) {
+            window.location.href = '/signin.html?redirect=' + encodeURIComponent(window.location.href);
+            return;
+        }
+
+        try {
+            currentUser = JSON.parse(saved);
+        } catch(e) {
+            window.location.href = '/signin.html';
+            return;
+        }
+
+        if (currentUser.role !== 'creator' && currentUser.role !== 'admin') {
+            // Reader trying to access creator studio
+            document.getElementById('loading-curtain').classList.add('lift');
+            setTimeout(() => {
+                document.getElementById('loading-curtain').remove();
+                document.body.innerHTML = `
+                    <div style="font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;background:#f9fafb;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:8px;color:#1f1e24;">Creator Access Required</h2>
+                        <p style="color:#6b7280;max-width:360px;margin-bottom:2rem;">You need a Creator account to write stories. Ask the site admin to upgrade your account.</p>
+                        <a href="/stories/" style="background:#1f1e24;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Browse Stories</a>
+                    </div>`;
+            }, 600);
+            return;
+        }
+
+        buildAuthUI(currentUser);
+
+        // Decide which view to show
+        const idFromUrl = new URLSearchParams(window.location.search).get('id');
+        if (idFromUrl) {
+            currentStoryId = idFromUrl;
+            document.getElementById('editor-view').style.display = 'block';
+            await loadStoryIntoEditor(idFromUrl);
+        } else {
+            document.getElementById('dashboard-view').style.display = 'block';
+            await loadMyStories();
+        }
+
+        document.getElementById('loading-curtain').classList.add('lift');
+        setTimeout(() => {
+            const c = document.getElementById('loading-curtain');
+            if (c) c.remove();
+        }, 750);
+    });
+
+    // Handle browser back/forward
+    window.addEventListener('popstate', () => {
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (id) {
+            currentStoryId = id;
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('editor-view').style.display = 'block';
+            loadStoryIntoEditor(id);
+        } else {
+            currentStoryId = null;
+            document.getElementById('editor-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            loadMyStories();
+        }
+    });
+</script>
 </body>
 </html>
