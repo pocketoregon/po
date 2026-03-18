@@ -252,10 +252,11 @@
                         <span class="outfit-font text-xl font-semibold text-gray-900">site</span>
                     </div>
                 </div>
-                <div class="hidden lg:flex ml-8 space-x-2">
-                    <a href="#features" class="nav-link-sub">Projects</a>
-                    <a href="#comments-section" class="nav-link-sub">Community</a>
-                </div>
+                    <div class="hidden lg:flex ml-8 space-x-2">
+                        <a href="/stories/" class="nav-link-sub">Stories</a>
+                        <a href="#features" class="nav-link-sub">Projects</a>
+                        <a href="#comments-section" class="nav-link-sub">Community</a>
+                    </div>
             </div>
             <div class="flex items-center space-x-2 sm:space-x-3 ml-auto">
                 <div id="dynamic-greeting" class="btn-greeting hidden sm:block">--</div>
@@ -271,6 +272,8 @@
                             <div id="dropdown-name" class="user-dropdown-name"></div>
                             <div id="dropdown-email" class="user-dropdown-email"></div>
                             <button id="profile-btn" class="user-dropdown-btn" onclick="goToProfile()">👤 My Profile</button>
+                            <button id="creator-btn" class="user-dropdown-btn" style="display:none;" onclick="window.location.href='/stories/create.html'">✍️ Creator Studio</button>
+                            <button id="my-stories-btn" class="user-dropdown-btn" onclick="window.location.href='/stories/index.html?author=' + currentUser.id">📚 My Stories</button>
                             <button class="user-dropdown-btn" onclick="window.location.href='/notes'">📝 My Notes</button>
                             <button id="admin-btn" class="user-dropdown-btn admin" style="display:none;" onclick="window.location.href='admin.html'">⚙ Admin Panel</button>
                             <button class="user-dropdown-btn" onclick="signOut()">Sign out</button>
@@ -478,6 +481,7 @@
             document.getElementById('dropdown-name').textContent = user.name || 'User';
             document.getElementById('dropdown-email').textContent = user.email || '';
             if (user.role === 'admin') document.getElementById('admin-btn').style.display = 'block';
+            if (user.role === 'creator' || user.role === 'admin') document.getElementById('creator-btn').style.display = 'block';
             document.getElementById('comment-form-area').style.display = 'block';
             document.getElementById('comment-login-prompt').style.display = 'none';
         }

@@ -94,11 +94,13 @@
             <div class="stat-card"><div id="stat-users" class="stat-num">—</div><div class="stat-label">Total Users</div></div>
             <div class="stat-card"><div id="stat-comments" class="stat-num">—</div><div class="stat-label">Comments</div></div>
             <div class="stat-card"><div id="stat-chats" class="stat-num">—</div><div class="stat-label">AI Chats</div></div>
+            <div class="stat-card"><div id="stat-stories" class="stat-num">—</div><div class="stat-label">Stories</div></div>
             <div class="stat-card"><div id="stat-age" class="stat-num">—</div><div class="stat-label">Site Age (days)</div></div>
         </div>
 
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('data')">Data</button>
+            <button class="tab-btn" onclick="switchTab('stories')">📚 Stories</button>
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
         </div>
 
@@ -111,7 +113,7 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table>
-                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Profile</th></tr></thead>
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
                         <tbody id="users-table-body"><tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
                     </table>
                 </div>
@@ -131,6 +133,21 @@
                     <table>
                         <thead><tr><th>User ID</th><th>Message</th><th>Reply</th><th>Date</th></tr></thead>
                         <tbody id="chats-table-body"><tr><td colspan="4" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- STORIES TAB -->
+        <div id="tab-stories" class="tab-panel">
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="outfit font-bold text-lg">All Stories</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead><tr><th>Title</th><th>Author</th><th>Genre</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="stories-table-body"><tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -264,6 +281,7 @@
         document.getElementById('tab-' + name).classList.add('active');
         event.target.classList.add('active');
         if (name === 'content') loadContentEditor();
+        if (name === 'stories') loadDashboard();
     }
 
     // ── AUTH ─────────────────────────────────────────────────────────
@@ -299,24 +317,22 @@
 
     async function loadDashboard() {
         try {
-            const resUsers = await fetch(WORKER_URL + '/admin/users', { headers: authHeader() });
-            const users = await resUsers.json();
+            const [users, comments, chats, stories] = await Promise.all([
+                fetch(WORKER_URL + '/admin/users', { headers: authHeader() }).then(r => r.json()),
+                fetch(WORKER_URL + '/admin/comments', { headers: authHeader() }).then(r => r.json()),
+                fetch(WORKER_URL + '/admin/chats', { headers: authHeader() }).then(r => r.json()),
+                fetch(WORKER_URL + '/admin/stories', { headers: authHeader() }).then(r => r.json())
+            ]);
             renderUsers(users);
-
-            const resComments = await fetch(WORKER_URL + '/admin/comments', { headers: authHeader() });
-            const comments = await resComments.json();
             renderComments(comments);
-
-            const resChats = await fetch(WORKER_URL + '/admin/chats', { headers: authHeader() });
-            const chats = await resChats.json();
             renderChats(chats);
-
+            renderStories(stories);
             document.getElementById('stat-users').textContent = users.length || 0;
             document.getElementById('stat-comments').textContent = comments.length || 0;
             document.getElementById('stat-chats').textContent = chats.length || 0;
+            document.getElementById('stat-stories').textContent = stories.length || 0;
             const age = Math.floor((Date.now() - new Date('2026-03-13')) / 86400000);
             document.getElementById('stat-age').textContent = age;
-
         } catch(e) { console.error(e); }
     }
 
@@ -329,9 +345,71 @@
                 <td class="text-gray-500">${esc(u.email)}</td>
                 <td><span class="badge badge-${u.role}">${u.role}</span></td>
                 <td class="text-gray-400">${fmt(u.created_at)}</td>
-                <td><a href="/profile.html?id=${u.id}" class="text-orange-600 hover:underline" target="_blank">View</a></td>
+                <td>
+                    <div class="flex gap-2 items-center">
+                        ${u.email !== ADMIN_EMAIL ? `
+                            <button onclick="updateRole(${u.id}, '${u.role === 'creator' ? 'reader' : 'creator'}')" class="text-[10px] bg-gray-100 px-2 py-1 rounded font-bold hover:bg-gray-200">
+                                ${u.role === 'creator' ? 'Make Reader' : 'Make Creator'}
+                            </button>
+                        ` : ''}
+                        <a href="/profile.html?userId=${u.id}" class="text-orange-600 hover:underline text-xs font-bold" target="_blank">View</a>
+                    </div>
+                </td>
             </tr>
         `).join('');
+    }
+
+    async function updateRole(userId, newRole) {
+        try {
+            const res = await fetch(`${WORKER_URL}/admin/users/${userId}/role`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify({ role: newRole })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Role updated.');
+                loadDashboard();
+            } else {
+                showCustomAlert(data.error || 'Failed to update role.');
+            }
+        } catch(e) { showCustomAlert('Network error.'); }
+    }
+
+    function renderStories(stories) {
+        const body = document.getElementById('stories-table-body');
+        if (!stories || stories.error) { body.innerHTML = '<tr><td colspan="5" class="text-center text-red-400">Error loading stories.</td></tr>'; return; }
+        body.innerHTML = stories.map(s => `
+            <tr>
+                <td class="font-bold">${esc(s.title)}</td>
+                <td>${esc(s.author_name)}</td>
+                <td><span class="text-xs bg-gray-100 px-2 py-1 rounded">${esc(s.genre)}</span></td>
+                <td><span class="badge badge-${s.status === 'published' ? 'admin' : 'reader'}">${s.status}</span></td>
+                <td>
+                    <div class="flex gap-2">
+                        <a href="/stories/read.html?id=${s.id}" class="text-blue-500 hover:underline text-xs font-bold" target="_blank">View</a>
+                        <button onclick="deleteStoryAdmin(${s.id})" class="text-red-500 hover:underline text-xs font-bold">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteStoryAdmin(storyId) {
+        if (!confirm('Delete this story and all its chapters?')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/stories/${storyId}`, {
+                method: 'DELETE',
+                headers: authHeader()
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Story deleted.');
+                loadDashboard();
+            } else {
+                showCustomAlert(data.error || 'Failed to delete.');
+            }
+        } catch(e) { showCustomAlert('Network error.'); }
     }
 
     function renderComments(comments) {

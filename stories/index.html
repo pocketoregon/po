@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stories — PocketOregon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        html { -ms-overflow-style: none; scrollbar-width: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1e24; }
+        
+        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1); }
+        #loading-curtain.lift { transform: translateY(-100%); }
+        .loader-text { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.75rem; letter-spacing: -0.04em; color: #1f1e24; }
+        
+        .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+        #main-nav { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #e5e7eb; }
+        .nav-link-sub { color:#333238; font-size:0.9375rem; font-weight:500; padding:6px 12px; border-radius:6px; transition: all 0.3s; }
+        .nav-link-sub:hover { background:rgba(0,0,0,0.04); }
+        
+        .hero { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 4rem 1.5rem; border-bottom: 1px solid #f3f4f6; text-align: center; }
+        .hero h1 { font-family: 'Outfit', sans-serif; font-size: 3rem; font-weight: 800; margin-bottom: 1rem; }
+        
+        .genre-pill { padding: 6px 16px; border-radius: 999px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1px solid #e5e7eb; transition: all 0.2s; }
+        .genre-pill.active { background: #f97316; color: white; border-color: #f97316; }
+        
+        .story-grid { display: grid; gap: 24px; grid-template-columns: repeat(1, 1fr); }
+        @media (min-width: 640px) { .story-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .story-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .story-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+        .story-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); }
+        .story-card-cover { height: 8px; }
+        .story-card-body { padding: 20px; }
+        .story-card-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+        .story-card-author { font-size: 0.875rem; color: #6b7280; margin-bottom: 12px; }
+        .story-card-desc { font-size: 0.9375rem; color: #4b5563; line-height: 1.5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 4.5rem; }
+        .story-card-footer { display: flex; align-items: center; gap: 16px; border-top: 1px solid #f3f4f6; padding-top: 16px; }
+        
+        .genre-badge { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; }
+        .genre-fantasy { background: #fef3c7; color: #92400e; }
+        .genre-sci-fi { background: #e0e7ff; color: #3730a3; }
+        .genre-romance { background: #fce7f3; color: #9d174d; }
+        .genre-thriller { background: #fee2e2; color: #991b1b; }
+        .genre-mystery { background: #f3f4f6; color: #374151; }
+        .genre-general { background: #f3f4f6; color: #374151; }
+
+        .like-btn, .bookmark-btn { display: flex; align-items: center; gap: 4px; font-size: 0.875rem; color: #6b7280; background: none; border: none; cursor: pointer; transition: color 0.2s; }
+        .like-btn:hover { color: #ef4444; }
+        .bookmark-btn:hover { color: #f97316; }
+        .like-btn.active { color: #ef4444; }
+        .bookmark-btn.active { color: #f97316; }
+        
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 180px; display: none; }
+        .user-dropdown.open { display: block; }
+        .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; }
+        .user-dropdown-btn:hover { background: #f3f4f6; }
+        
+        #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: white; padding: 12px 24px; border-radius: 999px; font-size: 0.875rem; font-weight: 500; z-index: 10000; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+    <div id="loading-curtain">
+        <div class="loader-text">PocketOregon</div>
+    </div>
+
+    <nav id="main-nav">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+                <span class="outfit-font font-extrabold text-lg">PocketOregon</span>
+            </a>
+            <div class="flex items-center gap-6">
+                <a href="/stories/" class="nav-link-sub">Stories</a>
+                <div id="auth-section">
+                    <button onclick="openLogin()" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-semibold">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="max-w-4xl mx-auto">
+            <h1>Stories</h1>
+            <p class="text-gray-500 text-lg">Explore tales from the Pocketverse community.</p>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <div class="flex flex-wrap gap-3 mb-12 justify-center" id="genre-filters">
+            <div class="genre-pill active" onclick="filterGenre('All', this)">All</div>
+            <div class="genre-pill" onclick="filterGenre('Fantasy', this)">Fantasy</div>
+            <div class="genre-pill" onclick="filterGenre('Sci-Fi', this)">Sci-Fi</div>
+            <div class="genre-pill" onclick="filterGenre('Romance', this)">Romance</div>
+            <div class="genre-pill" onclick="filterGenre('Thriller', this)">Thriller</div>
+            <div class="genre-pill" onclick="filterGenre('Mystery', this)">Mystery</div>
+            <div class="genre-pill" onclick="filterGenre('General', this)">General</div>
+        </div>
+
+        <div id="story-grid" class="story-grid">
+            <!-- Stories will be loaded here -->
+        </div>
+    </div>
+
+    <footer class="bg-[#1f1e24] py-12 text-center text-gray-500 text-sm">
+        <div class="flex items-center justify-center gap-2 mb-2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+            <span class="outfit-font text-white font-bold">PocketOregon</span>
+        </div>
+        <p>&copy; 2026 PocketOregon. All rights reserved.</p>
+    </footer>
+
+    <div id="toast"></div>
+
+    <script>
+        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+        const COVER_COLORS = ['#fde8e8','#e8f4fd','#e8fdf0','#fdf6e8','#f0e8fd','#fde8f6'];
+        let currentUser = null;
+        let currentGenre = 'All';
+
+        function escHtml(str) {
+            return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function getToken() { return localStorage.getItem('po_token') || ''; }
+        function authHeaders() {
+            return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = isError ? '#ef4444' : '#1f1e24';
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function loadStories() {
+            const grid = document.getElementById('story-grid');
+            grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-400">Loading stories...</div>';
+            
+            try {
+                let url = `${WORKER_URL}/stories`;
+                if (currentGenre !== 'All') url += `?genre=${encodeURIComponent(currentGenre)}`;
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.stories && data.stories.length > 0) {
+                    grid.innerHTML = data.stories.map(s => `
+                        <div class="story-card" onclick="window.location.href='/stories/read.html?id=${s.id}'" style="cursor:pointer;">
+                            <div class="story-card-cover" style="background:${COVER_COLORS[s.id % 6]};"></div>
+                            <div class="story-card-body">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="genre-badge genre-${s.genre.toLowerCase().replace(' ', '-')}">${escHtml(s.genre)}</span>
+                                </div>
+                                <div class="story-card-title">${escHtml(s.title)}</div>
+                                <div class="story-card-author">by ${escHtml(s.author_name)}</div>
+                                <div class="story-card-desc">${escHtml(s.description)}</div>
+                                <div class="story-card-footer">
+                                    <button class="like-btn" id="like-btn-${s.id}" onclick="event.stopPropagation(); toggleLike(${s.id})">
+                                        ♡ <span id="like-count-${s.id}">${s.like_count}</span>
+                                    </button>
+                                    <button class="bookmark-btn" id="bookmark-btn-${s.id}" onclick="event.stopPropagation(); toggleBookmark(${s.id})">
+                                        🔖
+                                    </button>
+                                    <span class="text-xs text-gray-400 ml-auto">${s.chapter_count} chapters</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-400">No stories found in this genre.</div>';
+                }
+            } catch (e) {
+                showToast('Failed to load stories.', true);
+            }
+        }
+
+        function filterGenre(genre, el) {
+            currentGenre = genre;
+            document.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            loadStories();
+        }
+
+        async function toggleLike(id) {
+            if (!getToken()) return showToast('Please sign in to like stories.');
+            try {
+                const res = await fetch(`${WORKER_URL}/stories/${id}/like`, { method: 'POST', headers: authHeaders() });
+                const data = await res.json();
+                if (data.liked !== undefined) {
+                    document.getElementById(`like-count-${id}`).textContent = data.like_count;
+                    document.getElementById(`like-btn-${id}`).style.color = data.liked ? '#ef4444' : '#6b7280';
+                }
+            } catch (e) { showToast('Action failed.'); }
+        }
+
+        async function toggleBookmark(id) {
+            if (!getToken()) return showToast('Please sign in to bookmark stories.');
+            try {
+                const res = await fetch(`${WORKER_URL}/stories/${id}/bookmark`, { method: 'POST', headers: authHeaders() });
+                const data = await res.json();
+                if (data.bookmarked !== undefined) {
+                    document.getElementById(`bookmark-btn-${id}`).style.color = data.bookmarked ? '#f97316' : '#6b7280';
+                    showToast(data.bookmarked ? 'Added to bookmarks' : 'Removed from bookmarks');
+                }
+            } catch (e) { showToast('Action failed.'); }
+        }
+
+        function updateAuthUI(user) {
+            const section = document.getElementById('auth-section');
+            if (user) {
+                section.innerHTML = `
+                    <div class="relative">
+                        <div class="user-avatar" onclick="document.getElementById('user-dropdown').classList.toggle('open')">
+                            ${user.name[0].toUpperCase()}
+                        </div>
+                        <div id="user-dropdown" class="user-dropdown">
+                            <div class="px-2 py-1 font-bold text-sm border-bottom mb-1">${escHtml(user.name)}</div>
+                            <button onclick="window.location.href='/profile.html?userId=${user.id}'" class="user-dropdown-btn">My Profile</button>
+                            ${(user.role === 'creator' || user.role === 'admin') ? `<button onclick="window.location.href='/stories/create.html'" class="user-dropdown-btn">Create Story</button>` : ''}
+                            ${user.role === 'admin' ? `<button onclick="window.location.href='/admin.html'" class="user-dropdown-btn text-purple-600 font-bold">Admin Panel</button>` : ''}
+                            <button onclick="logout()" class="user-dropdown-btn text-red-500">Sign Out</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('po_user');
+            localStorage.removeItem('po_token');
+            window.location.reload();
+        }
+
+        function openLogin() {
+            window.location.href = '/signin.html';
+        }
+
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('po_user');
+            const token = localStorage.getItem('po_token');
+            if (saved && token) {
+                try { currentUser = JSON.parse(saved); updateAuthUI(currentUser); } catch(e) {}
+            }
+            loadStories();
+            setTimeout(() => document.getElementById('loading-curtain').classList.add('lift'), 500);
+        });
+    </script>
+</body>
+</html>

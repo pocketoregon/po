@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read — PocketOregon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        html { -ms-overflow-style: none; scrollbar-width: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1e24; }
+        
+        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1); }
+        #loading-curtain.lift { transform: translateY(-100%); }
+        .loader-text { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.75rem; letter-spacing: -0.04em; color: #1f1e24; }
+        
+        .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+        #main-nav { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #e5e7eb; }
+        .nav-link-sub { color:#333238; font-size:0.9375rem; font-weight:500; padding:6px 12px; border-radius:6px; transition: all 0.3s; }
+        .nav-link-sub:hover { background:rgba(0,0,0,0.04); }
+        
+        .story-header { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 4rem 1.5rem; border-bottom: 1px solid #f3f4f6; }
+        .story-header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.1; }
+        
+        .chapter-content { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem; line-height: 1.8; font-size: 1.125rem; color: #374151; }
+        .chapter-content p { margin-bottom: 1.5rem; }
+        .chapter-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: #1f1e24; }
+        
+        .chapter-nav { display: flex; justify-content: space-between; align-items: center; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; border-top: 1px solid #f3f4f6; }
+        .nav-btn { display: flex; flex-direction: column; gap: 4px; padding: 12px 20px; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s; }
+        .nav-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+        .nav-btn span:first-child { font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+        .nav-btn span:last-child { font-weight: 700; color: #1f1e24; }
+        
+        .chapter-list-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s; cursor: pointer; }
+        .chapter-list-item:hover { background: #f9fafb; }
+        .chapter-num { font-family: 'Outfit', sans-serif; font-weight: 800; color: #f97316; font-size: 1.125rem; min-width: 40px; }
+        .chapter-name { font-weight: 600; flex: 1; margin-left: 12px; }
+        
+        #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: white; padding: 12px 24px; border-radius: 999px; font-size: 0.875rem; font-weight: 500; z-index: 10000; display: none; }
+        
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 180px; display: none; z-index: 500; }
+        .user-dropdown.open { display: block; }
+        .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; }
+        .user-dropdown-btn:hover { background: #f3f4f6; }
+    </style>
+</head>
+<body>
+    <div id="loading-curtain">
+        <div class="loader-text">PocketOregon</div>
+    </div>
+
+    <nav id="main-nav">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+                <span class="outfit-font font-extrabold text-lg">PocketOregon</span>
+            </a>
+            <div class="flex items-center gap-6">
+                <a href="/stories/" class="nav-link-sub">Stories</a>
+                <div id="auth-section">
+                    <button onclick="window.location.href='/signin.html'" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-semibold">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="story-view" style="display:none;">
+        <div class="story-header">
+            <div class="max-w-4xl mx-auto px-6">
+                <div id="story-genre" class="inline-block bg-[#f97316] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded mb-4">GENRE</div>
+                <h1 id="story-title">Loading Story...</h1>
+                <div class="flex items-center gap-4 text-gray-500 font-medium">
+                    <span id="story-author">by Author</span>
+                    <span class="text-gray-300">|</span>
+                    <span id="story-likes">0 likes</span>
+                </div>
+                <p id="story-desc" class="mt-6 text-gray-600 text-lg leading-relaxed max-w-2xl">Description goes here.</p>
+                <div class="mt-8 flex gap-4">
+                    <button id="start-reading-btn" class="bg-[#1f1e24] text-white px-8 py-3 rounded-lg font-bold transition hover:bg-black">Start Reading</button>
+                    <button id="bookmark-btn" onclick="toggleBookmark()" class="border border-gray-200 px-6 py-3 rounded-lg font-bold hover:bg-gray-50">🔖 Bookmark</button>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-4xl mx-auto px-6 py-12">
+            <h2 class="outfit-font text-2xl font-bold mb-8">Chapters</h2>
+            <div id="chapter-list" class="border border-gray-100 rounded-xl overflow-hidden">
+                <!-- Chapters loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="chapter-view" style="display:none;">
+        <div class="bg-white border-bottom py-4 sticky top-16 z-40 border-b border-gray-100">
+            <div class="max-w-4xl mx-auto px-6 flex items-center justify-between">
+                <a id="back-to-story" href="#" class="text-sm font-bold text-gray-400 hover:text-gray-900">← Back to Story</a>
+                <div id="reader-progress" class="text-xs font-bold text-[#f97316] uppercase tracking-widest">Chapter 1</div>
+            </div>
+        </div>
+        <div class="chapter-content">
+            <h1 id="chapter-display-title" class="chapter-title">Chapter Title</h1>
+            <div id="chapter-body">
+                <!-- Chapter body here -->
+            </div>
+        </div>
+        <div class="chapter-nav">
+            <a id="prev-chapter" href="#" class="nav-btn" style="visibility:hidden;">
+                <span>Previous</span>
+                <span id="prev-title">Title</span>
+            </a>
+            <a id="next-chapter" href="#" class="nav-btn" style="visibility:hidden;">
+                <span class="text-right">Next</span>
+                <span id="next-title">Title</span>
+            </a>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+        let currentUser = null;
+        let storyId = new URLSearchParams(window.location.search).get('id');
+        let chapterId = new URLSearchParams(window.location.search).get('chapter');
+
+        function escHtml(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function getToken() { return localStorage.getItem('po_token') || ''; }
+        function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = isError ? '#ef4444' : '#1f1e24';
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function loadStory() {
+            document.getElementById('story-view').style.display = 'block';
+            try {
+                const res = await fetch(`${WORKER_URL}/stories/${storyId}`, { headers: authHeaders() });
+                if (res.status === 404) {
+                    document.getElementById('story-title').textContent = "Story Not Found";
+                    return;
+                }
+                const data = await res.json();
+                const s = data.story;
+                document.getElementById('story-title').textContent = s.title;
+                document.getElementById('story-genre').textContent = s.genre;
+                document.getElementById('story-author').textContent = `by ${s.author_name}`;
+                document.getElementById('story-likes').textContent = `${s.like_count} likes`;
+                document.getElementById('story-desc').textContent = s.description;
+                document.getElementById('bookmark-btn').textContent = data.is_bookmarked ? '🔖 Bookmarked' : '🔖 Bookmark';
+                document.getElementById('bookmark-btn').style.color = data.is_bookmarked ? '#f97316' : '#1f1e24';
+
+                const list = document.getElementById('chapter-list');
+                if (data.chapters.length > 0) {
+                    list.innerHTML = data.chapters.map(c => `
+                        <div class="chapter-list-item" onclick="window.location.href='/stories/read.html?id=${storyId}&chapter=${c.id}'">
+                            <span class="chapter-num">${c.chapter_number}</span>
+                            <span class="chapter-name">${escHtml(c.title)}</span>
+                            <span class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('start-reading-btn').onclick = () => {
+                        window.location.href = `/stories/read.html?id=${storyId}&chapter=${data.chapters[0].id}`;
+                    };
+                } else {
+                    list.innerHTML = '<div class="p-8 text-center text-gray-400">No chapters yet.</div>';
+                    document.getElementById('start-reading-btn').style.display = 'none';
+                }
+            } catch (e) { showToast('Error loading story.', true); }
+        }
+
+        async function loadChapter() {
+            document.getElementById('chapter-view').style.display = 'block';
+            document.getElementById('back-to-story').href = `/stories/read.html?id=${storyId}`;
+            try {
+                const res = await fetch(`${WORKER_URL}/chapters/${chapterId}`, { headers: authHeaders() });
+                const data = await res.json();
+                const c = data.chapter;
+                document.getElementById('chapter-display-title').textContent = c.title;
+                document.getElementById('reader-progress').textContent = `Chapter ${c.chapter_number}`;
+                document.getElementById('chapter-body').innerHTML = c.body.split('\n').map(p => p.trim() ? `<p>${escHtml(p)}</p>` : '').join('');
+                
+                if (data.prev) {
+                    const btn = document.getElementById('prev-chapter');
+                    btn.style.visibility = 'visible';
+                    btn.href = `/stories/read.html?id=${storyId}&chapter=${data.prev.id}`;
+                    document.getElementById('prev-title').textContent = data.prev.title;
+                }
+                if (data.next) {
+                    const btn = document.getElementById('next-chapter');
+                    btn.style.visibility = 'visible';
+                    btn.href = `/stories/read.html?id=${storyId}&chapter=${data.next.id}`;
+                    document.getElementById('next-title').textContent = data.next.title;
+                }
+                window.scrollTo(0,0);
+            } catch (e) { showToast('Error loading chapter.', true); }
+        }
+
+        async function toggleBookmark() {
+            if (!getToken()) return showToast('Please sign in to bookmark.');
+            try {
+                const res = await fetch(`${WORKER_URL}/stories/${storyId}/bookmark`, { method: 'POST', headers: authHeaders() });
+                const data = await res.json();
+                document.getElementById('bookmark-btn').textContent = data.bookmarked ? '🔖 Bookmarked' : '🔖 Bookmark';
+                document.getElementById('bookmark-btn').style.color = data.bookmarked ? '#f97316' : '#1f1e24';
+            } catch (e) { showToast('Action failed.'); }
+        }
+
+        function updateAuthUI(user) {
+            const section = document.getElementById('auth-section');
+            if (user) {
+                section.innerHTML = `
+                    <div class="relative">
+                        <div class="user-avatar" onclick="document.getElementById('user-dropdown').classList.toggle('open')">
+                            ${user.name[0].toUpperCase()}
+                        </div>
+                        <div id="user-dropdown" class="user-dropdown">
+                            <div class="px-2 py-1 font-bold text-sm border-bottom mb-1">${escHtml(user.name)}</div>
+                            <button onclick="window.location.href='/profile.html?userId=${user.id}'" class="user-dropdown-btn">My Profile</button>
+                            ${(user.role === 'creator' || user.role === 'admin') ? `<button onclick="window.location.href='/stories/create.html'" class="user-dropdown-btn">Create Story</button>` : ''}
+                            ${user.role === 'admin' ? `<button onclick="window.location.href='/admin.html'" class="user-dropdown-btn text-purple-600 font-bold">Admin Panel</button>` : ''}
+                            <button onclick="logout()" class="user-dropdown-btn text-red-500">Sign Out</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('po_user');
+            localStorage.removeItem('po_token');
+            window.location.reload();
+        }
+
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('po_user');
+            const token = localStorage.getItem('po_token');
+            if (saved && token) {
+                try { currentUser = JSON.parse(saved); updateAuthUI(currentUser); } catch(e) {}
+            }
+            if (chapterId) loadChapter();
+            else if (storyId) loadStory();
+            else window.location.href = '/stories/';
+            setTimeout(() => document.getElementById('loading-curtain').classList.add('lift'), 500);
+        });
+    </script>
+</body>
+</html>
