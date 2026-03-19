@@ -537,7 +537,7 @@
                 const data = await res.json();
                 const cards = (data.cards && data.cards.length > 0) ? data.cards : CARDS_DEFAULT;
                 renderCards(cards);
-            } catch(e) { renderCards(CARDS_DEFAULT); }
+            } catch(e) { renderCards(CARDS_DEFAULT); showConnectionError(); }
             loadedFlags.cards = true;
             tryLiftCurtain();
         }
