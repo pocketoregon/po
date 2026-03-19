@@ -36,57 +36,19 @@
         html { -ms-overflow-style: none; scrollbar-width: none; }
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1e24; scroll-behavior: smooth; user-select: none; -webkit-user-select: none; }
 
-        /* ── LOADING CURTAIN ───────────────────────────── */
-        #loading-curtain {
-            position: fixed; inset: 0; z-index: 9999;
-            background: #ffffff;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 20px;
-            transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
-        }
-        #loading-curtain.lift {
-            transform: translateY(-100%);
-        }
-        .loader-logo-wrap {
-            display: flex; flex-direction: column; align-items: center; gap: 16px;
-        }
-        .loader-icon {
-            width: 56px; height: 56px;
-            animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
-        }
-        @keyframes iconPop {
-            from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
-            to   { opacity: 1; transform: scale(1) rotate(0deg); }
-        }
-        .loader-text {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 1.75rem;
-            letter-spacing: -0.04em;
-            color: #1f1e24;
-            animation: textRise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.35s both;
-        }
-        @keyframes textRise {
-            from { opacity: 0; transform: translateY(14px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .loader-dots {
-            display: flex; gap: 6px; margin-top: 4px;
-            animation: textRise 0.4s ease 0.55s both;
-        }
-        .loader-dot {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: #e5e7eb;
-            animation: dotBounce 1.3s ease-in-out infinite;
-        }
+        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1); }
+        #loading-curtain.lift { transform: translateY(-100%); }
+        .loader-logo-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .loader-icon { width: 56px; height: 56px; animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both; }
+        @keyframes iconPop { from { opacity: 0; transform: scale(0.4) rotate(-15deg); } to { opacity: 1; transform: scale(1) rotate(0deg); } }
+        .loader-text { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.75rem; letter-spacing: -0.04em; color: #1f1e24; animation: textRise 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.35s both; }
+        @keyframes textRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        .loader-dots { display: flex; gap: 6px; margin-top: 4px; animation: textRise 0.4s ease 0.55s both; }
+        .loader-dot { width: 7px; height: 7px; border-radius: 50%; background: #e5e7eb; animation: dotBounce 1.3s ease-in-out infinite; }
         .loader-dot:nth-child(1) { animation-delay: 0s; }
         .loader-dot:nth-child(2) { animation-delay: 0.18s; }
         .loader-dot:nth-child(3) { animation-delay: 0.36s; }
-        @keyframes dotBounce {
-            0%, 80%, 100% { transform: translateY(0); background: #e5e7eb; }
-            40% { transform: translateY(-8px); background: #f97316; }
-        }
-        /* ── END LOADING CURTAIN ──────────────────────── */
+        @keyframes dotBounce { 0%, 80%, 100% { transform: translateY(0); background: #e5e7eb; } 40% { transform: translateY(-8px); background: #f97316; } }
 
         .hero-title { font-family: 'Outfit', sans-serif; letter-spacing: -0.04em; background: linear-gradient(135deg, #111827 0%, #374151 50%, #111827 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 8s linear infinite; }
         .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
@@ -194,7 +156,6 @@
 </head>
 <body class="antialiased">
 
-    <!-- ── LOADING CURTAIN ── -->
     <div id="loading-curtain">
         <div class="loader-logo-wrap">
             <svg class="loader-icon text-orange-500" viewBox="0 0 24 24" fill="currentColor" style="color:#f97316;">
@@ -209,14 +170,16 @@
         </div>
     </div>
 
-    <div id="custom-alert"></div> 
+    <div id="custom-alert"></div>
+
     <div id="connection-error" style="display:none;position:fixed;inset:0;z-index:9998;background:white;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-    <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;color:#1f1e24;margin-bottom:8px;">Connection issue</h2>
-    <p style="color:#6b7280;max-width:340px;margin-bottom:2rem;font-size:0.95rem;">Our server is waking up or temporarily unreachable. Please wait a moment and try again.</p>
-    <button onclick="window.location.reload()" style="background:#1f1e24;color:white;border:none;border-radius:8px;padding:10px 28px;font-size:0.9rem;font-weight:600;cursor:pointer;">↻ Reload page</button>
-    <p style="color:#d1d5db;font-size:0.8rem;margin-top:1rem;">If this keeps happening, try again in a minute.</p>
-</div>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;color:#1f1e24;margin-bottom:8px;">Connection issue</h2>
+        <p style="color:#6b7280;max-width:340px;margin-bottom:2rem;font-size:0.95rem;">Our server is waking up or temporarily unreachable. Please wait a moment and try again.</p>
+        <button onclick="window.location.reload()" style="background:#1f1e24;color:white;border:none;border-radius:8px;padding:10px 28px;font-size:0.9rem;font-weight:600;cursor:pointer;">↻ Reload page</button>
+        <p style="color:#d1d5db;font-size:0.8rem;margin-top:1rem;">If this keeps happening, try again in a minute.</p>
+        <a href="/contact/" style="display:inline-block;margin-top:0.75rem;color:#f97316;font-size:0.85rem;font-weight:600;text-decoration:none;">Contact us →</a>
+    </div>
 
     <div id="login-modal">
         <div class="login-modal-box">
@@ -259,11 +222,11 @@
                         <span class="outfit-font text-xl font-semibold text-gray-900">site</span>
                     </div>
                 </div>
-                    <div class="hidden lg:flex ml-8 space-x-2">
-                        <a href="/stories/" class="nav-link-sub">Stories</a>
-                        <a href="#features" class="nav-link-sub">Projects</a>
-                        <a href="#comments-section" class="nav-link-sub">Community</a>
-                    </div>
+                <div class="hidden lg:flex ml-8 space-x-2">
+                    <a href="/stories/" class="nav-link-sub">Stories</a>
+                    <a href="#comments-section" class="nav-link-sub">Community</a>
+                    <a href="/contact/" class="nav-link-sub">Contact</a>
+                </div>
             </div>
             <div class="flex items-center space-x-2 sm:space-x-3 ml-auto">
                 <div id="dynamic-greeting" class="btn-greeting hidden sm:block">--</div>
@@ -301,10 +264,9 @@
                         <span id="mobile-greeting" class="text-sm font-semibold text-gray-700">--</span>
                         <span id="mobile-time" class="text-sm font-bold text-gray-900">--:--</span>
                     </div>
-                    <a href="#features" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Projects</a>
+                    <a href="/stories/" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Stories</a>
                     <a href="#comments-section" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Community</a>
-                    <hr>
-                    <button id="contact-us-btn" class="block text-sm text-gray-500 w-full text-left py-1">Contact us</button>
+                    <a href="/contact/" onclick="toggleMenu()" class="block text-base font-medium text-gray-900 py-1">Contact us</a>
                 </div>
             </div>
         </div>
@@ -407,11 +369,9 @@
         let conversationHistory = [];
         let historyLoaded = false;
 
-        // ── TOKEN HELPER ─────────────────────────────────────────────
         function getToken() { return localStorage.getItem('po_token') || ''; }
         function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
 
-        // ── LOADING CURTAIN ──────────────────────────────────────────
         const LOAD_TIMEOUT = 5000;
         let loadedFlags = { content: false, cards: false, comments: false };
         let curtainLifted = false;
@@ -430,7 +390,6 @@
             }, 120);
         }
         setTimeout(liftCurtain, LOAD_TIMEOUT);
-        // ── END LOADING CURTAIN ──────────────────────────────────────
 
         const CONTENT_DEFAULTS = {
             hero_title: "Pocket's private spaces",
@@ -440,9 +399,9 @@
         };
 
         const CARDS_DEFAULT = [
-            { id: 'default-1', title: 'Pocket Verse', date: '03/12/2026', body: 'Our creative team is currently sketching out the lore and character designs for the first installment of the Pocketverse saga.', link_text: '', page_content: '' },
-            { id: 'default-2', title: 'Site Info', date: 'Origin: 3/13/2026', body: 'This site is a site for fiction story fundamentally.', link_text: '', page_content: '' },
-            { id: 'default-3', title: 'Chapters ...', date: '03/18/2026', body: "This section will be updated soon and provide insights on chapter release dates. the button below don't work now so don't click it yet.", link_text: 'View Chapters', page_content: '' }
+            { id: 'default-1', title: 'Pocket Verse', date: '03/12/2026', body: 'Our creative team is currently sketching out the lore and character designs for the first installment of the Pocketverse saga.', link_text: '', link_url: '', page_content: '' },
+            { id: 'default-2', title: 'Site Info', date: 'Origin: 3/13/2026', body: 'This site is a site for fiction story fundamentally.', link_text: '', link_url: '', page_content: '' },
+            { id: 'default-3', title: 'Chapters ...', date: '03/18/2026', body: "This section will be updated soon and provide insights on chapter release dates.", link_text: '', link_url: '', page_content: '' }
         ];
 
         function waitForGoogle() {
@@ -460,7 +419,6 @@
         function closeLoginModal() { document.getElementById('login-modal').classList.remove('open'); }
         document.getElementById('login-modal').addEventListener('click', function(e) { if (e.target === this) closeLoginModal(); });
 
-        // ── CHANGED: saves sessionToken, no more raw userId sent to worker ──
         function handleGoogleLogin(response) {
             closeLoginModal();
             showCustomAlert('Signing you in...');
@@ -495,7 +453,6 @@
 
         function goToProfile() { if (currentUser) window.location.href = 'profile.html?id=' + currentUser.id; }
 
-        // ── CHANGED: calls /auth/logout, clears token ────────────────
         function signOut() {
             const token = getToken();
             if (token) {
@@ -516,7 +473,6 @@
         document.getElementById('user-avatar').addEventListener('click', () => { document.getElementById('user-dropdown').classList.toggle('open'); });
         document.addEventListener('click', (e) => { const area = document.getElementById('user-area'); if (area && !area.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open'); });
 
-        // ── DYNAMIC CONTENT ──────────────────────────────────────────
         async function loadPageContent() {
             try {
                 const res = await fetch(WORKER_URL + '/content');
@@ -553,11 +509,10 @@
                 const dateHtml = isSiteInfo
                     ? `<div class="gl-card-date flex flex-wrap gap-2"><span>${escapeHtml(card.date)}</span><span class="text-gray-400">|</span><span id="site-age" class="text-orange-600">Age: calculating...</span></div>`
                     : `<p class="gl-card-date">${escapeHtml(card.date || '')}</p>`;
-                const hasPage = card.page_content && card.page_content.trim().length > 0;
                 const isDbCard = card.id && !String(card.id).startsWith('default');
                 const linkHtml = (card.link_text && card.link_url)
-    ? `<a href="${escapeHtml(card.link_url)}" class="gl-card-link">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></a>`
-    : '';
+                    ? `<a href="${escapeHtml(card.link_url)}" class="gl-card-link">${escapeHtml(card.link_text)} <span class="ml-2">&gt;</span></a>`
+                    : '';
                 const titleEl = isDbCard
                     ? `<a href="/card/${card.id}" class="gl-card-title outfit-font hover:text-orange-600 transition-colors" style="text-decoration:none;display:block;color:#333238;">${escapeHtml(card.title)}</a>`
                     : `<h3 class="gl-card-title outfit-font">${escapeHtml(card.title)}</h3>`;
@@ -571,7 +526,6 @@
             }
         }
 
-        // ── COMMENTS ─────────────────────────────────────────────────
         async function loadComments() {
             try {
                 const res = await fetch(WORKER_URL + '/comments?chapter=general');
@@ -594,15 +548,11 @@
             tryLiftCurtain();
         }
 
-        // ── CHANGED: uses Bearer token, no userId/adminEmail in body ─
         async function deleteComment(commentId) {
             if (!currentUser) return;
             if (!confirm('Delete this comment?')) return;
             try {
-                const res = await fetch(`${WORKER_URL}/comments/${commentId}`, {
-                    method: 'DELETE',
-                    headers: authHeaders()
-                });
+                const res = await fetch(`${WORKER_URL}/comments/${commentId}`, { method: 'DELETE', headers: authHeaders() });
                 const data = await res.json();
                 if (data.success) {
                     showCustomAlert('Comment deleted.');
@@ -614,18 +564,13 @@
 
         document.getElementById('comment-input').addEventListener('input', function() { document.getElementById('comment-char').textContent = this.value.length + ' / 500'; });
 
-        // ── CHANGED: uses Bearer token, no userId in body ────────────
         document.getElementById('comment-submit').addEventListener('click', async () => {
             const text = document.getElementById('comment-input').value.trim();
             if (!text || !currentUser) return;
             const btn = document.getElementById('comment-submit');
             btn.disabled = true; btn.textContent = 'Posting...';
             try {
-                await fetch(WORKER_URL + '/comments', {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ chapter: 'general', text })
-                });
+                await fetch(WORKER_URL + '/comments', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ chapter: 'general', text }) });
                 document.getElementById('comment-input').value = '';
                 document.getElementById('comment-char').textContent = '0 / 500';
                 await loadComments();
@@ -635,10 +580,7 @@
 
         function escapeHtml(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
         function formatTime(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
-        function showConnectionError() {
-    const el = document.getElementById('connection-error');
-    el.style.display = 'flex';
-}
+        function showConnectionError() { const el = document.getElementById('connection-error'); el.style.display = 'flex'; }
         function showCustomAlert(msg) { const box = document.getElementById('custom-alert'); box.textContent = msg; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000); }
 
         const logo = document.getElementById('logo-traveller');
@@ -696,7 +638,6 @@
         function showChatLoginGate() { document.getElementById('chat-login-gate').style.display = 'flex'; document.getElementById('ai-chat-messages').style.display = 'none'; document.getElementById('ai-chat-input-row').style.display = 'none'; }
         function showChatForLoggedIn() { document.getElementById('chat-login-gate').style.display = 'none'; document.getElementById('ai-chat-messages').style.display = 'flex'; document.getElementById('ai-chat-input-row').style.display = 'flex'; }
 
-        // ── CHANGED: uses Bearer token, no ?userId= in URL ───────────
         async function loadChatHistory() {
             if (!currentUser || historyLoaded) return;
             const msgs = document.getElementById('ai-chat-messages');
@@ -745,18 +686,13 @@
         function showTyping() { const div = document.createElement('div'); div.className = 'chat-msg ai typing'; div.id = 'typing-indicator'; div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>'; chatMsgs.appendChild(div); chatMsgs.scrollTop = chatMsgs.scrollHeight; }
         function removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
 
-        // ── CHANGED: uses Bearer token, no userId in body ────────────
         async function sendMessage() {
             if (!currentUser) { openLoginModal(); return; }
             const text = chatInput.value.trim(); if (!text) return;
             chatInput.value = ''; chatSend.disabled = true;
             appendMsg(text, 'user'); showTyping();
             try {
-                const res = await fetch(WORKER_URL + '/chat', {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ prompt: text, history: conversationHistory.slice(-10) })
-                });
+                const res = await fetch(WORKER_URL + '/chat', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ prompt: text, history: conversationHistory.slice(-10) }) });
                 const data = await res.json(); removeTyping();
                 if (data.error) { appendMsg('⚠️ ' + data.error, 'ai'); }
                 else {
@@ -781,7 +717,6 @@
         chatSend.addEventListener('click', sendMessage);
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-        // ── CHANGED: restores token alongside user on page load ──────
         window.addEventListener('load', () => {
             const saved = localStorage.getItem('po_user');
             const savedToken = localStorage.getItem('po_token');
@@ -795,7 +730,6 @@
         window.addEventListener('resize', positionLogo);
         setInterval(updateClock, 1000);
         document.getElementById('mobile-menu-btn').addEventListener('click', toggleMenu);
-        document.getElementById('contact-us-btn').addEventListener('click', () => { toggleMenu(); showCustomAlert("Please don't disturb we are busy now"); });
     </script>
 </body>
 </html>
