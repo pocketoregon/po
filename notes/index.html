@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; user-select: none; -webkit-user-select: none; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; user-select: none; -webkit-user-select: none; transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         body.dark { background: #1a1a1a; color: #e5e7eb; }
         .outfit { font-family: 'Outfit', sans-serif; }
         #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.76,0,0.24,1); }
@@ -167,6 +167,15 @@
         .dark-mode-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; padding: 4px; transition: color 0.15s; }
         .dark-mode-btn:hover { color: #1f1e24; }
         body.dark .dark-mode-btn:hover { color: #e5e7eb; }
+        .nav-logo { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-logo-wrapper { display: flex; align-items: center; gap: 8px; text-decoration: none; position: relative; }
+        body.dark .nav-logo-wrapper { background: white; padding: 6px 12px; border-radius: 4px; transform: skewX(-15deg); }
+        body.dark .nav-logo-wrapper svg { color: #f97316; }
+        body.dark .nav-logo-wrapper span { color: #1f1e24; transform: skewX(15deg); display: inline-block; }
+        .nav-logo-wrapper svg { transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-logo-wrapper span { transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        nav * { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .note-card, .note-list-item, .editor-box, #editor-tags, #editor-body, #notes-search, #notes-sort, .view-btn, .tag-pill, .btn-new, .btn-save { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body>
@@ -239,7 +248,7 @@
 
 <nav>
     <div class="nav-inner">
-        <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+        <a href="/" class="nav-logo-wrapper">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
             <span class="outfit" style="font-weight:800;font-size:1rem;color:#1f1e24;">PocketOregon</span>
         </a>

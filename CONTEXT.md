@@ -50,3 +50,8 @@ Implemented 12 new features:
 10. Export Note as .md File
 11. Dark Mode (Persisted in localStorage)
 12. Keyboard Shortcuts (Ctrl/Cmd+S, Ctrl/Cmd+N, Esc, Ctrl/Cmd+P)
+
+## UI Improvements (March 19, 2026 - Update 2)
+- **Smooth Theme Transition**: Added 0.5s cubic-bezier transitions for background, color, and border-color across all UI elements for a fluid dark mode experience.
+- **Enhanced Dark Mode Logo**: Implemented a white parallelogram background for the logo in dark mode using CSS skew transforms, ensuring high contrast and professional appearance.
+- **Global Transition Support**: Ensured all interactive elements (cards, inputs, buttons) share the same smooth transition timing for visual consistency.
