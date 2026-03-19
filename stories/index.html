@@ -135,7 +135,11 @@
         function getToken() { return localStorage.getItem('po_token') || ''; }
         function authHeaders() {
             return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
-        }
+        } 
+        function showConnectionError() {
+    const el = document.getElementById('connection-error');
+    el.style.display = 'flex';
+}
 
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast');
