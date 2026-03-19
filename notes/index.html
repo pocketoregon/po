@@ -11,63 +11,162 @@
     <meta name="theme-color" content="#ffffff">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; user-select: none; -webkit-user-select: none; }
+        body.dark { background: #1a1a1a; color: #e5e7eb; }
         .outfit { font-family: 'Outfit', sans-serif; }
         #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.76,0,0.24,1); }
+        body.dark #loading-curtain { background: #1a1a1a; }
         #loading-curtain.lift { transform: translateY(-100%); }
         .loader-icon { animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
         @keyframes iconPop { from { opacity:0; transform:scale(0.4) rotate(-15deg); } to { opacity:1; transform:scale(1) rotate(0); } }
         .loader-text { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.5rem; letter-spacing:-0.04em; color:#1f1e24; animation: textRise 0.4s ease 0.3s both; }
+        body.dark .loader-text { color: #e5e7eb; }
         @keyframes textRise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+        body.dark nav { background: #2d2d2d; border-color: #404040; }
         .nav-inner { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
         #gate { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 56px); }
         .gate-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 2.5rem; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+        body.dark .gate-card { background: #2d2d2d; border-color: #404040; }
         #app { display: none; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
         .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+        .search-bar { width: 100%; position: relative; margin-bottom: 1rem; }
+        #notes-search { width: 100%; padding: 10px 36px 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; }
+        body.dark #notes-search { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
+        .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.2rem; padding: 4px; }
+        .search-clear:hover { color: #1f1e24; }
+        body.dark .search-clear:hover { color: #e5e7eb; }
+        .search-result-count { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; display: none; }
+        .filter-tags-section { margin-bottom: 1rem; }
+        .filter-tags-label { font-size: 0.75rem; color: #9ca3af; margin-bottom: 8px; display: block; }
+        .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tag-pill { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; border-radius: 999px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+        body.dark .tag-pill { background: #404040; color: #9ca3af; border-color: #505050; }
+        .tag-pill.active { background: #f97316; color: white; border-color: #f97316; }
+        .tag-pill:hover { background: #e5e7eb; }
+        body.dark .tag-pill:hover { background: #505050; }
+        .tag-pill.active:hover { background: #f97316; }
+        .controls-row { display: flex; gap: 12px; align-items: center; }
+        #notes-sort { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; background: white; color: #1f1e24; cursor: pointer; }
+        body.dark #notes-sort { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
+        .view-toggle { display: flex; gap: 4px; }
+        .view-btn { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #6b7280; transition: all 0.15s; }
+        body.dark .view-btn { background: #1a1a1a; border-color: #404040; color: #9ca3af; }
+        .view-btn.active { background: #1f1e24; color: white; border-color: #1f1e24; }
+        body.dark .view-btn.active { background: #f97316; border-color: #f97316; }
         #notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        #notes-list { display: flex; flex-direction: column; gap: 8px; }
         .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; }
+        body.dark .note-card { background: #2d2d2d; border-color: #404040; }
+        .note-card.pinned { border-left: 3px solid #f97316; }
         .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
+        body.dark .note-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
         .note-card-title { font-weight: 700; font-size: 0.95rem; color: #1f1e24; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        body.dark .note-card-title { color: #f3f4f6; }
         .note-card-preview { font-size: 0.82rem; color: #6b7280; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.6em; }
+        body.dark .note-card-preview { color: #9ca3af; }
+        .note-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .note-tag { background: #fee2e2; color: #f97316; font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
         .note-card-date { font-size: 0.72rem; color: #9ca3af; margin-top: 10px; }
+        .note-card-pin { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; font-size: 1rem; }
+        .note-card:hover .note-card-pin { opacity: 1; }
+        .note-card-pin:hover { color: #f97316; }
         .note-card-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; }
         .note-card:hover .note-card-delete { opacity: 1; }
         .note-card-delete:hover { color: #dc2626; background: #fee2e2; }
+        .pinned-badge { position: absolute; top: 8px; left: 8px; font-size: 0.65rem; color: #f97316; font-weight: 700; }
+        .note-list-item { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 1rem; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; position: relative; }
+        body.dark .note-list-item { background: #2d2d2d; border-color: #404040; }
+        .note-list-item.pinned { border-left: 3px solid #f97316; }
+        .note-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #d1d5db; }
+        body.dark .note-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .note-list-title { font-weight: 600; font-size: 0.9rem; color: #1f1e24; min-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        body.dark .note-list-title { color: #f3f4f6; }
+        .note-list-body { font-size: 0.8rem; color: #6b7280; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        body.dark .note-list-body { color: #9ca3af; }
+        .note-list-tags { font-size: 0.75rem; color: #9ca3af; min-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .note-list-date { font-size: 0.72rem; color: #9ca3af; min-width: 80px; text-align: right; }
         #empty-state { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
         #empty-state svg { margin: 0 auto 1rem; display: block; }
         #editor-modal { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; }
         #editor-modal.open { display: flex; }
         @media (min-width: 640px) { #editor-modal { align-items: center; } }
         .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); }
+        body.dark .editor-box { background: #2d2d2d; color: #e5e7eb; }
+        .editor-box.fullscreen { position: fixed; inset: 0; border-radius: 0; max-height: 100vh; z-index: 9999; }
         @media (min-width: 640px) { .editor-box { border-radius: 16px; animation: fadeIn 0.2s ease; } }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
         #editor-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.1rem; border: none; outline: none; width: 100%; color: #1f1e24; background: transparent; user-select: text; -webkit-user-select: text; }
+        body.dark #editor-title { color: #e5e7eb; }
         #editor-title::placeholder { color: #d1d5db; }
-        #editor-body { flex: 1; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; min-height: 220px; max-height: 50vh; user-select: text; -webkit-user-select: text; overflow-y: auto; }
+        .editor-controls { display: flex; gap: 8px; }
+        .editor-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; padding: 4px; transition: color 0.15s; }
+        .editor-btn:hover { color: #1f1e24; }
+        body.dark .editor-btn:hover { color: #e5e7eb; }
+        .editor-tabs { display: flex; gap: 8px; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
+        body.dark .editor-tabs { border-color: #404040; }
+        .editor-tab { background: none; border: none; padding: 8px 12px; cursor: pointer; font-size: 0.875rem; color: #9ca3af; border-bottom: 2px solid transparent; transition: all 0.15s; }
+        .editor-tab.active { color: #1f1e24; border-bottom-color: #1f1e24; }
+        body.dark .editor-tab.active { color: #e5e7eb; border-bottom-color: #e5e7eb; }
+        .editor-toolbar { display: flex; gap: 4px; margin-bottom: 12px; padding: 8px; background: #f3f4f6; border-radius: 6px; flex-wrap: wrap; }
+        body.dark .editor-toolbar { background: #404040; }
+        .toolbar-btn { background: none; border: 1px solid #e5e7eb; border-radius: 4px; padding: 6px 8px; cursor: pointer; font-size: 0.8rem; color: #6b7280; transition: all 0.15s; }
+        body.dark .toolbar-btn { border-color: #505050; color: #9ca3af; }
+        .toolbar-btn:hover { background: white; color: #1f1e24; border-color: #d1d5db; }
+        body.dark .toolbar-btn:hover { background: #505050; color: #e5e7eb; }
+        #editor-tags { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; margin-bottom: 12px; }
+        body.dark #editor-tags { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
+        #editor-tags::placeholder { color: #d1d5db; }
+        .editor-preview { flex: 1; overflow-y: auto; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; font-size: 0.9rem; line-height: 1.6; }
+        body.dark .editor-preview { background: #1a1a1a; border-color: #404040; }
+        .editor-preview h1, .editor-preview h2, .editor-preview h3 { font-weight: 700; margin: 1rem 0 0.5rem; }
+        .editor-preview p { margin-bottom: 0.75rem; }
+        .editor-preview code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        body.dark .editor-preview code { background: #404040; }
+        .editor-preview pre { background: #1f1e24; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; }
+        #editor-body { flex: 1; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; min-height: 220px; max-height: 50vh; user-select: text; -webkit-user-select: text; overflow-y: auto; background: transparent; }
+        body.dark #editor-body { color: #e5e7eb; }
         #editor-body::placeholder { color: #d1d5db; }
         .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
+        body.dark .editor-divider { border-color: #404040; }
         .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
         .editor-meta { font-size: 0.75rem; color: #9ca3af; }
+        .editor-shortcuts { font-size: 0.7rem; color: #9ca3af; }
         .btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+        body.dark .btn-save { background: #f97316; }
         .btn-save:hover { background: #374151; }
+        body.dark .btn-save:hover { background: #ea580c; }
         .btn-save:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn-export { background: none; border: none; color: #6b7280; font-size: 0.8rem; cursor: pointer; transition: color 0.15s; }
+        .btn-export:hover { color: #1f1e24; }
+        body.dark .btn-export:hover { color: #e5e7eb; }
         .btn-close { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.2rem; line-height: 1; padding: 4px; transition: color 0.15s; }
         .btn-close:hover { color: #1f1e24; }
+        body.dark .btn-close:hover { color: #e5e7eb; }
         .btn-new { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 6px; }
+        body.dark .btn-new { background: #f97316; }
         .btn-new:hover { background: #374151; }
+        body.dark .btn-new:hover { background: #ea580c; }
         .e2e-badge { display: inline-flex; align-items: center; gap: 5px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
         #custom-alert { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: #fff; padding: 10px 22px; border-radius: 8px; z-index: 700; font-size: 0.875rem; }
+        body.dark #custom-alert { background: #f97316; }
         #login-modal { display: none; position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
         #login-modal.open { display: flex; }
         .login-box { background: white; border-radius: 12px; padding: 2rem; max-width: 340px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        body.dark .login-box { background: #2d2d2d; }
         .login-box h2 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
+        body.dark .login-box h2 { color: #e5e7eb; }
         .login-box p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
+        body.dark .login-box p { color: #9ca3af; }
+        .dark-mode-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; padding: 4px; transition: color 0.15s; }
+        .dark-mode-btn:hover { color: #1f1e24; }
+        body.dark .dark-mode-btn:hover { color: #e5e7eb; }
     </style>
 </head>
 <body>
@@ -97,14 +196,43 @@
     <div class="editor-box">
         <div class="editor-header">
             <input id="editor-title" type="text" placeholder="Note title..." maxlength="100" />
-            <button class="btn-close" onclick="closeEditor()">✕</button>
+            <div class="editor-controls">
+                <button class="editor-btn" id="fullscreen-btn" onclick="toggleFullscreen()" title="Full-screen">⛶</button>
+                <button class="btn-close" onclick="closeEditor()">✕</button>
+            </div>
+        </div>
+        <div class="editor-tabs">
+            <button class="editor-tab active" onclick="switchTab('write')">Write</button>
+            <button class="editor-tab" onclick="switchTab('preview')">Preview</button>
+        </div>
+        <div id="write-tab" style="display: flex; flex-direction: column; flex: 1;">
+            <div class="editor-toolbar" id="editor-toolbar">
+                <button class="toolbar-btn" onclick="insertMarkdown('**', '**')" title="Bold">B</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('*', '*')" title="Italic">I</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('## ', '')" title="Heading 1">H1</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('### ', '')" title="Heading 2">H2</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('`', '`')" title="Inline code">`</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('```\n', '\n```')" title="Code block">```</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('- ', '')" title="List">—</button>
+                <button class="toolbar-btn" onclick="insertMarkdown('- [ ] ', '')" title="Checkbox">☑</button>
+                <button class="toolbar-btn" onclick="insertLink()" title="Link">🔗</button>
+            </div>
+            <input id="editor-tags" type="text" placeholder="Add tags (comma separated, e.g. work, ideas)" />
+            <textarea id="editor-body" placeholder="Write your note here..." maxlength="10000"></textarea>
+        </div>
+        <div id="preview-tab" style="display: none; flex: 1; overflow: hidden;">
+            <div class="editor-preview" id="editor-preview"></div>
         </div>
         <hr class="editor-divider">
-        <textarea id="editor-body" placeholder="Write your note here..." maxlength="10000"></textarea>
-        <hr class="editor-divider">
         <div class="editor-footer">
-            <span class="editor-meta" id="editor-meta">New note</span>
-            <button class="btn-save" id="save-btn" onclick="saveNote()">Save</button>
+            <div>
+                <span class="editor-meta" id="editor-meta">New note</span>
+                <div class="editor-shortcuts">⌘S Save  ·  ⌘N New  ·  Esc Close  ·  ⌘P Pin</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="btn-export" onclick="exportNote()" title="Export as Markdown">↓ Export .md</button>
+                <button class="btn-save" id="save-btn" onclick="saveNote()">Save</button>
+            </div>
         </div>
     </div>
 </div>
@@ -120,6 +248,7 @@
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 E2E Encrypted
             </span>
+            <button class="dark-mode-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
             <a href="/" style="font-size:.875rem;color:#6b7280;text-decoration:none;">← Back</a>
         </div>
     </div>
@@ -146,7 +275,30 @@
             New Note
         </button>
     </div>
+    <div class="search-bar">
+        <input id="notes-search" type="text" placeholder="Search notes..." />
+        <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display: none;">×</button>
+        <div class="search-result-count" id="search-result-count"></div>
+    </div>
+    <div class="filter-tags-section">
+        <label class="filter-tags-label">Filter by tag:</label>
+        <div class="filter-tags" id="filter-tags"></div>
+    </div>
+    <div class="controls-row">
+        <select id="notes-sort" onchange="handleSort()">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="a-z">A-Z</option>
+            <option value="z-a">Z-A</option>
+            <option value="longest">Longest</option>
+        </select>
+        <div class="view-toggle">
+            <button class="view-btn active" id="grid-view-btn" onclick="switchView('grid')" title="Grid view">⊞</button>
+            <button class="view-btn" id="list-view-btn" onclick="switchView('list')" title="List view">☰</button>
+        </div>
+    </div>
     <div id="notes-grid"></div>
+    <div id="notes-list" style="display: none;"></div>
     <div id="empty-state" style="display:none;">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5">
             <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
@@ -163,8 +315,14 @@
     let currentUser = null;
     let googleReady = false;
     let notes = [];
+    let filteredNotes = [];
     let editingNoteId = null;
     let cryptoKey = null;
+    let currentTab = 'write';
+    let currentView = 'grid';
+    let currentSort = 'newest';
+    let selectedTag = null;
+    let isFullscreen = false;
 
     // ── LOADING CURTAIN ──────────────────────────────────────────────
     function liftCurtain() {
@@ -178,6 +336,25 @@
     function authHeader() {
         const token = localStorage.getItem('po_token');
         return token ? { 'Authorization': 'Bearer ' + token } : {};
+    }
+
+    // ── DARK MODE ────────────────────────────────────────────────────
+    function initDarkMode() {
+        const isDark = localStorage.getItem('po_notes_dark') === 'true';
+        if (isDark) document.body.classList.add('dark');
+        updateDarkModeButton();
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        localStorage.setItem('po_notes_dark', isDark);
+        updateDarkModeButton();
+    }
+
+    function updateDarkModeButton() {
+        const btn = document.getElementById('dark-mode-btn');
+        btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
     }
 
     // ── GOOGLE AUTH ──────────────────────────────────────────────────
@@ -200,7 +377,6 @@
         tryRender();
     }
 
-    // CHANGED: store sessionToken, use authHeader going forward
     function handleGoogleLogin(response) {
         document.getElementById('login-modal').classList.remove('open');
         fetch(WORKER_URL + '/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:response.credential}) })
@@ -253,11 +429,11 @@
     async function showApp() {
         document.getElementById('gate').style.display = 'none';
         document.getElementById('app').style.display = 'block';
+        initDarkMode();
         liftCurtain();
         await loadNotes();
     }
 
-    // CHANGED: Authorization: Bearer instead of X-User-Id
     async function loadNotes() {
         try {
             const res = await fetch(WORKER_URL + '/notes', {
@@ -268,8 +444,12 @@
             notes = await Promise.all(raw.map(async n => ({
                 ...n,
                 title: await decrypt(n.title),
-                body: await decrypt(n.body)
+                body: await decrypt(n.body),
+                tags: await decrypt(n.tags)
             })));
+            filteredNotes = [...notes];
+            renderFilterTags();
+            applySort();
             renderNotes();
         } catch(e) {
             showAlert('Could not load notes.');
@@ -277,18 +457,150 @@
         }
     }
 
+    function renderFilterTags() {
+        const allTags = new Set();
+        notes.forEach(n => {
+            if (n.tags) {
+                n.tags.split(',').forEach(t => {
+                    const tag = t.trim();
+                    if (tag) allTags.add(tag);
+                });
+            }
+        });
+        const container = document.getElementById('filter-tags');
+        container.innerHTML = Array.from(allTags).sort().map(tag => `
+            <button class="tag-pill ${selectedTag === tag ? 'active' : ''}" onclick="toggleTagFilter('${escHtml(tag)}')">${escHtml(tag)}</button>
+        `).join('');
+    }
+
+    function toggleTagFilter(tag) {
+        selectedTag = selectedTag === tag ? null : tag;
+        applyFilters();
+        renderFilterTags();
+        renderNotes();
+    }
+
+    function applyFilters() {
+        let result = [...notes];
+        
+        // Search filter
+        const searchTerm = document.getElementById('notes-search').value.toLowerCase();
+        if (searchTerm) {
+            result = result.filter(n => 
+                (n.title || '').toLowerCase().includes(searchTerm) ||
+                (n.body || '').toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // Tag filter
+        if (selectedTag) {
+            result = result.filter(n => {
+                if (!n.tags) return false;
+                return n.tags.split(',').map(t => t.trim()).includes(selectedTag);
+            });
+        }
+        
+        filteredNotes = result;
+        updateSearchResultCount();
+    }
+
+    function updateSearchResultCount() {
+        const searchTerm = document.getElementById('notes-search').value.trim();
+        const count = document.getElementById('search-result-count');
+        if (searchTerm) {
+            count.textContent = `Showing ${filteredNotes.length} of ${notes.length} notes`;
+            count.style.display = 'block';
+        } else {
+            count.style.display = 'none';
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('notes-search').value = '';
+        document.getElementById('search-clear').style.display = 'none';
+        applyFilters();
+        renderNotes();
+    }
+
+    function applySort() {
+        const sortType = currentSort;
+        let sorted = [...filteredNotes];
+        
+        // Pinned notes always first
+        const pinned = sorted.filter(n => n.pinned);
+        const unpinned = sorted.filter(n => !n.pinned);
+        
+        if (sortType === 'newest') {
+            unpinned.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        } else if (sortType === 'oldest') {
+            unpinned.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
+        } else if (sortType === 'a-z') {
+            unpinned.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        } else if (sortType === 'z-a') {
+            unpinned.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+        } else if (sortType === 'longest') {
+            unpinned.sort((a, b) => (b.body || '').split(/\s+/).length - (a.body || '').split(/\s+/).length);
+        }
+        
+        filteredNotes = [...pinned, ...unpinned];
+    }
+
+    function handleSort() {
+        currentSort = document.getElementById('notes-sort').value;
+        applySort();
+        renderNotes();
+    }
+
+    function switchView(view) {
+        currentView = view;
+        localStorage.setItem('po_notes_view', view);
+        document.getElementById('grid-view-btn').classList.toggle('active', view === 'grid');
+        document.getElementById('list-view-btn').classList.toggle('active', view === 'list');
+        renderNotes();
+    }
+
     function renderNotes() {
         const grid = document.getElementById('notes-grid');
+        const list = document.getElementById('notes-list');
         const empty = document.getElementById('empty-state');
         const count = document.getElementById('notes-count');
-        count.textContent = notes.length === 0 ? 'No notes yet' : `${notes.length} note${notes.length !== 1 ? 's' : ''}`;
-        if (notes.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+        
+        count.textContent = filteredNotes.length === 0 ? 'No notes yet' : `${filteredNotes.length} note${filteredNotes.length !== 1 ? 's' : ''}`;
+        
+        if (filteredNotes.length === 0) { 
+            grid.innerHTML = ''; 
+            list.innerHTML = '';
+            empty.style.display = 'block'; 
+            return; 
+        }
         empty.style.display = 'none';
-        grid.innerHTML = notes.map(n => `
-            <div class="note-card" onclick="openEditNote(${n.id})">
+        
+        if (currentView === 'grid') {
+            list.style.display = 'none';
+            grid.style.display = 'grid';
+            grid.innerHTML = filteredNotes.map(n => renderNoteCard(n)).join('');
+        } else {
+            grid.style.display = 'none';
+            list.style.display = 'flex';
+            list.innerHTML = filteredNotes.map(n => renderNoteListItem(n)).join('');
+        }
+    }
+
+    function renderNoteCard(n) {
+        const preview = stripHtml(n.body || '').substring(0, 150);
+        const tagsHtml = n.tags ? n.tags.split(',').map(t => {
+            const tag = t.trim();
+            return tag ? `<div class="note-tag">${escHtml(tag)}</div>` : '';
+        }).join('') : '';
+        
+        return `
+            <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="openEditNote(${n.id})">
+                ${n.pinned ? '<div class="pinned-badge">PINNED</div>' : ''}
                 <div class="note-card-title">${escHtml(n.title || 'Untitled')}</div>
-                <div class="note-card-preview">${escHtml(n.body || '')}</div>
+                <div class="note-card-preview">${escHtml(preview)}</div>
+                ${tagsHtml ? `<div class="note-card-tags">${tagsHtml}</div>` : ''}
                 <div class="note-card-date">${formatDate(n.updated_at)}</div>
+                <button class="note-card-pin" onclick="togglePin(event, ${n.id})" title="Pin note">📌</button>
                 <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="3 6 5 6 21 6"/>
@@ -297,44 +609,189 @@
                     </svg>
                 </button>
             </div>
-        `).join('');
+        `;
+    }
+
+    function renderNoteListItem(n) {
+        const preview = stripHtml(n.body || '').substring(0, 60);
+        const tagsText = n.tags ? n.tags.split(',').map(t => t.trim()).filter(Boolean).join(', ') : '';
+        
+        return `
+            <div class="note-list-item ${n.pinned ? 'pinned' : ''}" onclick="openEditNote(${n.id})">
+                <div class="note-list-title">${escHtml(n.title || 'Untitled')}</div>
+                <div class="note-list-body">${escHtml(preview)}</div>
+                <div class="note-list-tags">${escHtml(tagsText)}</div>
+                <div class="note-list-date">${formatDate(n.updated_at)}</div>
+                <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note" style="position: absolute; right: 10px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('DIV');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
     }
 
     function openNewNote() {
         editingNoteId = null;
         document.getElementById('editor-title').value = '';
         document.getElementById('editor-body').value = '';
+        document.getElementById('editor-tags').value = '';
         document.getElementById('editor-meta').textContent = 'New note';
         document.getElementById('save-btn').textContent = 'Save';
+        currentTab = 'write';
+        switchTab('write');
         document.getElementById('editor-modal').classList.add('open');
+        updateWordCount();
         setTimeout(() => document.getElementById('editor-title').focus(), 100);
     }
 
     function openEditNote(noteId) {
-        const note = notes.find(n => n.id === noteId);
+        const note = filteredNotes.find(n => n.id === noteId);
         if (!note) return;
         editingNoteId = noteId;
         document.getElementById('editor-title').value = note.title || '';
         document.getElementById('editor-body').value = note.body || '';
+        document.getElementById('editor-tags').value = note.tags || '';
         document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
         document.getElementById('save-btn').textContent = 'Save';
+        currentTab = 'write';
+        switchTab('write');
         document.getElementById('editor-modal').classList.add('open');
+        updateWordCount();
         setTimeout(() => document.getElementById('editor-body').focus(), 100);
     }
 
     function closeEditor() {
+        if (isFullscreen) {
+            toggleFullscreen();
+            return;
+        }
         document.getElementById('editor-modal').classList.remove('open');
         editingNoteId = null;
+        isFullscreen = false;
     }
 
-    document.getElementById('editor-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeEditor();
-    });
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.editor-tab').forEach((t, i) => {
+            if ((i === 0 && tab === 'write') || (i === 1 && tab === 'preview')) {
+                t.classList.add('active');
+            }
+        });
+        
+        document.getElementById('write-tab').style.display = tab === 'write' ? 'flex' : 'none';
+        document.getElementById('preview-tab').style.display = tab === 'preview' ? 'flex' : 'none';
+        
+        if (tab === 'preview') {
+            updatePreview();
+        }
+    }
 
-    // CHANGED: Authorization: Bearer instead of X-User-Id
+    function updatePreview() {
+        const body = document.getElementById('editor-body').value;
+        const preview = document.getElementById('editor-preview');
+        preview.innerHTML = marked.parse(body);
+    }
+
+    function insertMarkdown(before, after) {
+        const textarea = document.getElementById('editor-body');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end);
+        const newText = textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end);
+        textarea.value = newText;
+        textarea.selectionStart = start + before.length;
+        textarea.selectionEnd = start + before.length + selected.length;
+        textarea.focus();
+        updateWordCount();
+    }
+
+    function insertLink() {
+        const textarea = document.getElementById('editor-body');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end);
+        const url = prompt('Enter URL:');
+        if (!url) return;
+        const newText = textarea.value.substring(0, start) + `[${selected}](${url})` + textarea.value.substring(end);
+        textarea.value = newText;
+        textarea.focus();
+        updateWordCount();
+    }
+
+    function updateWordCount() {
+        const body = document.getElementById('editor-body').value;
+        const words = body.trim().split(/\s+/).filter(Boolean).length;
+        const chars = body.length;
+        document.getElementById('editor-meta').textContent = `${words} words · ${chars} chars`;
+    }
+
+    function toggleFullscreen() {
+        isFullscreen = !isFullscreen;
+        const box = document.querySelector('.editor-box');
+        const btn = document.getElementById('fullscreen-btn');
+        
+        if (isFullscreen) {
+            box.classList.add('fullscreen');
+            btn.textContent = '⊡';
+        } else {
+            box.classList.remove('fullscreen');
+            btn.textContent = '⛶';
+        }
+    }
+
+    function exportNote() {
+        const title = document.getElementById('editor-title').value || 'note';
+        const body = document.getElementById('editor-body').value;
+        const content = `# ${title}\n\n${body}`;
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = title.toLowerCase().replace(/\s+/g, '-') + '.md';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function togglePin(e, noteId) {
+        e.stopPropagation();
+        const note = notes.find(n => n.id === noteId);
+        if (!note) return;
+        
+        try {
+            const res = await fetch(`${WORKER_URL}/notes/${noteId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify({ 
+                    title: await encrypt(note.title || 'Untitled'),
+                    body: await encrypt(note.body || ''),
+                    tags: await encrypt(note.tags || ''),
+                    pinned: note.pinned ? 0 : 1
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                note.pinned = note.pinned ? 0 : 1;
+                applySort();
+                renderNotes();
+                showAlert(note.pinned ? 'Note pinned.' : 'Note unpinned.');
+            }
+        } catch(e) { showAlert('Error updating note.'); }
+    }
+
     async function saveNote() {
         const titleRaw = document.getElementById('editor-title').value.trim();
         const bodyRaw = document.getElementById('editor-body').value.trim();
+        const tagsRaw = document.getElementById('editor-tags').value.trim();
         if (!titleRaw && !bodyRaw) { showAlert('Note is empty.'); return; }
 
         const btn = document.getElementById('save-btn');
@@ -343,24 +800,35 @@
         try {
             const encTitle = await encrypt(titleRaw || 'Untitled');
             const encBody = await encrypt(bodyRaw);
+            const encTags = await encrypt(tagsRaw);
 
             if (editingNoteId) {
                 const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', ...authHeader() },
-                    body: JSON.stringify({ title: encTitle, body: encBody })
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: notes.find(n => n.id === editingNoteId)?.pinned || 0 })
                 });
                 const data = await res.json();
                 if (data.success) {
                     const idx = notes.findIndex(n => n.id === editingNoteId);
-                    if (idx !== -1) { notes[idx].title = titleRaw || 'Untitled'; notes[idx].body = bodyRaw; notes[idx].updated_at = new Date().toISOString(); }
-                    closeEditor(); renderNotes(); showAlert('Note saved.');
+                    if (idx !== -1) { 
+                        notes[idx].title = titleRaw || 'Untitled'; 
+                        notes[idx].body = bodyRaw; 
+                        notes[idx].tags = tagsRaw;
+                        notes[idx].updated_at = new Date().toISOString(); 
+                    }
+                    closeEditor(); 
+                    applyFilters();
+                    applySort();
+                    renderFilterTags();
+                    renderNotes(); 
+                    showAlert('Note saved.');
                 } else { showAlert(data.error || 'Save failed.'); }
             } else {
                 const res = await fetch(`${WORKER_URL}/notes`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...authHeader() },
-                    body: JSON.stringify({ title: encTitle, body: encBody })
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -373,7 +841,6 @@
         btn.disabled = false; btn.textContent = 'Save';
     }
 
-    // CHANGED: Authorization: Bearer instead of X-User-Id
     async function deleteNote(e, noteId) {
         e.stopPropagation();
         if (!confirm('Delete this note? This cannot be undone.')) return;
@@ -383,16 +850,46 @@
                 headers: authHeader()
             });
             const data = await res.json();
-            if (data.success) { notes = notes.filter(n => n.id !== noteId); renderNotes(); showAlert('Note deleted.'); }
+            if (data.success) { 
+                notes = notes.filter(n => n.id !== noteId); 
+                applyFilters();
+                applySort();
+                renderFilterTags();
+                renderNotes(); 
+                showAlert('Note deleted.'); 
+            }
             else { showAlert(data.error || 'Delete failed.'); }
         } catch(e) { showAlert('Network error.'); }
     }
 
+    document.getElementById('editor-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditor();
+    });
+
+    document.getElementById('editor-body').addEventListener('keyup', updateWordCount);
+
+    document.getElementById('notes-search').addEventListener('input', (e) => {
+        document.getElementById('search-clear').style.display = e.target.value ? 'block' : 'none';
+        applyFilters();
+        renderNotes();
+    });
+
     document.addEventListener('keydown', e => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
             if (document.getElementById('editor-modal').classList.contains('open')) saveNote();
         }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            if (!document.getElementById('editor-modal').classList.contains('open')) openNewNote();
+        }
         if (e.key === 'Escape') closeEditor();
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            if (document.getElementById('editor-modal').classList.contains('open') && editingNoteId) {
+                togglePin({stopPropagation: () => {}}, editingNoteId);
+            }
+        }
     });
 
     function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -400,10 +897,12 @@
     function showAlert(msg) { const b=document.getElementById('custom-alert'); b.textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
 
     // ── INIT ─────────────────────────────────────────────────────────
-    // CHANGED: also require po_session to exist before trusting saved user
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');
+        const savedView = localStorage.getItem('po_notes_view');
+        if (savedView) currentView = savedView;
+        
         if (saved && token) {
             try {
                 const user = JSON.parse(saved);
@@ -413,6 +912,7 @@
                 return;
             } catch(e) {}
         }
+        initDarkMode();
         liftCurtain();
     });
 </script>
