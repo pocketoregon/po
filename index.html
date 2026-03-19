@@ -209,7 +209,14 @@
         </div>
     </div>
 
-    <div id="custom-alert"></div>
+    <div id="custom-alert"></div> 
+    <div id="connection-error" style="display:none;position:fixed;inset:0;z-index:9998;background:white;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;color:#1f1e24;margin-bottom:8px;">Connection issue</h2>
+    <p style="color:#6b7280;max-width:340px;margin-bottom:2rem;font-size:0.95rem;">Our server is waking up or temporarily unreachable. Please wait a moment and try again.</p>
+    <button onclick="window.location.reload()" style="background:#1f1e24;color:white;border:none;border-radius:8px;padding:10px 28px;font-size:0.9rem;font-weight:600;cursor:pointer;">↻ Reload page</button>
+    <p style="color:#d1d5db;font-size:0.8rem;margin-top:1rem;">If this keeps happening, try again in a minute.</p>
+</div>
 
     <div id="login-modal">
         <div class="login-modal-box">
