@@ -452,9 +452,9 @@ export default {
         let chapter_num = chapter_number;
         if (!chapter_num) {
           const max = await env.DB.prepare("SELECT MAX(chapter_number) as max_num FROM chapters WHERE story_id=?").bind(storyId).first();
-          chapter_number = (max?.max_num || 0) + 1;
+          chapter_num = (max?.max_num || 0) + 1;
         }
-        const res = await env.DB.prepare("INSERT INTO chapters (story_id, title, body, chapter_number) VALUES (?, ?, ?, ?)").bind(storyId, title, body, chapter_number).run();
+        const res = await env.DB.prepare("INSERT INTO chapters (story_id, title, body, chapter_number) VALUES (?, ?, ?, ?)").bind(storyId, title, body, chapter_num).run();
         await env.DB.prepare("UPDATE stories SET updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(storyId).run();
         return new Response(JSON.stringify({ success: true, id: res.meta.last_row_id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
