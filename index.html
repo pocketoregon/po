@@ -635,6 +635,10 @@
 
         function escapeHtml(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
         function formatTime(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
+        function showConnectionError() {
+    const el = document.getElementById('connection-error');
+    el.style.display = 'flex';
+}
         function showCustomAlert(msg) { const box = document.getElementById('custom-alert'); box.textContent = msg; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000); }
 
         const logo = document.getElementById('logo-traveller');
