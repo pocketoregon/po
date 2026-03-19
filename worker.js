@@ -300,56 +300,6 @@ export default {
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
-    // NOTES GET
-    if (path === '/notes' && request.method === 'GET') {
-      const user = await validateToken(request, env);
-      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
-      try {
-        const notes = await env.DB.prepare('SELECT id,title,body,tags,pinned,created_at,updated_at FROM notes WHERE user_id=? ORDER BY pinned DESC, updated_at DESC').bind(user.id).all();
-        return new Response(JSON.stringify({notes:notes.results}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
-    }
-
-    // NOTES POST
-    if (path === '/notes' && request.method === 'POST') {
-      const user = await validateToken(request, env);
-      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
-      try {
-        const {title,body,tags,pinned} = await request.json();
-        const result = await env.DB.prepare('INSERT INTO notes (user_id,title,body,tags,pinned) VALUES (?,?,?,?,?)').bind(user.id,title||'',body||'',tags||'',pinned||0).run();
-        return new Response(JSON.stringify({success:true,id:result.meta?.last_row_id}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
-    }
-
-    // NOTES PUT
-    if (path.startsWith('/notes/') && request.method === 'PUT') {
-      const user = await validateToken(request, env);
-      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
-      try {
-        const noteId = path.split('/notes/')[1];
-        const {title,body,tags,pinned} = await request.json();
-        const note = await env.DB.prepare('SELECT user_id FROM notes WHERE id=?').bind(noteId).first();
-        if (!note) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        if (String(note.user_id)!==String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        await env.DB.prepare('UPDATE notes SET title=?,body=?,tags=?,pinned=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title||'',body||'',tags||'',pinned||0,noteId).run();
-        return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
-    }
-
-    // NOTES DELETE
-    if (path.startsWith('/notes/') && request.method === 'DELETE') {
-      const user = await validateToken(request, env);
-      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
-      try {
-        const noteId = path.split('/notes/')[1];
-        const note = await env.DB.prepare('SELECT user_id FROM notes WHERE id=?').bind(noteId).first();
-        if (!note) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        if (String(note.user_id)!==String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        await env.DB.prepare('DELETE FROM notes WHERE id=?').bind(noteId).run();
-        return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
-      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
-    }
-
     // ADMIN USERS
     if (path === '/admin/users' && request.method === 'GET') {
       const user = await validateToken(request, env);
@@ -461,28 +411,29 @@ export default {
         const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id=?").bind(storyId).first();
         if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (story.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        await env.DB.prepare("DELETE FROM stories WHERE id=?").bind(storyId).run();
         await env.DB.prepare("DELETE FROM chapters WHERE story_id=?").bind(storyId).run();
-        await env.DB.prepare("DELETE FROM story_likes WHERE story_id=?").bind(storyId).run();
-        await env.DB.prepare("DELETE FROM story_bookmarks WHERE story_id=?").bind(storyId).run();
+        await env.DB.prepare("DELETE FROM stories WHERE id=?").bind(storyId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // CHAPTERS GET ONE
+    // CHAPTERS GET
     if (chapterMatch && request.method === 'GET') {
       try {
         const chapterId = chapterMatch[1];
-        const chapter = await env.DB.prepare("SELECT chapters.*, stories.title as story_title, stories.user_id as story_owner, stories.status as story_status FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
+        const chapter = await env.DB.prepare("SELECT chapters.*, stories.user_id, stories.status FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!chapter) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        if (chapter.story_status === 'draft') {
-          const user = await validateToken(request, env);
-          if (!user || (user.id !== chapter.story_owner && user.role !== 'admin')) {
+        const user = await validateToken(request, env);
+        if (chapter.status === 'draft') {
+          if (!user || (user.id !== chapter.user_id && user.role !== 'admin')) {
             return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
         }
-        const prev = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number < ? ORDER BY chapter_number DESC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
-        const next = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number > ? ORDER BY chapter_number ASC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
+        const storyId = chapter.story_id;
+        const chapters = await env.DB.prepare("SELECT id, title, chapter_number FROM chapters WHERE story_id=? ORDER BY chapter_number ASC").bind(storyId).all();
+        const chapterIndex = chapters.results.findIndex(c => c.id === parseInt(chapterId));
+        const prev = chapterIndex > 0 ? chapters.results[chapterIndex - 1] : null;
+        const next = chapterIndex < chapters.results.length - 1 ? chapters.results[chapterIndex + 1] : null;
         return new Response(JSON.stringify({ chapter, prev, next }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
@@ -493,11 +444,13 @@ export default {
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
         const storyId = storyChapterPostMatch[1];
-        const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id=?").bind(storyId).first();
-        if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        if (story.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        let { title, body, chapter_number } = await request.json();
-        if (!chapter_number) {
+        const owner = await env.DB.prepare("SELECT user_id FROM stories WHERE id=?").bind(storyId).first();
+        if (!owner) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        if (owner.user_id !== user.id && user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const { title, body, chapter_number } = await request.json();
+        if (!title || !body) return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        let chapter_num = chapter_number;
+        if (!chapter_num) {
           const max = await env.DB.prepare("SELECT MAX(chapter_number) as max_num FROM chapters WHERE story_id=?").bind(storyId).first();
           chapter_number = (max?.max_num || 0) + 1;
         }
@@ -581,6 +534,56 @@ export default {
         const stories = await env.DB.prepare("SELECT stories.*, users.name as author_name, (SELECT COUNT(*) FROM story_likes WHERE story_id=stories.id) as like_count, (SELECT COUNT(*) FROM chapters WHERE story_id=stories.id) as chapter_count FROM story_bookmarks JOIN stories ON story_bookmarks.story_id=stories.id JOIN users ON stories.user_id=users.id WHERE story_bookmarks.user_id=? ORDER BY story_bookmarks.created_at DESC").bind(user.id).all();
         return new Response(JSON.stringify({ stories: stories.results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // NOTES GET
+    if (path === '/notes' && request.method === 'GET') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      try {
+        const notes = await env.DB.prepare('SELECT id,title,body,tags,pinned,created_at,updated_at FROM notes WHERE user_id=? ORDER BY pinned DESC, updated_at DESC').bind(user.id).all();
+        return new Response(JSON.stringify({notes:notes.results}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
+    }
+
+    // NOTES POST
+    if (path === '/notes' && request.method === 'POST') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      try {
+        const {title,body,tags,pinned} = await request.json();
+        const result = await env.DB.prepare('INSERT INTO notes (user_id,title,body,tags,pinned) VALUES (?,?,?,?,?)').bind(user.id,title||'',body||'',tags||'',pinned||0).run();
+        return new Response(JSON.stringify({success:true,id:result.meta?.last_row_id}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
+    }
+
+    // NOTES PUT
+    if (path.startsWith('/notes/') && request.method === 'PUT') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      try {
+        const noteId = path.split('/notes/')[1];
+        const {title,body,tags,pinned} = await request.json();
+        const note = await env.DB.prepare('SELECT user_id FROM notes WHERE id=?').bind(noteId).first();
+        if (!note) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        if (String(note.user_id)!==String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        await env.DB.prepare('UPDATE notes SET title=?,body=?,tags=?,pinned=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title||'',body||'',tags||'',pinned||0,noteId).run();
+        return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
+    }
+
+    // NOTES DELETE
+    if (path.startsWith('/notes/') && request.method === 'DELETE') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
+      try {
+        const noteId = path.split('/notes/')[1];
+        const note = await env.DB.prepare('SELECT user_id FROM notes WHERE id=?').bind(noteId).first();
+        if (!note) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        if (String(note.user_id)!==String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
+        await env.DB.prepare('DELETE FROM notes WHERE id=?').bind(noteId).run();
+        return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+      } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
 
     // ADMIN STORIES
