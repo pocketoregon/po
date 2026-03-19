@@ -841,8 +841,22 @@
                 });
                 const data = await res.json();
                 if (data.success) {
+                    const newNote = {
+                        id: data.id,
+                        user_id: currentUser.id,
+                        title: titleRaw || 'Untitled',
+                        body: bodyRaw,
+                        tags: tagsRaw,
+                        pinned: 0,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    notes.unshift(newNote);
                     closeEditor();
-                    await loadNotes();
+                    applyFilters();
+                    applySort();
+                    renderFilterTags();
+                    renderNotes();
                     showAlert('Note created.');
                 } else { showAlert(data.error || 'Create failed.'); }
             }
