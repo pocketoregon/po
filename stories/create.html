@@ -18,7 +18,6 @@
         .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
         #main-nav { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #e5e7eb; }
 
-        /* ── DASHBOARD ── */
         #dashboard-view { display: none; }
         .studio-hero { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 3rem 1.5rem 2.5rem; border-bottom: 1px solid #f3f4f6; }
         .studio-hero h1 { font-family: 'Outfit', sans-serif; font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em; }
@@ -37,7 +36,6 @@
         .empty-studio { text-align: center; padding: 5rem 2rem; color: #9ca3af; }
         .empty-studio h3 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #374151; margin-bottom: 8px; }
 
-        /* ── EDITOR ── */
         #editor-view { display: none; background: white; }
         .editor-hero { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 2.5rem 1.5rem 2rem; border-bottom: 1px solid #f3f4f6; }
         .editor-hero h1 { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; }
@@ -48,17 +46,15 @@
         .form-section { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
         .form-section h3 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; color: #1f1e24; }
 
-        .chapter-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; background: #fafafa; transition: border-color 0.15s, background 0.15s; }
+        .chapter-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #f3f4f6; border-radius: 8px; margin-bottom: 8px; background: #fafafa; transition: border-color 0.15s, background 0.15s; cursor: pointer; }
         .chapter-row:hover { border-color: #e5e7eb; background: white; }
         .chapter-num-badge { width: 28px; height: 28px; border-radius: 50%; background: #f97316; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
         .chapter-row-title { font-weight: 600; font-size: 0.9rem; flex: 1; }
 
-        /* ── CHAPTER EDITOR OVERLAY ── */
         #chapter-editor { display: none; position: fixed; inset: 0; background: white; z-index: 300; overflow-y: auto; }
         .chapter-editor-nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
         .chapter-editor-nav-inner { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
 
-        /* ── AUTH DROPDOWN ── */
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s; }
         .user-avatar:hover { border-color: #1f1e24; }
         .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 180px; display: none; z-index: 500; }
@@ -70,13 +66,13 @@
 
         #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: white; padding: 12px 24px; border-radius: 999px; font-size: 0.875rem; font-weight: 600; z-index: 10000; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
 
-        /* ── CHARACTER & BOOK CARDS ── */
-        .character-card, .book-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
-        .character-card:hover, .book-card:hover { border-color: #f97316; background: #fffaf8; }
+        .character-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+        .character-card:hover { border-color: #f97316; background: #fffaf8; }
+        .book-card { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 400; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
         .modal-content { background: white; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; }
-        .tab-btn { padding: 8px 16px; font-weight: 600; font-size: 0.875rem; border-bottom: 2px solid transparent; color: #6b7280; cursor: pointer; }
-        .tab-btn.active { border-color: #f97316; color: #1f1e24; }
+        .tab-btn { padding: 8px 16px; font-weight: 600; font-size: 0.875rem; border-bottom: 2px solid transparent; color: #6b7280; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none; }
+        .tab-btn.active { border-bottom-color: #f97316; color: #1f1e24; }
     </style>
 </head>
 <body>
@@ -106,6 +102,7 @@
     </div>
 </nav>
 
+<!-- DASHBOARD VIEW -->
 <div id="dashboard-view">
     <div class="studio-hero">
         <div class="max-w-5xl mx-auto px-6">
@@ -128,6 +125,7 @@
     </div>
 </div>
 
+<!-- EDITOR VIEW -->
 <div id="editor-view">
     <div class="editor-hero">
         <div class="max-w-5xl mx-auto px-6">
@@ -140,6 +138,8 @@
 
     <div class="max-w-5xl mx-auto px-6 py-8">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+
+            <!-- LEFT: Story Details -->
             <div class="md:col-span-2">
                 <form id="story-form">
                     <div class="form-section">
@@ -160,7 +160,7 @@
                         </select>
 
                         <label class="form-label">Description</label>
-                        <textarea id="s-desc" class="form-input mb-4" rows="4" placeholder="Brief summary..."></textarea>
+                        <textarea id="s-desc" class="form-input mb-4" rows="4" placeholder="Brief summary..." style="resize:vertical;"></textarea>
 
                         <label class="form-label">Status</label>
                         <select id="s-status" class="form-input mb-5">
@@ -168,19 +168,19 @@
                             <option value="published">Published (visible to everyone)</option>
                         </select>
 
-                        <!-- FEATURE 3: WORLD BUILDING -->
+                        <!-- WORLD BUILDING -->
                         <div class="border-t border-gray-100 pt-4 mt-2 mb-4">
                             <button type="button" onclick="toggleSection('world-section')" class="flex items-center justify-between w-full text-left">
-                                <span class="form-label mb-0">World Building</span>
-                                <svg id="world-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transition-transform"><path d="M6 9l6 6 6-6"/></svg>
+                                <span class="form-label mb-0" style="margin-bottom:0;">🌍 World Building</span>
+                                <svg id="world-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
                             </button>
                             <div id="world-section" class="hidden mt-4 space-y-4">
-                                <div><label class="form-label text-[10px]">History</label><textarea id="w-history" class="form-input" rows="3"></textarea></div>
-                                <div><label class="form-label text-[10px]">Nation</label><textarea id="w-nation" class="form-input" rows="3"></textarea></div>
-                                <div><label class="form-label text-[10px]">Power System</label><textarea id="w-power" class="form-input" rows="3"></textarea></div>
-                                <div><label class="form-label text-[10px]">Lore</label><textarea id="w-lore" class="form-input" rows="3"></textarea></div>
-                                <div><label class="form-label text-[10px]">Important Places</label><textarea id="w-places" class="form-input" rows="3"></textarea></div>
-                                <button type="button" onclick="saveWorld()" class="w-full bg-gray-100 text-gray-700 font-bold py-2 rounded text-xs hover:bg-gray-200">Save World</button>
+                                <div><label class="form-label" style="font-size:0.7rem;">History</label><textarea id="w-history" class="form-input" rows="3" placeholder="The history of your world..."></textarea></div>
+                                <div><label class="form-label" style="font-size:0.7rem;">Nation</label><textarea id="w-nation" class="form-input" rows="3" placeholder="Nations, kingdoms, factions..."></textarea></div>
+                                <div><label class="form-label" style="font-size:0.7rem;">Power System</label><textarea id="w-power" class="form-input" rows="3" placeholder="Magic, abilities, rules..."></textarea></div>
+                                <div><label class="form-label" style="font-size:0.7rem;">Lore</label><textarea id="w-lore" class="form-input" rows="3" placeholder="Myths, legends, culture..."></textarea></div>
+                                <div><label class="form-label" style="font-size:0.7rem;">Important Places</label><textarea id="w-places" class="form-input" rows="3" placeholder="Key locations..."></textarea></div>
+                                <button type="button" onclick="saveWorld()" class="w-full bg-gray-800 text-white font-bold py-2 rounded-lg text-xs hover:bg-gray-700 transition">Save World Building</button>
                             </div>
                         </div>
 
@@ -198,6 +198,7 @@
                 </form>
             </div>
 
+            <!-- RIGHT: Chapters, Characters, Books -->
             <div class="md:col-span-3" id="chapters-col">
                 <div id="chapters-locked" class="form-section text-center py-8" style="color:#9ca3af;">
                     <svg class="mx-auto mb-3" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -206,6 +207,7 @@
                 </div>
 
                 <div id="chapters-panel" style="display:none;" class="space-y-8">
+
                     <!-- CHAPTERS -->
                     <div class="form-section">
                         <div class="flex items-center justify-between mb-4">
@@ -217,11 +219,11 @@
                         <div id="chapter-list"><div class="text-gray-400 text-sm text-center py-6">No chapters yet.</div></div>
                     </div>
 
-                    <!-- FEATURE 2: CHARACTER ROSTER -->
+                    <!-- CHARACTER ROSTER -->
                     <div class="form-section">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="outfit-font font-bold text-lg">Character Roster</h3>
-                            <button onclick="openCharacterModal()" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition">
+                            <button onclick="openCharacterModal(null)" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition">
                                 + New Character
                             </button>
                         </div>
@@ -230,11 +232,11 @@
                         </div>
                     </div>
 
-                    <!-- FEATURE 4: BOOKS -->
+                    <!-- BOOKS / VOLUMES -->
                     <div class="form-section">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="outfit-font font-bold text-lg">Books / Volumes</h3>
-                            <button onclick="openBookModal()" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition">
+                            <button onclick="openBookModal(null)" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition">
                                 + New Book
                             </button>
                         </div>
@@ -242,51 +244,66 @@
                             <div class="text-gray-400 text-sm text-center py-6">No books yet.</div>
                         </div>
                     </div>
+
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
-<!-- CHAPTER EDITOR -->
+<!-- CHAPTER EDITOR FULLSCREEN -->
 <div id="chapter-editor">
     <div class="chapter-editor-nav">
         <div class="chapter-editor-nav-inner">
             <button onclick="closeChapterEditor()" class="text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors">✕ Close</button>
-            <div class="flex gap-4">
-                <div id="chapter-tab-story" onclick="switchChapterTab('story')" class="tab-btn active">Story</div>
-                <div id="chapter-tab-chars" onclick="switchChapterTab('chars')" class="tab-btn">Characters</div>
+            <div class="flex gap-1">
+                <button id="chapter-tab-story" onclick="switchChapterTab('story')" class="tab-btn active">Story</button>
+                <button id="chapter-tab-chars" onclick="switchChapterTab('chars')" class="tab-btn">Characters</button>
             </div>
             <button onclick="saveChapter()" class="bg-[#f97316] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#ea580c] transition">Save Chapter</button>
         </div>
     </div>
     <div style="max-width:760px; margin:0 auto; padding:2rem 1.5rem 4rem;">
+
+        <!-- STORY TAB -->
         <div id="chapter-view-story">
             <div class="mb-5">
                 <div class="flex items-center justify-between mb-2">
                     <label class="form-label mb-0">Chapter Title *</label>
-                    <button onclick="toggleSection('chapter-info-panel')" class="text-[10px] font-bold text-orange-500 hover:underline">CHAPTER INFO</button>
+                    <button type="button" onclick="toggleSection('chapter-info-panel')" class="text-[10px] font-bold text-orange-500 hover:underline bg-none border-none cursor-pointer">📋 CHAPTER INFO</button>
                 </div>
                 <input id="c-title" class="form-input" placeholder="e.g. Chapter 1: The Beginning" maxlength="150">
-                
+
                 <div id="chapter-info-panel" class="hidden mt-4 p-4 bg-orange-50 rounded-lg border border-orange-100 space-y-4">
-                    <div><label class="form-label text-[10px]">Main Idea</label><textarea id="ci-idea" class="form-input" rows="2"></textarea></div>
-                    <div><label class="form-label text-[10px]">Fundamental Theme</label><textarea id="ci-theme" class="form-input" rows="2"></textarea></div>
-                    <div><label class="form-label text-[10px]">Extended Synopsis</label><textarea id="ci-synopsis" class="form-input" rows="4"></textarea></div>
+                    <p class="text-xs font-bold text-orange-600 uppercase tracking-widest mb-2">Chapter Info (visible to readers)</p>
+                    <div><label class="form-label" style="font-size:0.7rem;">Main Idea</label><textarea id="ci-idea" class="form-input" rows="2" placeholder="The core idea of this chapter..."></textarea></div>
+                    <div><label class="form-label" style="font-size:0.7rem;">Fundamental Theme</label><textarea id="ci-theme" class="form-input" rows="2" placeholder="The theme explored..."></textarea></div>
+                    <div><label class="form-label" style="font-size:0.7rem;">Extended Synopsis</label><textarea id="ci-synopsis" class="form-input" rows="4" placeholder="A longer summary of events..."></textarea></div>
                 </div>
             </div>
-            <div class="mb-5"><label class="form-label">Chapter Number</label><input id="c-number" type="number" class="form-input" placeholder="Auto-assigned if empty" min="1"></div>
-            <div><label class="form-label">Chapter Content *</label><textarea id="c-body" class="form-input" rows="28" style="resize:vertical; min-height:400px; line-height:1.7;"></textarea></div>
+            <div class="mb-5">
+                <label class="form-label">Chapter Number</label>
+                <input id="c-number" type="number" class="form-input" placeholder="Auto-assigned if empty" min="1">
+            </div>
+            <div>
+                <label class="form-label">Chapter Content *</label>
+                <textarea id="c-body" class="form-input" rows="28" placeholder="Write your chapter here..." style="resize:vertical; min-height:400px; line-height:1.7;"></textarea>
+            </div>
         </div>
 
+        <!-- CHARACTERS TAB -->
         <div id="chapter-view-chars" class="hidden">
-            <div id="chapter-chars-locked" class="text-center py-12 text-gray-400">Save the chapter first to tag characters.</div>
+            <div id="chapter-chars-locked" class="text-center py-12 text-gray-400">
+                <svg class="mx-auto mb-3" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <p class="font-semibold">Save the chapter first to tag characters.</p>
+            </div>
             <div id="chapter-chars-content" class="hidden">
                 <div class="flex items-center justify-between mb-6">
-                    <h4 class="font-bold text-gray-700">Tagged Characters</h4>
+                    <h4 class="font-bold text-gray-700">Characters in this chapter</h4>
                     <div class="relative">
-                        <button onclick="toggleSection('tag-char-dropdown')" class="bg-orange-500 text-white px-3 py-1.5 rounded text-xs font-bold">Tag a Character</button>
-                        <div id="tag-char-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 max-h-60 overflow-y-auto"></div>
+                        <button onclick="toggleSection('tag-char-dropdown')" class="bg-[#f97316] text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-[#ea580c]">+ Tag a Character</button>
+                        <div id="tag-char-dropdown" class="hidden absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 max-h-60 overflow-y-auto"></div>
                     </div>
                 </div>
                 <div id="chapter-tagged-list" class="space-y-2"></div>
@@ -295,6 +312,7 @@
 
         <div class="flex items-center justify-between mt-8 border-t border-gray-100 pt-6">
             <button id="delete-chapter-btn" onclick="deleteChapter()" class="text-red-400 hover:text-red-600 text-sm font-semibold transition-colors" style="display:none;">🗑 Delete chapter</button>
+            <div style="flex:1;"></div>
             <button onclick="saveChapter()" class="bg-[#f97316] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#ea580c] transition">Save Chapter</button>
         </div>
     </div>
@@ -305,20 +323,20 @@
     <div class="modal-content">
         <h3 id="char-modal-title" class="outfit-font font-bold text-xl mb-6">New Character</h3>
         <div class="space-y-4">
-            <div><label class="form-label">Name *</label><input id="char-name" class="form-input"></div>
-            <div><label class="form-label">Age</label><input id="char-age" class="form-input"></div>
-            <div><label class="form-label">Description</label><textarea id="char-desc" class="form-input" rows="3"></textarea></div>
-            <div><label class="form-label">Hobbies</label><textarea id="char-hobbies" class="form-input" rows="2"></textarea></div>
-            <div><label class="form-label">Backstory</label><textarea id="char-backstory" class="form-input" rows="3"></textarea></div>
-            <div><label class="form-label">Personality</label><textarea id="char-personality" class="form-input" rows="2"></textarea></div>
-            <div><label class="form-label">Motivations</label><textarea id="char-motivations" class="form-input" rows="2"></textarea></div>
-            <div><label class="form-label">Relationships</label><textarea id="char-relationships" class="form-input" rows="2"></textarea></div>
+            <div><label class="form-label">Name *</label><input id="char-name" class="form-input" placeholder="Character name"></div>
+            <div><label class="form-label">Age</label><input id="char-age" class="form-input" placeholder="e.g. 24"></div>
+            <div><label class="form-label">Description</label><textarea id="char-desc" class="form-input" rows="3" placeholder="Brief description..."></textarea></div>
+            <div><label class="form-label">Hobbies</label><textarea id="char-hobbies" class="form-input" rows="2" placeholder="What do they enjoy?"></textarea></div>
+            <div><label class="form-label">Backstory</label><textarea id="char-backstory" class="form-input" rows="3" placeholder="Their history..."></textarea></div>
+            <div><label class="form-label">Personality</label><textarea id="char-personality" class="form-input" rows="2" placeholder="Personality traits..."></textarea></div>
+            <div><label class="form-label">Motivations</label><textarea id="char-motivations" class="form-input" rows="2" placeholder="What drives them?"></textarea></div>
+            <div><label class="form-label">Relationships</label><textarea id="char-relationships" class="form-input" rows="2" placeholder="Key relationships..."></textarea></div>
         </div>
         <div class="flex items-center justify-between mt-8">
-            <button id="delete-char-btn" onclick="deleteCharacter()" class="text-red-500 text-sm font-bold hidden">Delete</button>
+            <button id="delete-char-btn" onclick="deleteCharacter()" class="text-red-500 text-sm font-bold" style="display:none;">Delete</button>
             <div class="flex gap-3 ml-auto">
-                <button onclick="closeCharacterModal()" class="px-4 py-2 text-sm font-bold text-gray-500">Cancel</button>
-                <button onclick="saveCharacter()" class="bg-[#1f1e24] text-white px-6 py-2 rounded-lg text-sm font-bold">Save</button>
+                <button onclick="closeCharacterModal()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-800">Cancel</button>
+                <button onclick="saveCharacter()" class="bg-[#1f1e24] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-gray-700">Save</button>
             </div>
         </div>
     </div>
@@ -329,15 +347,15 @@
     <div class="modal-content">
         <h3 id="book-modal-title" class="outfit-font font-bold text-xl mb-6">New Book</h3>
         <div class="space-y-4">
-            <div><label class="form-label">Name *</label><input id="book-name" class="form-input"></div>
-            <div><label class="form-label">Description</label><textarea id="book-desc" class="form-input" rows="2"></textarea></div>
-            <div><label class="form-label">Sort Order</label><input id="book-order" type="number" class="form-input" value="0"></div>
+            <div><label class="form-label">Name *</label><input id="book-name" class="form-input" placeholder="Volume 1: The Beginning"></div>
+            <div><label class="form-label">Description</label><textarea id="book-desc" class="form-input" rows="2" placeholder="What is this volume about?"></textarea></div>
+            <div><label class="form-label">Sort Order</label><input id="book-order" type="number" class="form-input" value="0" min="0"></div>
         </div>
         <div class="flex items-center justify-between mt-8">
-            <button id="delete-book-btn" onclick="deleteBook()" class="text-red-500 text-sm font-bold hidden">Delete</button>
+            <button id="delete-book-btn" onclick="deleteBook()" class="text-red-500 text-sm font-bold" style="display:none;">Delete</button>
             <div class="flex gap-3 ml-auto">
-                <button onclick="closeBookModal()" class="px-4 py-2 text-sm font-bold text-gray-500">Cancel</button>
-                <button onclick="saveBook()" class="bg-[#1f1e24] text-white px-6 py-2 rounded-lg text-sm font-bold">Save</button>
+                <button onclick="closeBookModal()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-800">Cancel</button>
+                <button onclick="saveBook()" class="bg-[#1f1e24] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-gray-700">Save</button>
             </div>
         </div>
     </div>
@@ -353,11 +371,12 @@
     let editingCharId = null;
     let editingBookId = null;
     let storyCharacters = [];
-    let publishedChapters = [];
+    let allChapters = [];
 
     function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function getToken() { return localStorage.getItem('po_token') || ''; }
     function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
+
     function showToast(msg, isError = false) {
         const t = document.getElementById('toast');
         t.textContent = msg;
@@ -366,10 +385,15 @@
         clearTimeout(window._toastTimer);
         window._toastTimer = setTimeout(() => t.style.display = 'none', 3000);
     }
+
     function toggleSection(id) {
         const el = document.getElementById(id);
+        if (!el) return;
         el.classList.toggle('hidden');
-        if (id === 'world-section') document.getElementById('world-arrow').style.transform = el.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        if (id === 'world-section') {
+            const arrow = document.getElementById('world-arrow');
+            if (arrow) arrow.style.transform = el.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        }
     }
 
     // ── NAVIGATION ───────────────────────────────────────────────────
@@ -380,6 +404,7 @@
         document.getElementById('dashboard-view').style.display = 'block';
         loadMyStories();
     }
+
     function startNewStory() {
         currentStoryId = null;
         window.history.pushState({}, '', '/stories/create.html');
@@ -393,7 +418,7 @@
         document.getElementById('delete-story-btn').style.display = 'none';
         document.getElementById('chapters-locked').style.display = 'block';
         document.getElementById('chapters-panel').style.display = 'none';
-        document.getElementById('view-story-link').style.display = 'none';
+        document.getElementById('view-story-link').style.cssText = 'display:none!important;';
         document.getElementById('s-title').focus();
     }
 
@@ -406,7 +431,7 @@
             const data = await res.json();
             const stories = data.stories || [];
             if (stories.length === 0) {
-                list.innerHTML = '<div class="empty-studio"><h3>No stories yet</h3><p class="text-sm mb-6">Click "New Story" to write your first one.</p></div>';
+                list.innerHTML = `<div class="empty-studio"><svg class="mx-auto mb-4" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg><h3>No stories yet</h3><p class="text-sm mb-6">Click "New Story" to write your first one.</p></div>`;
                 return;
             }
             list.innerHTML = stories.map(s => `
@@ -415,18 +440,20 @@
                         <div class="my-story-title">${escHtml(s.title)}</div>
                         <div class="my-story-meta">
                             <span class="status-pill status-${s.status}">${s.status}</span>
-                            <span>${s.chapter_count} chapters</span>
-                            <span>${s.like_count} likes</span>
+                            <span>${s.chapter_count} chapter${s.chapter_count !== 1 ? 's' : ''}</span>
+                            <span>${s.like_count} like${s.like_count !== 1 ? 's' : ''}</span>
                             <span>${escHtml(s.genre)}</span>
                         </div>
                     </div>
                     <div class="flex gap-2 flex-shrink-0">
-                        <a href="/stories/read.html?id=${s.id}" target="_blank" class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-xs font-bold no-underline">View</a>
+                        <a href="/stories/read.html?id=${s.id}" target="_blank" style="background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:8px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">View</a>
                         <button onclick="openStoryEditor(${s.id})" class="btn-edit">Edit</button>
                     </div>
                 </div>
             `).join('');
-        } catch(e) { list.innerHTML = '<div class="text-red-400 text-sm text-center py-8">Could not load your stories.</div>'; }
+        } catch(e) {
+            list.innerHTML = '<div class="text-red-400 text-sm text-center py-8">Could not load your stories.</div>';
+        }
     }
 
     // ── STORY EDITOR ─────────────────────────────────────────────────
@@ -437,55 +464,124 @@
         document.getElementById('editor-view').style.display = 'block';
         await loadStoryIntoEditor(id);
     }
+
     async function loadStoryIntoEditor(id) {
         try {
             const res = await fetch(`${WORKER_URL}/stories/${id}`, { headers: authHeaders() });
+            if (res.status === 403 || res.status === 404) { showToast('Story not found or access denied.', true); goToDashboard(); return; }
             const data = await res.json();
             const s = data.story;
+
+            if (currentUser && String(s.user_id) !== String(currentUser.id) && currentUser.role !== 'admin') {
+                showToast("You can't edit someone else's story.", true);
+                goToDashboard();
+                return;
+            }
+
             document.getElementById('editor-title').textContent = 'Editing: ' + s.title;
             document.getElementById('s-title').value = s.title;
             document.getElementById('s-genre').value = s.genre;
             document.getElementById('s-desc').value = s.description || '';
             document.getElementById('s-status').value = s.status;
             document.getElementById('delete-story-btn').style.display = 'block';
-            document.getElementById('view-story-link').href = `/stories/read.html?id=${id}`;
-            document.getElementById('view-story-link').style.cssText = 'display:block!important;';
+            const vl = document.getElementById('view-story-link');
+            vl.href = `/stories/read.html?id=${id}`;
+            vl.style.cssText = 'display:block!important;';
             document.getElementById('chapters-locked').style.display = 'none';
             document.getElementById('chapters-panel').style.display = 'block';
-            renderChapterList(data.chapters || []);
-            publishedChapters = (data.chapters || []).filter(c => s.status === 'published'); // simplified for demo
+
+            allChapters = data.chapters || [];
+            renderChapterList(allChapters);
             loadWorld();
             loadCharacters();
             loadBooks();
         } catch(e) { showToast('Error loading story.', true); }
     }
+
     function renderChapterList(chapters) {
         const list = document.getElementById('chapter-list');
-        if (!chapters || chapters.length === 0) { list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No chapters yet.</div>'; return; }
-        list.innerHTML = chapters.map(c => `<div class="chapter-row" onclick="openChapterEditor(${c.id})"><div class="chapter-num-badge">${c.chapter_number}</div><div class="chapter-row-title">${escHtml(c.title)}</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>`).join('');
+        if (!chapters || chapters.length === 0) { list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No chapters yet. Add your first one!</div>'; return; }
+        list.innerHTML = chapters.map(c => `
+            <div class="chapter-row" onclick="openChapterEditor(${c.id})">
+                <div class="chapter-num-badge">${c.chapter_number}</div>
+                <span class="chapter-row-title">${escHtml(c.title)}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+        `).join('');
     }
 
-    // ── FEATURE 1: CHAPTER INFO & EDITOR ─────────────────────────────
-    function switchChapterTab(tab) {
-        document.getElementById('chapter-tab-story').classList.toggle('active', tab==='story');
-        document.getElementById('chapter-tab-chars').classList.toggle('active', tab==='chars');
-        document.getElementById('chapter-view-story').classList.toggle('hidden', tab!=='story');
-        document.getElementById('chapter-view-chars').classList.toggle('hidden', tab!=='chars');
+    // ── STORY FORM SAVE ──────────────────────────────────────────────
+    document.getElementById('story-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('save-story-btn');
+        btn.disabled = true; btn.textContent = 'Saving...';
+
+        const body = {
+            title: document.getElementById('s-title').value.trim(),
+            genre: document.getElementById('s-genre').value,
+            description: document.getElementById('s-desc').value.trim(),
+            status: document.getElementById('s-status').value
+        };
+
+        if (!body.title) { showToast('Title is required.', true); btn.disabled = false; btn.textContent = 'Save Story'; return; }
+
+        try {
+            const method = currentStoryId ? 'PUT' : 'POST';
+            const url = currentStoryId ? `${WORKER_URL}/stories/${currentStoryId}` : `${WORKER_URL}/stories`;
+            const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+            const data = await res.json();
+
+            if (data.success || data.id) {
+                if (!currentStoryId && data.id) {
+                    currentStoryId = String(data.id);
+                    window.history.pushState({}, '', `/stories/create.html?id=${data.id}`);
+                    await loadStoryIntoEditor(data.id);
+                    showToast('Story created! Now add chapters.');
+                } else {
+                    document.getElementById('editor-title').textContent = 'Editing: ' + body.title;
+                    showToast('Story saved!');
+                    await loadStoryIntoEditor(currentStoryId);
+                }
+            } else { showToast(data.error || 'Failed to save.', true); }
+        } catch(e) { showToast('Network error.', true); }
+        btn.disabled = false; btn.textContent = 'Save Story';
+    });
+
+    async function deleteStory() {
+        if (!confirm('Delete this entire story and all its chapters? This CANNOT be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}`, { method: 'DELETE', headers: authHeaders() });
+            const data = await res.json();
+            if (data.success) { showToast('Story deleted.'); goToDashboard(); }
+            else { showToast(data.error || 'Delete failed.', true); }
+        } catch(e) { showToast('Network error.', true); }
     }
+
+    // ── CHAPTER EDITOR ────────────────────────────────────────────────
+    function switchChapterTab(tab) {
+        document.getElementById('chapter-tab-story').classList.toggle('active', tab === 'story');
+        document.getElementById('chapter-tab-chars').classList.toggle('active', tab === 'chars');
+        document.getElementById('chapter-view-story').classList.toggle('hidden', tab !== 'story');
+        document.getElementById('chapter-view-chars').classList.toggle('hidden', tab !== 'chars');
+    }
+
     async function openChapterEditor(id) {
         editingChapterId = id;
         switchChapterTab('story');
-        document.getElementById('chapter-editor').style.display = 'block';
-        document.getElementById('chapter-editor-heading').textContent = id ? 'Edit Chapter' : 'New Chapter';
-        document.getElementById('delete-chapter-btn').style.display = id ? 'block' : 'none';
-        document.getElementById('chapter-info-panel').classList.add('hidden');
         document.getElementById('c-title').value = '';
         document.getElementById('c-number').value = '';
         document.getElementById('c-body').value = '';
         document.getElementById('ci-idea').value = '';
         document.getElementById('ci-theme').value = '';
         document.getElementById('ci-synopsis').value = '';
-        
+        document.getElementById('chapter-info-panel').classList.add('hidden');
+
+        const deleteBtn = document.getElementById('delete-chapter-btn');
+        if (deleteBtn) deleteBtn.style.display = id ? 'block' : 'none';
+
+        document.getElementById('chapter-editor').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+
         if (id) {
             document.getElementById('chapter-chars-locked').classList.add('hidden');
             document.getElementById('chapter-chars-content').classList.remove('hidden');
@@ -496,9 +592,9 @@
                 ]);
                 const cData = await cRes.json();
                 const iData = await iRes.json();
-                document.getElementById('c-title').value = cData.chapter.title;
-                document.getElementById('c-number').value = cData.chapter.chapter_number;
-                document.getElementById('c-body').value = cData.chapter.body;
+                document.getElementById('c-title').value = cData.chapter.title || '';
+                document.getElementById('c-number').value = cData.chapter.chapter_number || '';
+                document.getElementById('c-body').value = cData.chapter.body || '';
                 document.getElementById('ci-idea').value = iData.main_idea || '';
                 document.getElementById('ci-theme').value = iData.fundamental_theme || '';
                 document.getElementById('ci-synopsis').value = iData.extended_synopsis || '';
@@ -508,58 +604,88 @@
             document.getElementById('chapter-chars-locked').classList.remove('hidden');
             document.getElementById('chapter-chars-content').classList.add('hidden');
         }
+        setTimeout(() => document.getElementById('c-title').focus(), 100);
     }
-    function closeChapterEditor() { document.getElementById('chapter-editor').style.display = 'none'; editingChapterId = null; }
+
+    function closeChapterEditor() {
+        document.getElementById('chapter-editor').style.display = 'none';
+        document.body.style.overflow = '';
+        editingChapterId = null;
+    }
+
     async function saveChapter() {
         const title = document.getElementById('c-title').value.trim();
         const body = document.getElementById('c-body').value.trim();
         const num = document.getElementById('c-number').value;
-        if (!title || !body) return showToast('Title and content required.', true);
+        if (!title) { showToast('Chapter title is required.', true); return; }
+        if (!body) { showToast('Chapter content cannot be empty.', true); return; }
+        if (!currentStoryId) { showToast('Save the story first.', true); return; }
+
         try {
             const method = editingChapterId ? 'PUT' : 'POST';
             const url = editingChapterId ? `${WORKER_URL}/chapters/${editingChapterId}` : `${WORKER_URL}/stories/${currentStoryId}/chapters`;
-            const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify({ title, body, chapter_number: num }) });
+            const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify({ title, body, chapter_number: num || null }) });
             const data = await res.json();
+
             if (data.success) {
                 const cid = editingChapterId || data.id;
-                await fetch(`${WORKER_URL}/chapters/${cid}/info`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({
-                    main_idea: document.getElementById('ci-idea').value,
-                    fundamental_theme: document.getElementById('ci-theme').value,
-                    extended_synopsis: document.getElementById('ci-synopsis').value
-                })});
-                showToast('Chapter saved!');
+                if (cid) {
+                    await fetch(`${WORKER_URL}/chapters/${cid}/info`, {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                            main_idea: document.getElementById('ci-idea').value,
+                            fundamental_theme: document.getElementById('ci-theme').value,
+                            extended_synopsis: document.getElementById('ci-synopsis').value
+                        })
+                    });
+                }
+                showToast(editingChapterId ? 'Chapter updated!' : 'Chapter added!');
                 closeChapterEditor();
-                loadStoryIntoEditor(currentStoryId);
-            }
-        } catch(e) { showToast('Save failed.', true); }
-    }
-    async function deleteChapter() {
-        if (!confirm('Delete chapter?')) return;
-        try {
-            await fetch(`${WORKER_URL}/chapters/${editingChapterId}`, { method: 'DELETE', headers: authHeaders() });
-            showToast('Deleted.');
-            closeChapterEditor();
-            loadStoryIntoEditor(currentStoryId);
-        } catch(e) { showToast('Delete failed.', true); }
+                await loadStoryIntoEditor(currentStoryId);
+            } else { showToast(data.error || 'Failed to save chapter.', true); }
+        } catch(e) { showToast('Network error.', true); }
     }
 
-    // ── FEATURE 2: CHARACTERS ────────────────────────────────────────
+    async function deleteChapter() {
+        if (!editingChapterId) return;
+        if (!confirm('Delete this chapter? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/chapters/${editingChapterId}`, { method: 'DELETE', headers: authHeaders() });
+            const data = await res.json();
+            if (data.success) { showToast('Chapter deleted.'); closeChapterEditor(); await loadStoryIntoEditor(currentStoryId); }
+            else { showToast(data.error || 'Delete failed.', true); }
+        } catch(e) { showToast('Network error.', true); }
+    }
+
+    // ── CHARACTERS ────────────────────────────────────────────────────
     async function loadCharacters() {
         try {
             const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/characters`);
             const data = await res.json();
             storyCharacters = data.characters || [];
             const list = document.getElementById('character-list');
-            if (storyCharacters.length === 0) { list.innerHTML = '<div class="col-span-full text-gray-400 text-sm text-center py-6">No characters yet.</div>'; return; }
-            list.innerHTML = storyCharacters.map(c => `<div class="character-card" onclick="openCharacterModal(${c.id})"><div class="font-bold text-sm">${escHtml(c.name)}</div><div class="text-[10px] text-gray-500 line-clamp-2 mt-1">${escHtml(c.description)}</div></div>`).join('');
+            if (storyCharacters.length === 0) {
+                list.innerHTML = '<div class="col-span-full text-gray-400 text-sm text-center py-6">No characters yet.</div>';
+                return;
+            }
+            list.innerHTML = storyCharacters.map(c => `
+                <div class="character-card" onclick="openCharacterModal(${c.id})">
+                    <div class="font-bold text-sm text-gray-800">${escHtml(c.name)}</div>
+                    ${c.age ? `<div class="text-xs text-gray-400 mt-0.5">Age: ${escHtml(c.age)}</div>` : ''}
+                    <div class="text-xs text-gray-500 mt-1 line-clamp-2">${escHtml(c.description || '')}</div>
+                </div>
+            `).join('');
         } catch(e) {}
     }
-    function openCharacterModal(id = null) {
+
+    function openCharacterModal(id) {
         editingCharId = id;
         document.getElementById('char-modal').style.display = 'flex';
         document.getElementById('char-modal-title').textContent = id ? 'Edit Character' : 'New Character';
-        document.getElementById('delete-char-btn').classList.toggle('hidden', !id);
-        const c = storyCharacters.find(x => x.id === id) || {};
+        const delBtn = document.getElementById('delete-char-btn');
+        delBtn.style.display = id ? 'block' : 'none';
+        const c = id ? (storyCharacters.find(x => x.id === id) || {}) : {};
         document.getElementById('char-name').value = c.name || '';
         document.getElementById('char-age').value = c.age || '';
         document.getElementById('char-desc').value = c.description || '';
@@ -569,58 +695,90 @@
         document.getElementById('char-motivations').value = c.motivations || '';
         document.getElementById('char-relationships').value = c.relationships || '';
     }
-    function closeCharacterModal() { document.getElementById('char-modal').style.display = 'none'; }
+
+    function closeCharacterModal() { document.getElementById('char-modal').style.display = 'none'; editingCharId = null; }
+
     async function saveCharacter() {
         const name = document.getElementById('char-name').value.trim();
-        if (!name) return showToast('Name required.', true);
+        if (!name) { showToast('Name is required.', true); return; }
         const body = {
-            name, age: document.getElementById('char-age').value,
-            description: document.getElementById('char-desc').value, hobbies: document.getElementById('char-hobbies').value,
-            backstory: document.getElementById('char-backstory').value, personality: document.getElementById('char-personality').value,
-            motivations: document.getElementById('char-motivations').value, relationships: document.getElementById('char-relationships').value
+            name,
+            age: document.getElementById('char-age').value.trim(),
+            description: document.getElementById('char-desc').value.trim(),
+            hobbies: document.getElementById('char-hobbies').value.trim(),
+            backstory: document.getElementById('char-backstory').value.trim(),
+            personality: document.getElementById('char-personality').value.trim(),
+            motivations: document.getElementById('char-motivations').value.trim(),
+            relationships: document.getElementById('char-relationships').value.trim()
         };
         try {
             const method = editingCharId ? 'PUT' : 'POST';
             const url = editingCharId ? `${WORKER_URL}/characters/${editingCharId}` : `${WORKER_URL}/stories/${currentStoryId}/characters`;
-            await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
-            showToast('Character saved!');
+            const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+            const data = await res.json();
+            if (data.success) { showToast('Character saved!'); closeCharacterModal(); loadCharacters(); }
+            else { showToast(data.error || 'Save failed.', true); }
+        } catch(e) { showToast('Network error.', true); }
+    }
+
+    async function deleteCharacter() {
+        if (!editingCharId) return;
+        if (!confirm('Delete this character? They will be removed from all chapters.')) return;
+        try {
+            await fetch(`${WORKER_URL}/characters/${editingCharId}`, { method: 'DELETE', headers: authHeaders() });
+            showToast('Character deleted.');
             closeCharacterModal();
             loadCharacters();
-        } catch(e) { showToast('Save failed.', true); }
+        } catch(e) { showToast('Network error.', true); }
     }
-    async function deleteCharacter() {
-        if (!confirm('Delete character?')) return;
-        await fetch(`${WORKER_URL}/characters/${editingCharId}`, { method: 'DELETE', headers: authHeaders() });
-        closeCharacterModal();
-        loadCharacters();
-    }
+
     async function loadChapterCharacters(cid) {
         try {
             const res = await fetch(`${WORKER_URL}/chapters/${cid}/characters`);
             const data = await res.json();
             const tagged = data.characters || [];
-            document.getElementById('chapter-tagged-list').innerHTML = tagged.map(c => `
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span class="text-sm font-medium">${escHtml(c.name)}</span>
-                    <button onclick="untagCharacter(${c.id})" class="text-red-400 hover:text-red-600">✕</button>
-                </div>
-            `).join('');
-            const untagged = storyCharacters.filter(sc => !tagged.find(tc => tc.id === sc.id));
-            document.getElementById('tag-char-dropdown').innerHTML = untagged.map(c => `<div onclick="tagCharacter(${c.id})" class="px-3 py-2 text-xs hover:bg-gray-100 cursor-pointer">${escHtml(c.name)}</div>`).join('');
+            const taggedList = document.getElementById('chapter-tagged-list');
+            taggedList.innerHTML = tagged.length === 0
+                ? '<div class="text-gray-400 text-sm text-center py-4">No characters tagged yet.</div>'
+                : tagged.map(c => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div>
+                            <span class="text-sm font-semibold text-gray-800">${escHtml(c.name)}</span>
+                            ${c.description ? `<div class="text-xs text-gray-500 mt-0.5">${escHtml(c.description.substring(0,60))}${c.description.length > 60 ? '...' : ''}</div>` : ''}
+                        </div>
+                        <button onclick="untagCharacter(${c.id})" class="text-red-400 hover:text-red-600 text-xs font-bold ml-3">Remove</button>
+                    </div>
+                `).join('');
+
+            const taggedIds = new Set(tagged.map(c => c.id));
+            const untagged = storyCharacters.filter(sc => !taggedIds.has(sc.id));
+            const dropdown = document.getElementById('tag-char-dropdown');
+            dropdown.innerHTML = untagged.length === 0
+                ? '<div class="px-3 py-2 text-xs text-gray-400">All characters tagged</div>'
+                : untagged.map(c => `<div onclick="tagCharacter(${c.id})" class="px-3 py-2 text-xs hover:bg-gray-100 cursor-pointer font-medium">${escHtml(c.name)}</div>`).join('');
         } catch(e) {}
     }
+
     async function tagCharacter(charId) {
-        await fetch(`${WORKER_URL}/chapters/${editingChapterId}/characters`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ character_id: charId }) });
-        document.getElementById('tag-char-dropdown').classList.add('hidden');
-        loadChapterCharacters(editingChapterId);
-    }
-    async function untagCharacter(charId) {
-        await fetch(`${WORKER_URL}/chapters/${editingChapterId}/characters/${charId}`, { method: 'DELETE', headers: authHeaders() });
-        loadChapterCharacters(editingChapterId);
+        if (!editingChapterId) return;
+        try {
+            await fetch(`${WORKER_URL}/chapters/${editingChapterId}/characters`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ character_id: charId }) });
+            document.getElementById('tag-char-dropdown').classList.add('hidden');
+            loadChapterCharacters(editingChapterId);
+        } catch(e) { showToast('Error tagging character.', true); }
     }
 
-    // ── FEATURE 3: WORLD ─────────────────────────────────────────────
+    async function untagCharacter(charId) {
+        if (!editingChapterId) return;
+        try {
+            await fetch(`${WORKER_URL}/chapters/${editingChapterId}/characters/${charId}`, { method: 'DELETE', headers: authHeaders() });
+            loadChapterCharacters(editingChapterId);
+        } catch(e) { showToast('Error removing character.', true); }
+    }
+
+    // ── WORLD BUILDING ────────────────────────────────────────────────
     async function loadWorld() {
+        if (!currentStoryId) return;
         try {
             const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`);
             const w = await res.json();
@@ -631,104 +789,143 @@
             document.getElementById('w-places').value = w.important_places || '';
         } catch(e) {}
     }
+
     async function saveWorld() {
+        if (!currentStoryId) { showToast('Save the story first.', true); return; }
         const body = {
-            history: document.getElementById('w-history').value, nation: document.getElementById('w-nation').value,
-            power_system: document.getElementById('w-power').value, lore: document.getElementById('w-lore').value,
+            history: document.getElementById('w-history').value,
+            nation: document.getElementById('w-nation').value,
+            power_system: document.getElementById('w-power').value,
+            lore: document.getElementById('w-lore').value,
             important_places: document.getElementById('w-places').value
         };
         try {
-            await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
-            showToast('World building saved!');
-        } catch(e) { showToast('Save failed.', true); }
+            const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+            const data = await res.json();
+            if (data.success) { showToast('World building saved!'); }
+            else { showToast(data.error || 'Save failed.', true); }
+        } catch(e) { showToast('Network error.', true); }
     }
 
-    // ── FEATURE 4: BOOKS ─────────────────────────────────────────────
+    // ── BOOKS ─────────────────────────────────────────────────────────
     async function loadBooks() {
+        if (!currentStoryId) return;
         try {
             const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/books`);
             const data = await res.json();
             const list = document.getElementById('book-list');
-            if (!data.books || data.books.length === 0) { list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No books yet.</div>'; return; }
-            list.innerHTML = data.books.map(b => `
-                <div class="book-card p-0 overflow-hidden">
-                    <div class="p-3 flex items-center justify-between" onclick="toggleSection('book-panel-${b.id}')">
-                        <div><span class="font-bold text-sm">${escHtml(b.name)}</span> <span class="text-[10px] text-gray-400 ml-2">${b.chapters.length} chapters</span></div>
-                        <div class="flex gap-2">
-                            <button onclick="event.stopPropagation();openBookModal(${b.id})" class="text-[10px] font-bold text-gray-400 hover:text-gray-700">EDIT</button>
+            if (!data.books || data.books.length === 0) {
+                list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No books yet.</div>';
+                return;
+            }
+            list.innerHTML = data.books.map(b => {
+                const addableChapters = allChapters.filter(ac => !b.chapters.find(bc => bc.chapter_id === ac.id));
+                return `
+                <div class="book-card">
+                    <div class="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50" onclick="toggleSection('book-panel-${b.id}')">
+                        <div>
+                            <span class="font-bold text-sm text-gray-800">${escHtml(b.name)}</span>
+                            <span class="text-xs text-gray-400 ml-2">${b.chapters.length} chapter${b.chapters.length !== 1 ? 's' : ''}</span>
+                            ${b.description ? `<div class="text-xs text-gray-500 mt-0.5">${escHtml(b.description)}</div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <button onclick="event.stopPropagation();openBookModal(${b.id})" class="text-xs font-bold text-gray-400 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100">Edit</button>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                         </div>
                     </div>
                     <div id="book-panel-${b.id}" class="hidden bg-gray-50 border-t border-gray-100 p-3">
-                        <div class="space-y-2 mb-4">
-                            ${b.chapters.map(bc => `
+                        <div class="space-y-2 mb-3">
+                            ${b.chapters.length === 0 ? '<div class="text-xs text-gray-400 text-center py-2">No chapters yet.</div>' : b.chapters.map(bc => `
                                 <div class="flex items-center justify-between bg-white p-2 rounded border border-gray-100 text-xs">
-                                    <span>${bc.chapter_number}. ${escHtml(bc.title)}</span>
-                                    <button onclick="removeChapterFromBook(${b.id}, ${bc.chapter_id})" class="text-red-400">✕</button>
+                                    <span class="font-medium">${bc.chapter_number}. ${escHtml(bc.title)}</span>
+                                    <button onclick="removeChapterFromBook(${b.id}, ${bc.chapter_id})" class="text-red-400 hover:text-red-600 ml-2">✕</button>
                                 </div>
                             `).join('')}
                         </div>
                         <div class="relative">
-                            <button onclick="toggleSection('book-add-dropdown-${b.id}')" class="w-full py-1.5 border-2 border-dashed border-gray-200 rounded text-[10px] font-bold text-gray-400 hover:border-gray-300 hover:text-gray-500">+ ADD CHAPTER</button>
-                            <div id="book-add-dropdown-${b.id}" class="hidden absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded shadow-xl z-50 py-1 max-h-40 overflow-y-auto">
-                                ${publishedChapters.filter(pc => !b.chapters.find(bc => bc.chapter_id === pc.id)).map(pc => `
-                                    <div onclick="addChapterToBook(${b.id}, ${pc.id}, ${b.chapters.length+1})" class="px-3 py-2 text-[10px] hover:bg-gray-100 cursor-pointer">${pc.chapter_number}. ${escHtml(pc.title)}</div>
-                                `).join('') || '<div class="px-3 py-2 text-[10px] text-gray-400">No chapters to add</div>'}
+                            <button onclick="toggleSection('book-add-${b.id}')" class="w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-xs font-bold text-gray-400 hover:border-gray-300 hover:text-gray-600 transition">+ Add Chapter</button>
+                            <div id="book-add-${b.id}" class="hidden absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 max-h-40 overflow-y-auto">
+                                ${addableChapters.length === 0
+                                    ? '<div class="px-3 py-2 text-xs text-gray-400">No more chapters to add</div>'
+                                    : addableChapters.map(ac => `<div onclick="addChapterToBook(${b.id}, ${ac.id}, ${b.chapters.length + 1})" class="px-3 py-2 text-xs hover:bg-gray-100 cursor-pointer font-medium">${ac.chapter_number}. ${escHtml(ac.title)}</div>`).join('')
+                                }
                             </div>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         } catch(e) {}
     }
-    function openBookModal(id = null) {
+
+    function openBookModal(id) {
         editingBookId = id;
         document.getElementById('book-modal').style.display = 'flex';
         document.getElementById('book-modal-title').textContent = id ? 'Edit Book' : 'New Book';
-        document.getElementById('delete-book-btn').classList.toggle('hidden', !id);
-        const b = (id ? null : {}); // Need to fetch or find in local list
+        const delBtn = document.getElementById('delete-book-btn');
+        delBtn.style.display = id ? 'block' : 'none';
         document.getElementById('book-name').value = '';
         document.getElementById('book-desc').value = '';
         document.getElementById('book-order').value = 0;
         if (id) {
-            fetch(`${WORKER_URL}/stories/${currentStoryId}/books`).then(r => r.json()).then(data => {
-                const book = data.books.find(x => x.id === id);
-                document.getElementById('book-name').value = book.name;
-                document.getElementById('book-desc').value = book.description || '';
-                document.getElementById('book-order').value = book.sort_order || 0;
-            });
+            fetch(`${WORKER_URL}/stories/${currentStoryId}/books`)
+                .then(r => r.json())
+                .then(data => {
+                    const book = (data.books || []).find(x => x.id === id);
+                    if (book) {
+                        document.getElementById('book-name').value = book.name || '';
+                        document.getElementById('book-desc').value = book.description || '';
+                        document.getElementById('book-order').value = book.sort_order || 0;
+                    }
+                });
         }
     }
-    function closeBookModal() { document.getElementById('book-modal').style.display = 'none'; }
+
+    function closeBookModal() { document.getElementById('book-modal').style.display = 'none'; editingBookId = null; }
+
     async function saveBook() {
         const name = document.getElementById('book-name').value.trim();
-        if (!name) return showToast('Name required.', true);
-        const body = { name, description: document.getElementById('book-desc').value, sort_order: document.getElementById('book-order').value };
+        if (!name) { showToast('Name is required.', true); return; }
+        const body = {
+            name,
+            description: document.getElementById('book-desc').value.trim(),
+            sort_order: parseInt(document.getElementById('book-order').value) || 0
+        };
         try {
             const method = editingBookId ? 'PUT' : 'POST';
             const url = editingBookId ? `${WORKER_URL}/books/${editingBookId}` : `${WORKER_URL}/stories/${currentStoryId}/books`;
-            await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
-            showToast('Book saved!');
-            closeBookModal();
-            loadBooks();
-        } catch(e) { showToast('Save failed.', true); }
-    }
-    async function deleteBook() {
-        if (!confirm('Delete book?')) return;
-        await fetch(`${WORKER_URL}/books/${editingBookId}`, { method: 'DELETE', headers: authHeaders() });
-        closeBookModal();
-        loadBooks();
-    }
-    async function addChapterToBook(bid, cid, order) {
-        await fetch(`${WORKER_URL}/books/${bid}/chapters`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ chapter_id: cid, sequence_order: order }) });
-        loadBooks();
-    }
-    async function removeChapterFromBook(bid, cid) {
-        await fetch(`${WORKER_URL}/books/${bid}/chapters/${cid}`, { method: 'DELETE', headers: authHeaders() });
-        loadBooks();
+            const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+            const data = await res.json();
+            if (data.success) { showToast('Book saved!'); closeBookModal(); loadBooks(); }
+            else { showToast(data.error || 'Save failed.', true); }
+        } catch(e) { showToast('Network error.', true); }
     }
 
-    // ── AUTH & INIT ──────────────────────────────────────────────────
+    async function deleteBook() {
+        if (!editingBookId) return;
+        if (!confirm('Delete this book? Chapters will not be deleted.')) return;
+        try {
+            await fetch(`${WORKER_URL}/books/${editingBookId}`, { method: 'DELETE', headers: authHeaders() });
+            showToast('Book deleted.');
+            closeBookModal();
+            loadBooks();
+        } catch(e) { showToast('Network error.', true); }
+    }
+
+    async function addChapterToBook(bookId, chapterId, order) {
+        try {
+            await fetch(`${WORKER_URL}/books/${bookId}/chapters`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ chapter_id: chapterId, sequence_order: order }) });
+            loadBooks();
+        } catch(e) { showToast('Error adding chapter.', true); }
+    }
+
+    async function removeChapterFromBook(bookId, chapterId) {
+        try {
+            await fetch(`${WORKER_URL}/books/${bookId}/chapters/${chapterId}`, { method: 'DELETE', headers: authHeaders() });
+            loadBooks();
+        } catch(e) { showToast('Error removing chapter.', true); }
+    }
+
+    // ── AUTH UI ───────────────────────────────────────────────────────
     function buildAuthUI(user) {
         const area = document.getElementById('auth-area');
         const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?';
@@ -736,22 +933,84 @@
             <div class="user-avatar" onclick="document.getElementById('nav-dropdown').classList.toggle('open')">${initials}</div>
             <div id="nav-dropdown" class="user-dropdown">
                 <div class="user-dropdown-name">${escHtml(user.name)}</div>
+                <div class="user-dropdown-email">${escHtml(user.email)}</div>
                 <button class="user-dropdown-btn" onclick="window.location.href='/profile.html?id=${user.id}'">👤 My Profile</button>
+                <button class="user-dropdown-btn" onclick="window.location.href='/notes'">📝 My Notes</button>
+                ${user.role === 'admin' ? `<button class="user-dropdown-btn" style="color:#7c3aed;font-weight:600;" onclick="window.location.href='/admin.html'">⚙ Admin Panel</button>` : ''}
                 <button class="user-dropdown-btn" onclick="signOut()" style="color:#dc2626;">Sign out</button>
             </div>
         `;
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('nav-dropdown');
+            const av = area.querySelector('.user-avatar');
+            if (dd && av && !av.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('open');
+        });
     }
-    function signOut() { localStorage.removeItem('po_user'); localStorage.removeItem('po_token'); window.location.href = '/'; }
+
+    function signOut() {
+        const token = getToken();
+        if (token) fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+        localStorage.removeItem('po_user');
+        localStorage.removeItem('po_token');
+        window.location.href = '/';
+    }
+
+    // ── INIT ──────────────────────────────────────────────────────────
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');
-        if (!saved || !token) { window.location.href = '/signin.html'; return; }
-        currentUser = JSON.parse(saved);
-        if (currentUser.role !== 'creator' && currentUser.role !== 'admin') { document.body.innerHTML = '<div class="p-20 text-center">Creator access required.</div>'; return; }
+
+        if (!saved || !token) {
+            window.location.href = '/signin.html?redirect=' + encodeURIComponent(window.location.href);
+            return;
+        }
+
+        try { currentUser = JSON.parse(saved); } catch(e) { window.location.href = '/signin.html'; return; }
+
+        if (currentUser.role !== 'creator' && currentUser.role !== 'admin') {
+            document.getElementById('loading-curtain').classList.add('lift');
+            setTimeout(() => {
+                document.getElementById('loading-curtain').remove();
+                document.body.innerHTML = `
+                    <div style="font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;background:#f9fafb;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:8px;color:#1f1e24;">Creator Access Required</h2>
+                        <p style="color:#6b7280;max-width:360px;margin-bottom:2rem;">You need a Creator account to write stories. Ask the site admin to upgrade your account.</p>
+                        <a href="/stories/" style="background:#1f1e24;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Browse Stories</a>
+                    </div>`;
+            }, 600);
+            return;
+        }
+
         buildAuthUI(currentUser);
-        if (currentStoryId) await loadStoryIntoEditor(currentStoryId);
-        else await loadMyStories();
+
+        const idFromUrl = new URLSearchParams(window.location.search).get('id');
+        if (idFromUrl) {
+            currentStoryId = idFromUrl;
+            document.getElementById('editor-view').style.display = 'block';
+            await loadStoryIntoEditor(idFromUrl);
+        } else {
+            document.getElementById('dashboard-view').style.display = 'block';
+            await loadMyStories();
+        }
+
         document.getElementById('loading-curtain').classList.add('lift');
+        setTimeout(() => { const c = document.getElementById('loading-curtain'); if (c) c.remove(); }, 750);
+    });
+
+    window.addEventListener('popstate', () => {
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (id) {
+            currentStoryId = id;
+            document.getElementById('dashboard-view').style.display = 'none';
+            document.getElementById('editor-view').style.display = 'block';
+            loadStoryIntoEditor(id);
+        } else {
+            currentStoryId = null;
+            document.getElementById('editor-view').style.display = 'none';
+            document.getElementById('dashboard-view').style.display = 'block';
+            loadMyStories();
+        }
     });
 </script>
 </body>
