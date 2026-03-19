@@ -45,6 +45,15 @@
         .user-dropdown.open { display: block; }
         .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; }
         .user-dropdown-btn:hover { background: #f3f4f6; }
+
+        .tab-pill { padding: 6px 20px; border-radius: 999px; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; border: 1px solid #e5e7eb; color: #6b7280; }
+        .tab-pill.active { background: #1f1e24; color: white; border-color: #1f1e24; }
+        .character-card-read { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; }
+        .character-field { margin-top: 1rem; border-top: 1px solid #f3f4f6; pt-4; }
+        .character-label { font-size: 0.7rem; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .character-value { font-size: 0.95rem; color: #374151; line-height: 1.6; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+        .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; padding: 2rem; }
     </style>
 </head>
 <body>
@@ -78,16 +87,25 @@
                     <span id="story-likes">0 likes</span>
                 </div>
                 <p id="story-desc" class="mt-6 text-gray-600 text-lg leading-relaxed max-w-2xl">Description goes here.</p>
-                <div class="mt-8 flex gap-4">
+                <div class="mt-8 flex flex-wrap gap-4">
                     <button id="start-reading-btn" class="bg-[#1f1e24] text-white px-8 py-3 rounded-lg font-bold transition hover:bg-black">Start Reading</button>
                     <button id="bookmark-btn" onclick="toggleBookmark()" class="border border-gray-200 px-6 py-3 rounded-lg font-bold hover:bg-gray-50">🔖 Bookmark</button>
+                    <button id="world-btn" onclick="openWorldModal()" class="hidden border border-gray-200 px-6 py-3 rounded-lg font-bold hover:bg-gray-50">🌍 World</button>
                 </div>
             </div>
         </div>
         <div class="max-w-4xl mx-auto px-6 py-12">
-            <h2 class="outfit-font text-2xl font-bold mb-8">Chapters</h2>
-            <div id="chapter-list" class="border border-gray-100 rounded-xl overflow-hidden">
-                <!-- Chapters loaded here -->
+            <div class="flex items-center gap-4 mb-8">
+                <div id="tab-chapters" onclick="switchStoryTab('chapters')" class="tab-pill active">Chapters</div>
+                <div id="tab-books" onclick="switchStoryTab('books')" class="tab-pill">Books</div>
+            </div>
+            
+            <div id="view-chapters">
+                <div id="chapter-list" class="border border-gray-100 rounded-xl overflow-hidden"></div>
+            </div>
+
+            <div id="view-books" class="hidden space-y-6">
+                <div id="book-list"></div>
             </div>
         </div>
     </div>
@@ -100,11 +118,23 @@
             </div>
         </div>
         <div class="chapter-content">
-            <h1 id="chapter-display-title" class="chapter-title">Chapter Title</h1>
-            <div id="chapter-body">
-                <!-- Chapter body here -->
+            <h1 id="chapter-display-title" class="chapter-title mb-2">Chapter Title</h1>
+            <button id="chapter-info-btn" onclick="toggleChapterInfo()" class="hidden bg-[#f97316] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-8 hover:bg-[#ea580c] transition">Chapter Info</button>
+            
+            <div id="chapter-info-display" class="hidden mb-12 p-6 bg-orange-50 rounded-xl border border-orange-100 space-y-6">
+                <div><div class="character-label">Main Idea</div><div id="ci-idea-read" class="character-value italic"></div></div>
+                <div><div class="character-label">Fundamental Theme</div><div id="ci-theme-read" class="character-value"></div></div>
+                <div><div class="character-label">Extended Synopsis</div><div id="ci-synopsis-read" class="character-value"></div></div>
             </div>
+
+            <div id="chapter-body"></div>
         </div>
+
+        <div id="chapter-characters-section" class="hidden max-w-4xl mx-auto px-6 py-12 border-t border-gray-100">
+            <h3 class="outfit-font text-xl font-bold mb-6">Characters in this chapter</h3>
+            <div id="chapter-character-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        </div>
+
         <div class="chapter-nav">
             <a id="prev-chapter" href="#" class="nav-btn" style="visibility:hidden;">
                 <span>Previous</span>
@@ -114,6 +144,16 @@
                 <span class="text-right">Next</span>
                 <span id="next-title">Title</span>
             </a>
+        </div>
+    </div>
+
+    <div id="world-modal" class="modal-overlay" onclick="if(event.target===this)closeWorldModal()">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="outfit-font font-bold text-2xl">World Building</h3>
+                <button onclick="closeWorldModal()" class="text-gray-400 hover:text-gray-900 font-bold">✕</button>
+            </div>
+            <div id="world-content" class="space-y-8"></div>
         </div>
     </div>
 
@@ -139,12 +179,15 @@
         async function loadStory() {
             document.getElementById('story-view').style.display = 'block';
             try {
-                const res = await fetch(`${WORKER_URL}/stories/${storyId}`, { headers: authHeaders() });
-                if (res.status === 404) {
-                    document.getElementById('story-title').textContent = "Story Not Found";
-                    return;
-                }
-                const data = await res.json();
+                const [sRes, wRes, bRes] = await Promise.all([
+                    fetch(`${WORKER_URL}/stories/${storyId}`, { headers: authHeaders() }),
+                    fetch(`${WORKER_URL}/stories/${storyId}/world`),
+                    fetch(`${WORKER_URL}/stories/${storyId}/books`)
+                ]);
+                const data = await sRes.json();
+                const world = await wRes.json();
+                const booksData = await bRes.json();
+                
                 const s = data.story;
                 document.getElementById('story-title').textContent = s.title;
                 document.getElementById('story-genre').textContent = s.genre;
@@ -154,6 +197,18 @@
                 document.getElementById('bookmark-btn').textContent = data.is_bookmarked ? '🔖 Bookmarked' : '🔖 Bookmark';
                 document.getElementById('bookmark-btn').style.color = data.is_bookmarked ? '#f97316' : '#1f1e24';
 
+                // World Button
+                if (world.history || world.nation || world.power_system || world.lore || world.important_places) {
+                    document.getElementById('world-btn').classList.remove('hidden');
+                    const wc = document.getElementById('world-content');
+                    wc.innerHTML = '';
+                    const fields = [['History', world.history], ['Nation', world.nation], ['Power System', world.power_system], ['Lore', world.lore], ['Important Places', world.important_places]];
+                    fields.forEach(([label, val]) => {
+                        if (val) wc.innerHTML += `<div><div class="character-label">${label}</div><div class="character-value">${escHtml(val).replace(/\n/g, '<br>')}</div></div>`;
+                    });
+                }
+
+                // Chapters
                 const list = document.getElementById('chapter-list');
                 if (data.chapters.length > 0) {
                     list.innerHTML = data.chapters.map(c => `
@@ -163,27 +218,84 @@
                             <span class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString()}</span>
                         </div>
                     `).join('');
-                    document.getElementById('start-reading-btn').onclick = () => {
-                        window.location.href = `/stories/read.html?id=${storyId}&chapter=${data.chapters[0].id}`;
-                    };
+                    document.getElementById('start-reading-btn').onclick = () => window.location.href = `/stories/read.html?id=${storyId}&chapter=${data.chapters[0].id}`;
                 } else {
                     list.innerHTML = '<div class="p-8 text-center text-gray-400">No chapters yet.</div>';
                     document.getElementById('start-reading-btn').style.display = 'none';
                 }
+
+                // Books
+                const bList = document.getElementById('book-list');
+                if (booksData.books && booksData.books.length > 0) {
+                    bList.innerHTML = booksData.books.map(b => `
+                        <div class="bg-white border border-gray-100 rounded-xl p-6 mb-4">
+                            <h3 class="outfit-font font-bold text-xl mb-2">${escHtml(b.name)}</h3>
+                            <p class="text-gray-500 text-sm mb-6">${escHtml(b.description || '')}</p>
+                            <div class="space-y-1">
+                                ${b.chapters.map(bc => `
+                                    <div class="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer" onclick="window.location.href='/stories/read.html?id=${storyId}&chapter=${bc.chapter_id}'">
+                                        <span class="font-bold text-[#f97316] w-6">${bc.chapter_number}</span>
+                                        <span class="font-semibold text-gray-700">${escHtml(bc.title)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    bList.innerHTML = '<div class="p-8 text-center text-gray-400">No volumes published yet.</div>';
+                }
             } catch (e) { showToast('Error loading story.', true); }
         }
+
+        function switchStoryTab(tab) {
+            document.getElementById('tab-chapters').classList.toggle('active', tab==='chapters');
+            document.getElementById('tab-books').classList.toggle('active', tab==='books');
+            document.getElementById('view-chapters').classList.toggle('hidden', tab!=='chapters');
+            document.getElementById('view-books').classList.toggle('hidden', tab!=='books');
+        }
+        function openWorldModal() { document.getElementById('world-modal').style.display = 'flex'; }
+        function closeWorldModal() { document.getElementById('world-modal').style.display = 'none'; }
 
         async function loadChapter() {
             document.getElementById('chapter-view').style.display = 'block';
             document.getElementById('back-to-story').href = `/stories/read.html?id=${storyId}`;
             try {
-                const res = await fetch(`${WORKER_URL}/chapters/${chapterId}`, { headers: authHeaders() });
-                const data = await res.json();
+                const [cRes, iRes, chRes] = await Promise.all([
+                    fetch(`${WORKER_URL}/chapters/${chapterId}`, { headers: authHeaders() }),
+                    fetch(`${WORKER_URL}/chapters/${chapterId}/info`),
+                    fetch(`${WORKER_URL}/chapters/${chapterId}/characters`)
+                ]);
+                const data = await cRes.json();
+                const info = await iRes.json();
+                const charsData = await chRes.json();
+                
                 const c = data.chapter;
                 document.getElementById('chapter-display-title').textContent = c.title;
                 document.getElementById('reader-progress').textContent = `Chapter ${c.chapter_number}`;
                 document.getElementById('chapter-body').innerHTML = c.body.split('\n').map(p => p.trim() ? `<p>${escHtml(p)}</p>` : '').join('');
                 
+                // Chapter Info
+                if (info.main_idea || info.fundamental_theme || info.extended_synopsis) {
+                    document.getElementById('chapter-info-btn').classList.remove('hidden');
+                    document.getElementById('ci-idea-read').textContent = info.main_idea || '';
+                    document.getElementById('ci-theme-read').textContent = info.fundamental_theme || '';
+                    document.getElementById('ci-synopsis-read').textContent = info.extended_synopsis || '';
+                }
+
+                // Characters
+                if (charsData.characters && charsData.characters.length > 0) {
+                    document.getElementById('chapter-characters-section').classList.remove('hidden');
+                    document.getElementById('chapter-character-list').innerHTML = charsData.characters.map(ch => `
+                        <div class="character-card-read" onclick="toggleCharacterCard(this)">
+                            <div class="font-bold text-lg text-gray-800">${escHtml(ch.name)}</div>
+                            <div class="text-sm text-gray-500 line-clamp-2 mt-1">${escHtml(ch.description)}</div>
+                            <div class="hidden mt-4 space-y-4 pt-4 border-t border-gray-50">
+                                ${[['Age', ch.age], ['Hobbies', ch.hobbies], ['Backstory', ch.backstory], ['Personality', ch.personality], ['Motivations', ch.motivations], ['Relationships', ch.relationships]].map(([l, v]) => v ? `<div><div class="character-label">${l}</div><div class="character-value">${escHtml(v)}</div></div>` : '').join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
                 if (data.prev) {
                     const btn = document.getElementById('prev-chapter');
                     btn.style.visibility = 'visible';
@@ -199,6 +311,9 @@
                 window.scrollTo(0,0);
             } catch (e) { showToast('Error loading chapter.', true); }
         }
+
+        function toggleChapterInfo() { document.getElementById('chapter-info-display').classList.toggle('hidden'); }
+        function toggleCharacterCard(el) { el.querySelector('.hidden')?.classList.toggle('hidden'); el.querySelector('.line-clamp-2')?.classList.toggle('line-clamp-2'); }
 
         async function toggleBookmark() {
             if (!getToken()) return showToast('Please sign in to bookmark.');
@@ -222,7 +337,6 @@
                             <div class="px-2 py-1 font-bold text-sm border-bottom mb-1">${escHtml(user.name)}</div>
                             <button onclick="window.location.href='/profile.html?id=${user.id}'" class="user-dropdown-btn">My Profile</button>
                             ${(user.role === 'creator' || user.role === 'admin') ? `<button onclick="window.location.href='/stories/create.html'" class="user-dropdown-btn">Create Story</button>` : ''}
-                            ${user.role === 'admin' ? `<button onclick="window.location.href='/admin.html'" class="user-dropdown-btn text-purple-600 font-bold">Admin Panel</button>` : ''}
                             <button onclick="logout()" class="user-dropdown-btn text-red-500">Sign Out</button>
                         </div>
                     </div>
@@ -230,18 +344,12 @@
             }
         }
 
-        function logout() {
-            localStorage.removeItem('po_user');
-            localStorage.removeItem('po_token');
-            window.location.reload();
-        }
+        function logout() { localStorage.removeItem('po_user'); localStorage.removeItem('po_token'); window.location.reload(); }
 
         window.addEventListener('load', () => {
             const saved = localStorage.getItem('po_user');
             const token = localStorage.getItem('po_token');
-            if (saved && token) {
-                try { currentUser = JSON.parse(saved); updateAuthUI(currentUser); } catch(e) {}
-            }
+            if (saved && token) { try { currentUser = JSON.parse(saved); updateAuthUI(currentUser); } catch(e) {} }
             if (chapterId) loadChapter();
             else if (storyId) loadStory();
             else window.location.href = '/stories/';
