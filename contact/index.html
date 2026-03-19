@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — PocketOregon</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; }
+        .outfit { font-family: 'Outfit', sans-serif; }
+        nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+        .nav-inner { max-width: 640px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .nav-logo span { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1rem; color: #1f1e24; }
+        .nav-back { font-size: 0.875rem; color: #6b7280; text-decoration: none; transition: color 0.15s; }
+        .nav-back:hover { color: #1f1e24; }
+
+        main { max-width: 640px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+        .page-header { margin-bottom: 2.5rem; }
+        .page-header h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+        .page-header p { color: #6b7280; font-size: 0.95rem; line-height: 1.6; }
+
+        .contact-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 2rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 7px; font-size: 0.95rem; font-family: 'Inter', sans-serif; color: #1f1e24; outline: none; transition: border-color 0.15s; background: white; }
+        .form-input:focus { border-color: #f97316; }
+        textarea.form-input { resize: vertical; min-height: 130px; line-height: 1.6; }
+
+        .submit-btn { width: 100%; background: #1f1e24; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.15s; margin-top: 0.5rem; }
+        .submit-btn:hover { background: #374151; }
+        .submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .divider { display: flex; align-items: center; gap: 12px; margin: 1.5rem 0; }
+        .divider hr { flex: 1; border: none; border-top: 1px solid #e5e7eb; }
+        .divider span { font-size: 0.8rem; color: #9ca3af; font-weight: 600; }
+
+        .mailto-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 11px; font-size: 0.9rem; font-weight: 600; color: #374151; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+        .mailto-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
+
+        #success-msg { display: none; text-align: center; padding: 2rem; }
+        #success-msg svg { margin: 0 auto 1rem; display: block; }
+        #success-msg h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; color: #1f1e24; }
+        #success-msg p { color: #6b7280; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        #success-msg a { color: #f97316; font-weight: 600; text-decoration: none; }
+
+        .info-note { background: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 0.875rem 1rem; font-size: 0.82rem; color: #92400e; margin-bottom: 1.5rem; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-inner">
+        <a href="/" class="nav-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+            <span>PocketOregon</span>
+        </a>
+        <a href="/" class="nav-back">← Back to site</a>
+    </div>
+</nav>
+
+<main>
+    <div class="page-header">
+        <h1>Contact Us</h1>
+        <p>Having trouble with the site or want to get in touch? Send us a message and we'll get back to you.</p>
+    </div>
+
+    <div class="contact-card">
+        <div class="info-note">
+            💡 If you're experiencing a connection issue, try reloading the page first. If the problem persists, use the form below.
+        </div>
+
+        <!-- SUCCESS STATE -->
+        <div id="success-msg">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="9 12 11 14 15 10"/>
+            </svg>
+            <h2>Message sent!</h2>
+            <p>We'll get back to you at the email you provided as soon as possible.</p>
+            <a href="/">← Back to PocketOregon</a>
+        </div>
+
+        <!-- FORM STATE -->
+        <div id="form-state">
+            <form id="contact-form">
+                <div class="form-group">
+                    <label class="form-label">Your Name</label>
+                    <input type="text" name="name" class="form-input" placeholder="What should we call you?" required maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Your Email</label>
+                    <input type="email" name="email" class="form-input" placeholder="So we can reply to you" required maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-input" placeholder="Describe your issue or question..." required maxlength="2000"></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="submit-btn">Send Message</button>
+            </form>
+
+            <div class="divider">
+                <hr><span>OR</span><hr>
+            </div>
+
+            <a href="mailto:pocketoregon@gmail.com?subject=PocketOregon%20Contact&body=Hi%2C%20I%20wanted%20to%20get%20in%20touch%20about..." class="mailto-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Email us directly
+            </a>
+        </div>
+    </div>
+</main>
+
+<script>
+    const FORMSPREE_URL = 'https://formspree.io/f/xeervbna';
+
+    document.getElementById('contact-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        const formData = new FormData(this);
+
+        try {
+            const res = await fetch(FORMSPREE_URL, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (res.ok) {
+                document.getElementById('form-state').style.display = 'none';
+                document.getElementById('success-msg').style.display = 'block';
+            } else {
+                // Formspree failed — fall back to mailto
+                fallbackMailto(formData);
+            }
+        } catch(err) {
+            // Network error — fall back to mailto
+            fallbackMailto(formData);
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+    });
+
+    function fallbackMailto(formData) {
+        const name = formData.get('name') || '';
+        const message = formData.get('message') || '';
+        const subject = encodeURIComponent('PocketOregon Contact from ' + name);
+        const body = encodeURIComponent(message);
+        window.location.href = `mailto:pocketoregon@gmail.com?subject=${subject}&body=${body}`;
+    }
+</script>
+</body>
+</html>
