@@ -42,7 +42,7 @@
         .divider hr { flex: 1; border: none; border-top: 1px solid #e5e7eb; }
         .divider span { font-size: 0.8rem; color: #9ca3af; font-weight: 600; }
 
-        .mailto-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 11px; font-size: 0.9rem; font-weight: 600; color: #374151; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+        .mailto-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 11px; font-size: 0.9rem; font-weight: 600; color: #374151; text-decoration: none; transition: background 0.15s, border-color 0.15s; cursor: pointer; }
         .mailto-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
 
         #success-msg { display: none; text-align: center; padding: 2rem; }
@@ -93,15 +93,15 @@
             <form id="contact-form">
                 <div class="form-group">
                     <label class="form-label">Your Name</label>
-                    <input type="text" name="name" class="form-input" placeholder="What should we call you?" required maxlength="100">
+                    <input type="text" name="name" id="field-name" class="form-input" placeholder="What should we call you?" required maxlength="100">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Your Email</label>
-                    <input type="email" name="email" class="form-input" placeholder="So we can reply to you" required maxlength="200">
+                    <input type="email" name="email" id="field-email" class="form-input" placeholder="So we can reply to you" required maxlength="200">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Message</label>
-                    <textarea name="message" class="form-input" placeholder="Describe your issue or question..." required maxlength="2000"></textarea>
+                    <textarea name="message" id="field-message" class="form-input" placeholder="Describe your issue or question..." required maxlength="2000"></textarea>
                 </div>
                 <button type="submit" class="submit-btn" id="submit-btn">Send Message</button>
             </form>
@@ -110,16 +110,28 @@
                 <hr><span>OR</span><hr>
             </div>
 
-            <a href="mailto:pocketoregon@gmail.com?subject=PocketOregon%20Contact&body=Hi%2C%20I%20wanted%20to%20get%20in%20touch%20about..." class="mailto-btn">
+            <button class="mailto-btn" onclick="openMailto()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 Email us directly
-            </a>
+            </button>
         </div>
     </div>
 </main>
 
 <script>
     const FORMSPREE_URL = 'https://formspree.io/f/xeervbna';
+    const CONTACT_EMAIL = 'pocketoregon@gmail.com';
+
+    function openMailto(name, message) {
+        const subject = name
+            ? encodeURIComponent('PocketOregon Contact from ' + name)
+            : encodeURIComponent('PocketOregon Contact');
+        const body = message
+            ? encodeURIComponent(message)
+            : encodeURIComponent('Hi, I wanted to get in touch about...');
+        const url = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+        window.open(url, '_blank');
+    }
 
     document.getElementById('contact-form').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -127,6 +139,8 @@
         btn.disabled = true;
         btn.textContent = 'Sending...';
 
+        const name = document.getElementById('field-name').value.trim();
+        const message = document.getElementById('field-message').value.trim();
         const formData = new FormData(this);
 
         try {
@@ -141,24 +155,16 @@
                 document.getElementById('success-msg').style.display = 'block';
             } else {
                 // Formspree failed — fall back to mailto
-                fallbackMailto(formData);
+                openMailto(name, message);
             }
         } catch(err) {
             // Network error — fall back to mailto
-            fallbackMailto(formData);
+            openMailto(name, message);
         }
 
         btn.disabled = false;
         btn.textContent = 'Send Message';
     });
-
-    function fallbackMailto(formData) {
-        const name = formData.get('name') || '';
-        const message = formData.get('message') || '';
-        const subject = encodeURIComponent('PocketOregon Contact from ' + name);
-        const body = encodeURIComponent(message);
-        window.location.href = `mailto:pocketoregon@gmail.com?subject=${subject}&body=${body}`;
-    }
 </script>
 </body>
 </html>
