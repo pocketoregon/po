@@ -350,13 +350,6 @@
             margin: 0;
             color: #1f1e24;
         }
-        #char-modal .modal-header p {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: #9ca3af;
-            margin: 2px 0 0 0;
-            letter-spacing: 0.05em;
-        }
         #char-modal .close-btn {
             background: none;
             border: none;
@@ -384,7 +377,6 @@
             overflow-y: auto;
         }
         #char-modal .avatar-container {
-            position: relative;
             width: 72px;
             height: 72px;
             margin: 0 auto 24px;
@@ -401,22 +393,8 @@
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 24px;
-        }
-        #char-modal .avatar-badge {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 20px;
-            height: 20px;
-            background: #f97316;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            border: 2px solid #f9fafb;
+            border: 2px solid #f97316;
+            transition: background 0.2s;
         }
         #char-modal label {
             display: block;
@@ -505,19 +483,17 @@
         <div class="modal-header">
             <div>
                 <h2 id="char-modal-title">Edit Character</h2>
-                <p>Character Roster · Pocketverse Saga</p>
             </div>
             <button class="close-btn" onclick="closeCharacterModal()">✕</button>
         </div>
         <div class="modal-body">
             <div class="left-col">
                 <div class="avatar-container">
-                    <div class="avatar-circle">ET</div>
-                    <div class="avatar-badge">+</div>
+                    <div class="avatar-circle" id="char-avatar-preview">?</div>
                 </div>
                 <div>
                     <label for="char-name">Name</label>
-                    <input type="text" id="char-name" placeholder="Character Name">
+                    <input type="text" id="char-name" placeholder="Character Name" oninput="updateCharAvatar()">
                 </div>
                 <div>
                     <label for="char-age">Age</label>
@@ -622,6 +598,18 @@
             const arrow = document.getElementById('world-arrow');
             if (arrow) arrow.style.transform = el.classList.contains('hidden') ? '' : 'rotate(180deg)';
         }
+    }
+
+    // ── AVATAR LIVE UPDATE ────────────────────────────────────────────
+    function updateCharAvatar() {
+        const name = document.getElementById('char-name').value.trim();
+        const avatar = document.getElementById('char-avatar-preview');
+        if (!name) {
+            avatar.textContent = '?';
+            return;
+        }
+        const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        avatar.textContent = initials;
     }
 
     // ── NAVIGATION ───────────────────────────────────────────────────
@@ -922,6 +910,8 @@
         document.getElementById('char-personality').value = c.personality || '';
         document.getElementById('char-motivations').value = c.motivations || '';
         document.getElementById('char-relationships').value = c.relationships || '';
+        // Update avatar on open
+        updateCharAvatar();
     }
 
     function closeCharacterModal() { document.getElementById('char-modal').style.display = 'none'; editingCharId = null; }
