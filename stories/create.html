@@ -71,10 +71,73 @@
         .character-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
         .character-card:hover { border-color: #f97316; background: #fffaf8; }
         .book-card { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 400; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+
+        /* ── SHARED MODAL BASE ── */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 400; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
         .modal-content { background: white; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; }
+
         .tab-btn { padding: 8px 16px; font-weight: 600; font-size: 0.875rem; border-bottom: 2px solid transparent; color: #6b7280; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none; }
         .tab-btn.active { border-bottom-color: #f97316; color: #1f1e24; }
+
+        /* ── CHARACTER MODAL ── */
+        #char-modal * { box-sizing: border-box; }
+        #char-modal .modal-card { background: white; border-radius: 12px; width: 95%; max-width: 820px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-family: 'Inter', sans-serif; }
+        #char-modal .modal-header { padding: 16px 28px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        #char-modal .modal-header h2 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; margin: 0; color: #1f1e24; }
+        #char-modal .close-btn { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; padding: 4px; }
+        #char-modal .modal-body { display: flex; flex: 1; overflow: hidden; }
+        #char-modal .left-col { width: 260px; background: #f9fafb; border-right: 1px solid #e5e7eb; padding: 24px 20px; overflow-y: auto; }
+        #char-modal .right-col { flex: 1; padding: 24px 28px; background: white; overflow-y: auto; }
+        #char-modal .avatar-container { width: 72px; height: 72px; margin: 0 auto 24px; }
+        #char-modal .avatar-circle { width: 72px; height: 72px; background: #1f1e24; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; border: 2px solid #f97316; }
+        #char-modal label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin-bottom: 6px; font-weight: 600; }
+        #char-modal input, #char-modal textarea { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; box-sizing: border-box; margin-bottom: 16px; color: #1f1e24; background: white; }
+        #char-modal input:focus, #char-modal textarea:focus { border-color: #f97316; outline: none; }
+        #char-modal hr { border: none; border-top: 1px solid #e5e7eb; margin: 8px 0 20px; }
+        #char-modal .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        #char-modal .modal-footer { background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        #char-modal .delete-btn { color: #dc2626; background: none; border: none; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 0; }
+        #char-modal .footer-right { display: flex; gap: 12px; }
+        #char-modal .btn-cancel { padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; color: #6b7280; font-size: 13px; font-weight: 600; cursor: pointer; }
+        #char-modal .btn-save { padding: 8px 20px; background: #1f1e24; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+        /* ── WORLD MODAL ── */
+        #world-modal * { box-sizing: border-box; }
+        #world-modal .modal-card { background: white; border-radius: 12px; width: 95%; max-width: 680px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-family: 'Inter', sans-serif; }
+        #world-modal .modal-header { padding: 16px 28px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        #world-modal .modal-header h2 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; margin: 0; color: #1f1e24; }
+        #world-modal .modal-header p { font-size: 11px; color: #9ca3af; margin: 3px 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        #world-modal .close-btn { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; padding: 4px; }
+        #world-modal .modal-body { flex: 1; overflow-y: auto; padding: 24px 28px; }
+        #world-modal .modal-footer { background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 14px 28px; display: flex; justify-content: flex-end; }
+
+        /* world field cards */
+        .world-field-card { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; background: white; overflow: hidden; }
+        .world-field-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+        .world-field-title { font-weight: 700; font-size: 0.875rem; color: #1f1e24; flex: 1; }
+        .world-field-body { padding: 12px 14px; font-size: 0.875rem; color: #374151; line-height: 1.6; white-space: pre-wrap; }
+        .world-field-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .wf-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.75rem; color: #9ca3af; transition: all 0.15s; }
+        .wf-btn:hover { background: #f3f4f6; color: #374151; }
+        .wf-btn.danger:hover { background: #fee2e2; color: #dc2626; }
+
+        /* add / edit field inline form */
+        .world-field-form { border: 1px dashed #d1d5db; border-radius: 8px; padding: 16px; margin-bottom: 10px; background: #fafafa; }
+        .world-field-form input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #1f1e24; margin-bottom: 10px; outline: none; }
+        .world-field-form input:focus { border-color: #f97316; }
+        .world-field-form textarea { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #1f1e24; resize: vertical; min-height: 100px; outline: none; }
+        .world-field-form textarea:focus { border-color: #f97316; }
+        .world-field-form-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-wf-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 7px 18px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .btn-wf-save:hover { background: #374151; }
+        .btn-wf-cancel { background: #f3f4f6; color: #374151; border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .btn-wf-cancel:hover { background: #e5e7eb; }
+
+        .btn-add-field { width: 100%; padding: 10px; border: 2px dashed #e5e7eb; border-radius: 8px; background: none; color: #9ca3af; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; }
+        .btn-add-field:hover { border-color: #f97316; color: #f97316; background: #fff8f5; }
+
+        .world-empty-state { text-align: center; padding: 2.5rem 1rem; color: #9ca3af; }
+        .world-empty-state p { font-size: 0.875rem; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -170,22 +233,6 @@
                             <option value="published">Published (visible to everyone)</option>
                         </select>
 
-                        <!-- WORLD BUILDING -->
-                        <div class="border-t border-gray-100 pt-4 mt-2 mb-4">
-                            <button type="button" onclick="toggleSection('world-section')" class="flex items-center justify-between w-full text-left">
-                                <span class="form-label mb-0" style="margin-bottom:0;">🌍 World Building</span>
-                                <svg id="world-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
-                            </button>
-                            <div id="world-section" class="hidden mt-4 space-y-4">
-                                <div><label class="form-label" style="font-size:0.7rem;">History</label><textarea id="w-history" class="form-input" rows="3" placeholder="The history of your world..."></textarea></div>
-                                <div><label class="form-label" style="font-size:0.7rem;">Nation</label><textarea id="w-nation" class="form-input" rows="3" placeholder="Nations, kingdoms, factions..."></textarea></div>
-                                <div><label class="form-label" style="font-size:0.7rem;">Power System</label><textarea id="w-power" class="form-input" rows="3" placeholder="Magic, abilities, rules..."></textarea></div>
-                                <div><label class="form-label" style="font-size:0.7rem;">Lore</label><textarea id="w-lore" class="form-input" rows="3" placeholder="Myths, legends, culture..."></textarea></div>
-                                <div><label class="form-label" style="font-size:0.7rem;">Important Places</label><textarea id="w-places" class="form-input" rows="3" placeholder="Key locations..."></textarea></div>
-                                <button type="button" onclick="saveWorld()" class="w-full bg-gray-800 text-white font-bold py-2 rounded-lg text-xs hover:bg-gray-700 transition">Save World Building</button>
-                            </div>
-                        </div>
-
                         <button type="submit" id="save-story-btn" class="w-full bg-[#f97316] text-white font-bold py-3 rounded-lg hover:bg-[#ea580c] transition text-sm">
                             Save Story
                         </button>
@@ -200,12 +247,12 @@
                 </form>
             </div>
 
-            <!-- RIGHT: Chapters, Characters, Books -->
+            <!-- RIGHT: Chapters, Characters, Books, World -->
             <div class="md:col-span-3" id="chapters-col">
                 <div id="chapters-locked" class="form-section text-center py-8" style="color:#9ca3af;">
                     <svg class="mx-auto mb-3" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <p class="font-semibold text-gray-500 mb-1">Save story details first</p>
-                    <p class="text-sm">Then you can manage chapters, characters, and books.</p>
+                    <p class="text-sm">Then you can manage chapters, characters, books and world.</p>
                 </div>
 
                 <div id="chapters-panel" style="display:none;" class="space-y-8">
@@ -247,6 +294,19 @@
                         </div>
                     </div>
 
+                    <!-- WORLD BUILDING -->
+                    <div class="form-section">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="outfit-font font-bold text-lg">🌍 World Building</h3>
+                            <button onclick="openWorldModal()" class="bg-[#1f1e24] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition">
+                                Open World
+                            </button>
+                        </div>
+                        <div id="world-preview">
+                            <div class="text-gray-400 text-sm text-center py-4">No world fields yet. Open World to add some.</div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -267,8 +327,6 @@
         </div>
     </div>
     <div style="max-width:760px; margin:0 auto; padding:2rem 1.5rem 4rem;">
-
-        <!-- STORY TAB -->
         <div id="chapter-view-story">
             <div class="mb-5">
                 <div class="flex items-center justify-between mb-2">
@@ -276,7 +334,6 @@
                     <button type="button" onclick="toggleSection('chapter-info-panel')" class="text-[10px] font-bold text-orange-500 hover:underline bg-none border-none cursor-pointer">📋 CHAPTER INFO</button>
                 </div>
                 <input id="c-title" class="form-input" placeholder="e.g. Chapter 1: The Beginning" maxlength="150">
-
                 <div id="chapter-info-panel" class="hidden mt-4 p-4 bg-orange-50 rounded-lg border border-orange-100 space-y-4">
                     <p class="text-xs font-bold text-orange-600 uppercase tracking-widest mb-2">Chapter Info (visible to readers)</p>
                     <div><label class="form-label" style="font-size:0.7rem;">Main Idea</label><textarea id="ci-idea" class="form-input" rows="2" placeholder="The core idea of this chapter..."></textarea></div>
@@ -293,8 +350,6 @@
                 <textarea id="c-body" class="form-input" rows="28" placeholder="Write your chapter here..." style="resize:vertical; min-height:400px; line-height:1.7;"></textarea>
             </div>
         </div>
-
-        <!-- CHARACTERS TAB -->
         <div id="chapter-view-chars" class="hidden">
             <div id="chapter-chars-locked" class="text-center py-12 text-gray-400">
                 <svg class="mx-auto mb-3" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -311,7 +366,6 @@
                 <div id="chapter-tagged-list" class="space-y-2"></div>
             </div>
         </div>
-
         <div class="flex items-center justify-between mt-8 border-t border-gray-100 pt-6">
             <button id="delete-chapter-btn" onclick="deleteChapter()" class="text-red-400 hover:text-red-600 text-sm font-semibold transition-colors" style="display:none;">🗑 Delete chapter</button>
             <div style="flex:1;"></div>
@@ -322,168 +376,9 @@
 
 <!-- CHARACTER MODAL -->
 <div id="char-modal" class="modal-overlay" onclick="if(event.target===this)closeCharacterModal()">
-    <style>
-        #char-modal * { box-sizing: border-box; }
-        #char-modal .modal-card {
-            background: white;
-            border-radius: 12px;
-            width: 95%;
-            max-width: 820px;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            font-family: 'Inter', sans-serif;
-        }
-        #char-modal .modal-header {
-            padding: 16px 28px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #char-modal .modal-header h2 {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 20px;
-            margin: 0;
-            color: #1f1e24;
-        }
-        #char-modal .close-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 4px;
-        }
-        #char-modal .modal-body {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-        #char-modal .left-col {
-            width: 260px;
-            background: #f9fafb;
-            border-right: 1px solid #e5e7eb;
-            padding: 24px 20px;
-            overflow-y: auto;
-        }
-        #char-modal .right-col {
-            flex: 1;
-            padding: 24px 28px;
-            background: white;
-            overflow-y: auto;
-        }
-        #char-modal .avatar-container {
-            width: 72px;
-            height: 72px;
-            margin: 0 auto 24px;
-        }
-        #char-modal .avatar-circle {
-            width: 72px;
-            height: 72px;
-            background: #1f1e24;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 24px;
-            border: 2px solid #f97316;
-            transition: background 0.2s;
-        }
-        #char-modal label {
-            display: block;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #9ca3af;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-        #char-modal input, #char-modal textarea {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
-            margin-bottom: 16px;
-            color: #1f1e24;
-            background: white;
-        }
-        #char-modal input:focus, #char-modal textarea:focus {
-            border-color: #f97316;
-            outline: none;
-        }
-        #char-modal hr {
-            border: none;
-            border-top: 1px solid #e5e7eb;
-            margin: 8px 0 20px;
-        }
-        #char-modal .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        #char-modal .modal-footer {
-            background: #f9fafb;
-            border-top: 1px solid #e5e7eb;
-            padding: 16px 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #char-modal .delete-btn {
-            color: #dc2626;
-            background: none;
-            border: none;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 0;
-        }
-        #char-modal .footer-right {
-            display: flex;
-            gap: 12px;
-        }
-        #char-modal .btn-cancel {
-            padding: 8px 16px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            background: white;
-            color: #6b7280;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        #char-modal .btn-save {
-            padding: 8px 20px;
-            background: #1f1e24;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-    </style>
     <div class="modal-card">
         <div class="modal-header">
-            <div>
-                <h2 id="char-modal-title">Edit Character</h2>
-            </div>
+            <div><h2 id="char-modal-title">Edit Character</h2></div>
             <button class="close-btn" onclick="closeCharacterModal()">✕</button>
         </div>
         <div class="modal-body">
@@ -532,16 +427,47 @@
         </div>
         <div class="modal-footer">
             <button id="delete-char-btn" class="delete-btn" onclick="deleteCharacter()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                 Delete
             </button>
             <div class="footer-right">
                 <button class="btn-cancel" onclick="closeCharacterModal()">Cancel</button>
                 <button class="btn-save" onclick="saveCharacter()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Save
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- WORLD BUILDING MODAL -->
+<div id="world-modal" class="modal-overlay" onclick="if(event.target===this)closeWorldModal()">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <h2>World Building</h2>
+                <p id="world-modal-story-title">Story world</p>
+            </div>
+            <button class="close-btn" onclick="closeWorldModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="world-fields-list"></div>
+            <div id="world-add-form" style="display:none;" class="world-field-form">
+                <input type="text" id="wf-title-input" placeholder="Field title (e.g. History, Magic System...)" maxlength="60">
+                <textarea id="wf-content-input" placeholder="Write the content for this field..."></textarea>
+                <div class="world-field-form-actions">
+                    <button class="btn-wf-save" onclick="saveWorldField()">Save Field</button>
+                    <button class="btn-wf-cancel" onclick="cancelWorldField()">Cancel</button>
+                </div>
+            </div>
+            <button class="btn-add-field" id="world-add-btn" onclick="showAddWorldField()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Field
+            </button>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeWorldModal()" style="background:#1f1e24;color:white;border:none;border-radius:6px;padding:8px 20px;font-size:0.875rem;font-weight:600;cursor:pointer;">Done</button>
         </div>
     </div>
 </div>
@@ -577,9 +503,14 @@
     let storyCharacters = [];
     let allChapters = [];
 
+    // World state
+    let worldFields = []; // [{ id, title, content }]
+    let editingWorldFieldId = null; // null = adding new, else = editing existing
+
     function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function getToken() { return localStorage.getItem('po_token') || ''; }
     function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
+    function uid() { return Math.random().toString(36).slice(2, 10); }
 
     function showToast(msg, isError = false) {
         const t = document.getElementById('toast');
@@ -604,12 +535,8 @@
     function updateCharAvatar() {
         const name = document.getElementById('char-name').value.trim();
         const avatar = document.getElementById('char-avatar-preview');
-        if (!name) {
-            avatar.textContent = '?';
-            return;
-        }
-        const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-        avatar.textContent = initials;
+        if (!name) { avatar.textContent = '?'; return; }
+        avatar.textContent = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     }
 
     // ── NAVIGATION ───────────────────────────────────────────────────
@@ -705,12 +632,13 @@
             vl.style.cssText = 'display:block!important;';
             document.getElementById('chapters-locked').style.display = 'none';
             document.getElementById('chapters-panel').style.display = 'block';
+            document.getElementById('world-modal-story-title').textContent = s.title;
 
             allChapters = data.chapters || [];
             renderChapterList(allChapters);
-            loadWorld();
             loadCharacters();
             loadBooks();
+            loadWorld();
         } catch(e) { showToast('Error loading story.', true); }
     }
 
@@ -791,13 +719,10 @@
         document.getElementById('ci-theme').value = '';
         document.getElementById('ci-synopsis').value = '';
         document.getElementById('chapter-info-panel').classList.add('hidden');
-
         const deleteBtn = document.getElementById('delete-chapter-btn');
         if (deleteBtn) deleteBtn.style.display = id ? 'block' : 'none';
-
         document.getElementById('chapter-editor').style.display = 'block';
         document.body.style.overflow = 'hidden';
-
         if (id) {
             document.getElementById('chapter-chars-locked').classList.add('hidden');
             document.getElementById('chapter-chars-content').classList.remove('hidden');
@@ -836,24 +761,17 @@
         if (!title) { showToast('Chapter title is required.', true); return; }
         if (!body) { showToast('Chapter content cannot be empty.', true); return; }
         if (!currentStoryId) { showToast('Save the story first.', true); return; }
-
         try {
             const method = editingChapterId ? 'PUT' : 'POST';
             const url = editingChapterId ? `${WORKER_URL}/chapters/${editingChapterId}` : `${WORKER_URL}/stories/${currentStoryId}/chapters`;
             const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify({ title, body, chapter_number: num || null }) });
             const data = await res.json();
-
             if (data.success) {
                 const cid = editingChapterId || data.id;
                 if (cid) {
                     await fetch(`${WORKER_URL}/chapters/${cid}/info`, {
-                        method: 'POST',
-                        headers: authHeaders(),
-                        body: JSON.stringify({
-                            main_idea: document.getElementById('ci-idea').value,
-                            fundamental_theme: document.getElementById('ci-theme').value,
-                            extended_synopsis: document.getElementById('ci-synopsis').value
-                        })
+                        method: 'POST', headers: authHeaders(),
+                        body: JSON.stringify({ main_idea: document.getElementById('ci-idea').value, fundamental_theme: document.getElementById('ci-theme').value, extended_synopsis: document.getElementById('ci-synopsis').value })
                     });
                 }
                 showToast(editingChapterId ? 'Chapter updated!' : 'Chapter added!');
@@ -881,10 +799,7 @@
             const data = await res.json();
             storyCharacters = data.characters || [];
             const list = document.getElementById('character-list');
-            if (storyCharacters.length === 0) {
-                list.innerHTML = '<div class="col-span-full text-gray-400 text-sm text-center py-6">No characters yet.</div>';
-                return;
-            }
+            if (storyCharacters.length === 0) { list.innerHTML = '<div class="col-span-full text-gray-400 text-sm text-center py-6">No characters yet.</div>'; return; }
             list.innerHTML = storyCharacters.map(c => `
                 <div class="character-card" onclick="openCharacterModal(${c.id})">
                     <div class="font-bold text-sm text-gray-800">${escHtml(c.name)}</div>
@@ -899,8 +814,7 @@
         editingCharId = id;
         document.getElementById('char-modal').style.display = 'flex';
         document.getElementById('char-modal-title').textContent = id ? 'Edit Character' : 'New Character';
-        const delBtn = document.getElementById('delete-char-btn');
-        delBtn.style.display = id ? 'block' : 'none';
+        document.getElementById('delete-char-btn').style.display = id ? 'block' : 'none';
         const c = id ? (storyCharacters.find(x => x.id === id) || {}) : {};
         document.getElementById('char-name').value = c.name || '';
         document.getElementById('char-age').value = c.age || '';
@@ -910,7 +824,6 @@
         document.getElementById('char-personality').value = c.personality || '';
         document.getElementById('char-motivations').value = c.motivations || '';
         document.getElementById('char-relationships').value = c.relationships || '';
-        // Update avatar on open
         updateCharAvatar();
     }
 
@@ -919,16 +832,7 @@
     async function saveCharacter() {
         const name = document.getElementById('char-name').value.trim();
         if (!name) { showToast('Name is required.', true); return; }
-        const body = {
-            name,
-            age: document.getElementById('char-age').value.trim(),
-            description: document.getElementById('char-desc').value.trim(),
-            hobbies: document.getElementById('char-hobbies').value.trim(),
-            backstory: document.getElementById('char-backstory').value.trim(),
-            personality: document.getElementById('char-personality').value.trim(),
-            motivations: document.getElementById('char-motivations').value.trim(),
-            relationships: document.getElementById('char-relationships').value.trim()
-        };
+        const body = { name, age: document.getElementById('char-age').value.trim(), description: document.getElementById('char-desc').value.trim(), hobbies: document.getElementById('char-hobbies').value.trim(), backstory: document.getElementById('char-backstory').value.trim(), personality: document.getElementById('char-personality').value.trim(), motivations: document.getElementById('char-motivations').value.trim(), relationships: document.getElementById('char-relationships').value.trim() };
         try {
             const method = editingCharId ? 'PUT' : 'POST';
             const url = editingCharId ? `${WORKER_URL}/characters/${editingCharId}` : `${WORKER_URL}/stories/${currentStoryId}/characters`;
@@ -944,9 +848,7 @@
         if (!confirm('Delete this character? They will be removed from all chapters.')) return;
         try {
             await fetch(`${WORKER_URL}/characters/${editingCharId}`, { method: 'DELETE', headers: authHeaders() });
-            showToast('Character deleted.');
-            closeCharacterModal();
-            loadCharacters();
+            showToast('Character deleted.'); closeCharacterModal(); loadCharacters();
         } catch(e) { showToast('Network error.', true); }
     }
 
@@ -958,16 +860,7 @@
             const taggedList = document.getElementById('chapter-tagged-list');
             taggedList.innerHTML = tagged.length === 0
                 ? '<div class="text-gray-400 text-sm text-center py-4">No characters tagged yet.</div>'
-                : tagged.map(c => `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                        <div>
-                            <span class="text-sm font-semibold text-gray-800">${escHtml(c.name)}</span>
-                            ${c.description ? `<div class="text-xs text-gray-500 mt-0.5">${escHtml(c.description.substring(0,60))}${c.description.length > 60 ? '...' : ''}</div>` : ''}
-                        </div>
-                        <button onclick="untagCharacter(${c.id})" class="text-red-400 hover:text-red-600 text-xs font-bold ml-3">Remove</button>
-                    </div>
-                `).join('');
-
+                : tagged.map(c => `<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><div><span class="text-sm font-semibold text-gray-800">${escHtml(c.name)}</span>${c.description ? `<div class="text-xs text-gray-500 mt-0.5">${escHtml(c.description.substring(0,60))}${c.description.length > 60 ? '...' : ''}</div>` : ''}</div><button onclick="untagCharacter(${c.id})" class="text-red-400 hover:text-red-600 text-xs font-bold ml-3">Remove</button></div>`).join('');
             const taggedIds = new Set(tagged.map(c => c.id));
             const untagged = storyCharacters.filter(sc => !taggedIds.has(sc.id));
             const dropdown = document.getElementById('tag-char-dropdown');
@@ -994,34 +887,139 @@
         } catch(e) { showToast('Error removing character.', true); }
     }
 
-    // ── WORLD BUILDING ────────────────────────────────────────────────
+    // ── WORLD BUILDING ─────────────────────────────────────────────────
     async function loadWorld() {
         if (!currentStoryId) return;
         try {
             const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`);
-            const w = await res.json();
-            document.getElementById('w-history').value = w.history || '';
-            document.getElementById('w-nation').value = w.nation || '';
-            document.getElementById('w-power').value = w.power_system || '';
-            document.getElementById('w-lore').value = w.lore || '';
-            document.getElementById('w-places').value = w.important_places || '';
-        } catch(e) {}
+            const data = await res.json();
+            worldFields = data.fields || [];
+        } catch(e) { worldFields = []; }
+        renderWorldPreview();
     }
 
-    async function saveWorld() {
-        if (!currentStoryId) { showToast('Save the story first.', true); return; }
-        const body = {
-            history: document.getElementById('w-history').value,
-            nation: document.getElementById('w-nation').value,
-            power_system: document.getElementById('w-power').value,
-            lore: document.getElementById('w-lore').value,
-            important_places: document.getElementById('w-places').value
-        };
+    function renderWorldPreview() {
+        const preview = document.getElementById('world-preview');
+        if (worldFields.length === 0) {
+            preview.innerHTML = '<div class="text-gray-400 text-sm text-center py-4">No world fields yet. Open World to add some.</div>';
+            return;
+        }
+        preview.innerHTML = worldFields.map(f => `
+            <div style="padding:6px 0;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:0.8rem;font-weight:700;color:#374151;">${escHtml(f.title)}</span>
+                <span style="font-size:0.75rem;color:#9ca3af;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(f.content)}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderWorldFields() {
+        const list = document.getElementById('world-fields-list');
+        if (worldFields.length === 0) {
+            list.innerHTML = '<div class="world-empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin:0 auto 8px;display:block;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><p>No world fields yet.<br>Click "+ Add Field" to start building your world.</p></div>';
+            return;
+        }
+        list.innerHTML = worldFields.map((f, idx) => `
+            <div class="world-field-card" id="wf-card-${f.id}">
+                <div class="world-field-header">
+                    <span class="world-field-title">${escHtml(f.title)}</span>
+                    <div class="world-field-actions">
+                        <button class="wf-btn" onclick="moveWorldField('${f.id}', -1)" title="Move up" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>↑</button>
+                        <button class="wf-btn" onclick="moveWorldField('${f.id}', 1)" title="Move down" ${idx === worldFields.length - 1 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>↓</button>
+                        <button class="wf-btn" onclick="editWorldField('${f.id}')" title="Edit">✏</button>
+                        <button class="wf-btn danger" onclick="deleteWorldField('${f.id}')" title="Delete">✕</button>
+                    </div>
+                </div>
+                <div class="world-field-body">${escHtml(f.content)}</div>
+            </div>
+        `).join('');
+    }
+
+    function openWorldModal() {
+        document.getElementById('world-modal').style.display = 'flex';
+        editingWorldFieldId = null;
+        document.getElementById('world-add-form').style.display = 'none';
+        document.getElementById('world-add-btn').style.display = 'flex';
+        renderWorldFields();
+    }
+
+    function closeWorldModal() {
+        document.getElementById('world-modal').style.display = 'none';
+        renderWorldPreview();
+    }
+
+    function showAddWorldField() {
+        editingWorldFieldId = null;
+        document.getElementById('wf-title-input').value = '';
+        document.getElementById('wf-content-input').value = '';
+        document.getElementById('world-add-form').style.display = 'block';
+        document.getElementById('world-add-btn').style.display = 'none';
+        document.getElementById('wf-title-input').focus();
+    }
+
+    function editWorldField(id) {
+        const f = worldFields.find(x => x.id === id);
+        if (!f) return;
+        editingWorldFieldId = id;
+        document.getElementById('wf-title-input').value = f.title;
+        document.getElementById('wf-content-input').value = f.content;
+        document.getElementById('world-add-form').style.display = 'block';
+        document.getElementById('world-add-btn').style.display = 'none';
+        document.getElementById('wf-title-input').focus();
+    }
+
+    function cancelWorldField() {
+        editingWorldFieldId = null;
+        document.getElementById('world-add-form').style.display = 'none';
+        document.getElementById('world-add-btn').style.display = 'flex';
+    }
+
+    async function saveWorldField() {
+        const title = document.getElementById('wf-title-input').value.trim();
+        const content = document.getElementById('wf-content-input').value.trim();
+        if (!title) { showToast('Field title is required.', true); return; }
+
+        if (editingWorldFieldId) {
+            const idx = worldFields.findIndex(x => x.id === editingWorldFieldId);
+            if (idx !== -1) { worldFields[idx].title = title; worldFields[idx].content = content; }
+        } else {
+            worldFields.push({ id: uid(), title, content });
+        }
+
+        await persistWorldFields();
+        cancelWorldField();
+        renderWorldFields();
+        showToast(editingWorldFieldId ? 'Field updated.' : 'Field added.');
+    }
+
+    async function deleteWorldField(id) {
+        if (!confirm('Delete this world field?')) return;
+        worldFields = worldFields.filter(f => f.id !== id);
+        await persistWorldFields();
+        renderWorldFields();
+        showToast('Field deleted.');
+    }
+
+    function moveWorldField(id, dir) {
+        const idx = worldFields.findIndex(f => f.id === id);
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= worldFields.length) return;
+        const temp = worldFields[idx];
+        worldFields[idx] = worldFields[newIdx];
+        worldFields[newIdx] = temp;
+        persistWorldFields();
+        renderWorldFields();
+    }
+
+    async function persistWorldFields() {
+        if (!currentStoryId) return;
         try {
-            const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+            const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ fields: worldFields })
+            });
             const data = await res.json();
-            if (data.success) { showToast('World building saved!'); }
-            else { showToast(data.error || 'Save failed.', true); }
+            if (!data.success) showToast('Failed to save world.', true);
         } catch(e) { showToast('Network error.', true); }
     }
 
@@ -1032,10 +1030,7 @@
             const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/books`);
             const data = await res.json();
             const list = document.getElementById('book-list');
-            if (!data.books || data.books.length === 0) {
-                list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No books yet.</div>';
-                return;
-            }
+            if (!data.books || data.books.length === 0) { list.innerHTML = '<div class="text-gray-400 text-sm text-center py-6">No books yet.</div>'; return; }
             list.innerHTML = data.books.map(b => {
                 const addableChapters = allChapters.filter(ac => !b.chapters.find(bc => bc.chapter_id === ac.id));
                 return `
@@ -1053,20 +1048,12 @@
                     </div>
                     <div id="book-panel-${b.id}" class="hidden bg-gray-50 border-t border-gray-100 p-3">
                         <div class="space-y-2 mb-3">
-                            ${b.chapters.length === 0 ? '<div class="text-xs text-gray-400 text-center py-2">No chapters yet.</div>' : b.chapters.map(bc => `
-                                <div class="flex items-center justify-between bg-white p-2 rounded border border-gray-100 text-xs">
-                                    <span class="font-medium">${bc.chapter_number}. ${escHtml(bc.title)}</span>
-                                    <button onclick="removeChapterFromBook(${b.id}, ${bc.chapter_id})" class="text-red-400 hover:text-red-600 ml-2">✕</button>
-                                </div>
-                            `).join('')}
+                            ${b.chapters.length === 0 ? '<div class="text-xs text-gray-400 text-center py-2">No chapters yet.</div>' : b.chapters.map(bc => `<div class="flex items-center justify-between bg-white p-2 rounded border border-gray-100 text-xs"><span class="font-medium">${bc.chapter_number}. ${escHtml(bc.title)}</span><button onclick="removeChapterFromBook(${b.id}, ${bc.chapter_id})" class="text-red-400 hover:text-red-600 ml-2">✕</button></div>`).join('')}
                         </div>
                         <div class="relative">
                             <button onclick="toggleSection('book-add-${b.id}')" class="w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-xs font-bold text-gray-400 hover:border-gray-300 hover:text-gray-600 transition">+ Add Chapter</button>
                             <div id="book-add-${b.id}" class="hidden absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 max-h-40 overflow-y-auto">
-                                ${addableChapters.length === 0
-                                    ? '<div class="px-3 py-2 text-xs text-gray-400">No more chapters to add</div>'
-                                    : addableChapters.map(ac => `<div onclick="addChapterToBook(${b.id}, ${ac.id}, ${b.chapters.length + 1})" class="px-3 py-2 text-xs hover:bg-gray-100 cursor-pointer font-medium">${ac.chapter_number}. ${escHtml(ac.title)}</div>`).join('')
-                                }
+                                ${addableChapters.length === 0 ? '<div class="px-3 py-2 text-xs text-gray-400">No more chapters to add</div>' : addableChapters.map(ac => `<div onclick="addChapterToBook(${b.id}, ${ac.id}, ${b.chapters.length + 1})" class="px-3 py-2 text-xs hover:bg-gray-100 cursor-pointer font-medium">${ac.chapter_number}. ${escHtml(ac.title)}</div>`).join('')}
                             </div>
                         </div>
                     </div>
@@ -1079,22 +1066,15 @@
         editingBookId = id;
         document.getElementById('book-modal').style.display = 'flex';
         document.getElementById('book-modal-title').textContent = id ? 'Edit Book' : 'New Book';
-        const delBtn = document.getElementById('delete-book-btn');
-        delBtn.style.display = id ? 'block' : 'none';
+        document.getElementById('delete-book-btn').style.display = id ? 'block' : 'none';
         document.getElementById('book-name').value = '';
         document.getElementById('book-desc').value = '';
         document.getElementById('book-order').value = 0;
         if (id) {
-            fetch(`${WORKER_URL}/stories/${currentStoryId}/books`)
-                .then(r => r.json())
-                .then(data => {
-                    const book = (data.books || []).find(x => x.id === id);
-                    if (book) {
-                        document.getElementById('book-name').value = book.name || '';
-                        document.getElementById('book-desc').value = book.description || '';
-                        document.getElementById('book-order').value = book.sort_order || 0;
-                    }
-                });
+            fetch(`${WORKER_URL}/stories/${currentStoryId}/books`).then(r => r.json()).then(data => {
+                const book = (data.books || []).find(x => x.id === id);
+                if (book) { document.getElementById('book-name').value = book.name || ''; document.getElementById('book-desc').value = book.description || ''; document.getElementById('book-order').value = book.sort_order || 0; }
+            });
         }
     }
 
@@ -1103,11 +1083,7 @@
     async function saveBook() {
         const name = document.getElementById('book-name').value.trim();
         if (!name) { showToast('Name is required.', true); return; }
-        const body = {
-            name,
-            description: document.getElementById('book-desc').value.trim(),
-            sort_order: parseInt(document.getElementById('book-order').value) || 0
-        };
+        const body = { name, description: document.getElementById('book-desc').value.trim(), sort_order: parseInt(document.getElementById('book-order').value) || 0 };
         try {
             const method = editingBookId ? 'PUT' : 'POST';
             const url = editingBookId ? `${WORKER_URL}/books/${editingBookId}` : `${WORKER_URL}/stories/${currentStoryId}/books`;
@@ -1123,9 +1099,7 @@
         if (!confirm('Delete this book? Chapters will not be deleted.')) return;
         try {
             await fetch(`${WORKER_URL}/books/${editingBookId}`, { method: 'DELETE', headers: authHeaders() });
-            showToast('Book deleted.');
-            closeBookModal();
-            loadBooks();
+            showToast('Book deleted.'); closeBookModal(); loadBooks();
         } catch(e) { showToast('Network error.', true); }
     }
 
@@ -1168,8 +1142,7 @@
     function signOut() {
         const token = getToken();
         if (token) fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
-        localStorage.removeItem('po_user');
-        localStorage.removeItem('po_token');
+        localStorage.removeItem('po_user'); localStorage.removeItem('po_token');
         window.location.href = '/';
     }
 
@@ -1177,31 +1150,19 @@
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');
-
-        if (!saved || !token) {
-            window.location.href = '/signin.html?redirect=' + encodeURIComponent(window.location.href);
-            return;
-        }
-
+        if (!saved || !token) { window.location.href = '/signin.html?redirect=' + encodeURIComponent(window.location.href); return; }
         try { currentUser = JSON.parse(saved); } catch(e) { window.location.href = '/signin.html'; return; }
 
         if (currentUser.role !== 'creator' && currentUser.role !== 'admin') {
             document.getElementById('loading-curtain').classList.add('lift');
             setTimeout(() => {
                 document.getElementById('loading-curtain').remove();
-                document.body.innerHTML = `
-                    <div style="font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;background:#f9fafb;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:8px;color:#1f1e24;">Creator Access Required</h2>
-                        <p style="color:#6b7280;max-width:360px;margin-bottom:2rem;">You need a Creator account to write stories. Ask the site admin to upgrade your account.</p>
-                        <a href="/stories/" style="background:#1f1e24;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Browse Stories</a>
-                    </div>`;
+                document.body.innerHTML = `<div style="font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;background:#f9fafb;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin-bottom:1.5rem;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:8px;color:#1f1e24;">Creator Access Required</h2><p style="color:#6b7280;max-width:360px;margin-bottom:2rem;">You need a Creator account to write stories. Ask the site admin to upgrade your account.</p><a href="/stories/" style="background:#1f1e24;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Browse Stories</a></div>`;
             }, 600);
             return;
         }
 
         buildAuthUI(currentUser);
-
         const idFromUrl = new URLSearchParams(window.location.search).get('id');
         if (idFromUrl) {
             currentStoryId = idFromUrl;
@@ -1211,7 +1172,6 @@
             document.getElementById('dashboard-view').style.display = 'block';
             await loadMyStories();
         }
-
         document.getElementById('loading-curtain').classList.add('lift');
         setTimeout(() => { const c = document.getElementById('loading-curtain'); if (c) c.remove(); }, 750);
     });
