@@ -141,6 +141,27 @@
         #world-modal .wm-btn-cancel { background: #f3f4f6; color: #374151; border: none; border-radius: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
         #world-modal .wm-btn-cancel:hover { background: #e5e7eb; }
         #world-modal .wm-empty { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: 0.875rem; }
+        /* Split screen layout */
+        #world-modal.split-active,
+        #char-modal.split-active {
+            align-items: stretch;
+            padding: 0;
+        }
+
+        /* Note picker */
+        #note-picker {
+            font-family: 'Inter', sans-serif;
+        }
+        #note-picker input:focus {
+            border-color: #f97316;
+            outline: none;
+        }
+
+        /* Split note panel textarea */
+        #split-note-body {
+            user-select: text;
+            -webkit-user-select: text;
+        }
     </style>
 </head>
 <body>
@@ -391,40 +412,96 @@
                 </div>
                 <div>
                     <label for="char-name">Name</label>
-                    <input type="text" id="char-name" placeholder="Character Name" oninput="updateCharAvatar()">
+                    <div id="char-pills-name" style="margin-bottom:4px;"></div>
+                    <div style="position:relative;">
+                        <input type="text" id="char-name" placeholder="Character Name" oninput="updateCharAvatar()"
+                            onkeydown="charFieldSlashHandler(event, this, 'name')">
+                        <button onclick="openPickerForCharField(this, 'name')"
+                            style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
                 <div>
                     <label for="char-age">Age</label>
-                    <input type="text" id="char-age" placeholder="e.g. 25">
+                    <div id="char-pills-age" style="margin-bottom:4px;"></div>
+                    <div style="position:relative;">
+                        <input type="text" id="char-age" placeholder="e.g. 25"
+                            onkeydown="charFieldSlashHandler(event, this, 'age')">
+                        <button onclick="openPickerForCharField(this, 'age')"
+                            style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
                 <hr>
                 <div>
                     <label for="char-hobbies">Hobbies</label>
-                    <input type="text" id="char-hobbies" placeholder="Reading, etc.">
+                    <div id="char-pills-hobbies" style="margin-bottom:4px;"></div>
+                    <div style="position:relative;">
+                        <input type="text" id="char-hobbies" placeholder="Reading, etc."
+                            onkeydown="charFieldSlashHandler(event, this, 'hobbies')">
+                        <button onclick="openPickerForCharField(this, 'hobbies')"
+                            style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
                 <div>
                     <label for="char-motivations">Motivations</label>
-                    <input type="text" id="char-motivations" placeholder="What drives them?">
+                    <div id="char-pills-motivations" style="margin-bottom:4px;"></div>
+                    <div style="position:relative;">
+                        <input type="text" id="char-motivations" placeholder="What drives them?"
+                            onkeydown="charFieldSlashHandler(event, this, 'motivations')">
+                        <button onclick="openPickerForCharField(this, 'motivations')"
+                            style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
             </div>
             <div class="right-col">
                 <div>
                     <label for="char-desc">Physical Description</label>
-                    <textarea id="char-desc" rows="2" placeholder="Height, build, eyes..."></textarea>
+                    <div id="char-pills-description" style="margin-bottom:4px;"></div>
+                    <div style="position:relative;">
+                        <textarea id="char-desc" rows="2" placeholder="Height, build, eyes..."
+                            onkeydown="charFieldSlashHandler(event, this, 'description')"></textarea>
+                        <button onclick="openPickerForCharField(this, 'description')"
+                            style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
                 <div class="grid-2">
                     <div>
                         <label for="char-personality">Personality</label>
-                        <textarea id="char-personality" rows="4" placeholder="Traits..."></textarea>
+                        <div id="char-pills-personality" style="margin-bottom:4px;"></div>
+                        <div style="position:relative;">
+                            <textarea id="char-personality" rows="4" placeholder="Traits..."
+                                onkeydown="charFieldSlashHandler(event, this, 'personality')"></textarea>
+                            <button onclick="openPickerForCharField(this, 'personality')"
+                                style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                                border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                        </div>
                     </div>
                     <div>
                         <label for="char-relationships">Key Relationships</label>
-                        <textarea id="char-relationships" rows="4" placeholder="Friends, enemies..."></textarea>
+                        <div id="char-pills-relationships" style="margin-bottom:4px;"></div>
+                        <div style="position:relative;">
+                            <textarea id="char-relationships" rows="4" placeholder="Friends, enemies..."
+                                onkeydown="charFieldSlashHandler(event, this, 'relationships')"></textarea>
+                            <button onclick="openPickerForCharField(this, 'relationships')"
+                                style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                                border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                        </div>
                     </div>
                 </div>
                 <div>
                     <label for="char-backstory">Backstory</label>
-                    <textarea id="char-backstory" rows="5" placeholder="Their history..."></textarea>
+                    <div id="char-pills-backstory" style="margin-bottom:4px;"></div>
+                    <div style="position:relative;">
+                        <textarea id="char-backstory" rows="5" placeholder="Their history..."
+                            onkeydown="charFieldSlashHandler(event, this, 'backstory')"></textarea>
+                        <button onclick="openPickerForCharField(this, 'backstory')"
+                            style="position:absolute;top:6px;right:6px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -466,7 +543,13 @@
                 </div>
                 <div>
                     <span class="wm-form-label">Content</span>
-                    <textarea class="wm-textarea" id="wm-content-input" placeholder="Write the details for this world field..."></textarea>
+                    <div style="position:relative;">
+                        <textarea class="wm-textarea" id="wm-content-input" placeholder="Write the details for this world field..."
+                            onkeydown="wmSlashHandler(event, this)"></textarea>
+                        <button onclick="wmOpenPickerFromBtn(this)" 
+                            style="position:absolute;top:10px;right:10px;background:none;border:1px solid #e5e7eb;
+                            border-radius:4px;padding:2px 6px;font-size:10px;color:#9ca3af;cursor:pointer;">/ link</button>
+                    </div>
                 </div>
                 <div class="wm-form-row">
                     <button class="wm-btn-save" onclick="wmSaveTab()">Save tab</button>
@@ -517,11 +600,435 @@
 
     // World state
     let worldFields = []; // [{ id, title, content }]
+    // Note linking state
+    let creatorCryptoKey = null;
+    let creatorNotes = [];        // decrypted notes: [{id, title, body}]
+    let notesLoaded = false;
+
+    // Picker state
+    let pickerTargetInfo = null;  // { type: 'world'|'subtab'|'character', fieldId, subtabId, charField }
+    let pickerPage = 0;
+    const PICKER_PAGE_SIZE = 50;
+
+    // Split screen state
+    let splitScreenNoteId = null; // which note is open in split screen
 
     function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function getToken() { return localStorage.getItem('po_token') || ''; }
     function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
     function uid() { return Math.random().toString(36).slice(2, 10); }
+
+    async function initCreatorCrypto(user) {
+        creatorCryptoKey = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(String(user.id).padEnd(32, '0').slice(0, 32)),
+            { name: 'AES-GCM' },
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    async function creatorDecrypt(b64) {
+        try {
+            const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const iv = combined.slice(0, 12);
+            const data = combined.slice(12);
+            const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, creatorCryptoKey, data);
+            return new TextDecoder().decode(decrypted);
+        } catch(e) { return ''; }
+    }
+
+    async function creatorEncrypt(text) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(text);
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, creatorCryptoKey, encoded);
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(encrypted), iv.length);
+        return btoa(String.fromCharCode(...combined));
+    }
+
+    async function loadCreatorNotes() {
+        if (!creatorCryptoKey) return;
+        try {
+            const res = await fetch(WORKER_URL + '/notes', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            const data = await res.json();
+            const raw = data.notes || [];
+            creatorNotes = await Promise.all(raw.map(async n => ({
+                id: n.id,
+                title: await creatorDecrypt(n.title),
+                body: await creatorDecrypt(n.body),
+                tags: await creatorDecrypt(n.tags),
+                pinned: n.pinned,
+                created_at: n.created_at,
+                updated_at: n.updated_at
+            })));
+            notesLoaded = true;
+        } catch(e) { creatorNotes = []; }
+    }
+
+    // ── PICKER ───────────────────────────────────────────────────────────
+
+    let pickerFilter = '';
+    let pickerCurrentPage = 0;
+
+    function getFilteredNotes(filter) {
+        if (!filter) return creatorNotes;
+        const f = filter.toLowerCase();
+        return creatorNotes.filter(n => (n.title || '').toLowerCase().includes(f));
+    }
+
+    function renderPicker(filter) {
+        pickerFilter = filter || '';
+        pickerCurrentPage = 0;
+        renderPickerPage();
+    }
+
+    function renderPickerPage() {
+        const filtered = getFilteredNotes(pickerFilter);
+        const start = pickerCurrentPage * PICKER_PAGE_SIZE;
+        const page = filtered.slice(start, start + PICKER_PAGE_SIZE);
+        const list = document.getElementById('note-picker-list');
+        const footer = document.getElementById('note-picker-footer');
+
+        let html = `
+            <div onclick="pickerSelectNew()" style="
+                display:flex;align-items:center;gap:8px;padding:9px 14px;
+                cursor:pointer;font-size:13px;color:#1f1e24;border-bottom:1px solid #f3f4f6;
+                transition:background 0.1s;" onmouseover="this.style.background='#f9fafb'"
+                onmouseout="this.style.background=''">
+                <span style="font-weight:700;color:#f97316;min-width:18px;">0</span>
+                <span>+ Create new note</span>
+            </div>
+        `;
+
+        page.forEach((note, i) => {
+            const num = i + 1;
+            html += `
+                <div onclick="pickerSelectNote('${note.id}')" style="
+                    display:flex;align-items:center;gap:8px;padding:9px 14px;
+                    cursor:pointer;font-size:13px;color:#1f1e24;border-bottom:1px solid #f9fafb;
+                    transition:background 0.1s;" onmouseover="this.style.background='#f9fafb'"
+                    onmouseout="this.style.background=''">
+                    <span style="font-weight:700;color:#9ca3af;min-width:18px;">${num}</span>
+                    <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        ${escHtml(note.title || 'Untitled')}
+                    </span>
+                </div>
+            `;
+        });
+
+        if (page.length === 0 && pickerFilter) {
+            html += `<div style="padding:20px;text-align:center;font-size:12px;color:#9ca3af;">No notes found matching "${escHtml(pickerFilter)}"</div>`;
+        } else if (page.length === 0 && !pickerFilter) {
+            html += `<div style="padding:20px;text-align:center;font-size:12px;color:#9ca3af;">You haven't created any notes yet.</div>`;
+        }
+
+        list.innerHTML = html;
+        footer.style.display = (filtered.length > (pickerCurrentPage + 1) * PICKER_PAGE_SIZE) ? 'block' : 'none';
+    }
+
+    function pickerNextPage() {
+        pickerCurrentPage++;
+        renderPickerPage();
+    }
+
+    function openPicker(targetInfo, anchorEl) {
+        pickerTargetInfo = targetInfo;
+        const picker = document.getElementById('note-picker');
+        const rect = anchorEl.getBoundingClientRect();
+        
+        picker.style.display = 'block';
+        picker.style.top = Math.min(window.innerHeight - 350, rect.bottom + 5) + 'px';
+        picker.style.left = Math.min(window.innerWidth - 320, rect.left) + 'px';
+        
+        document.getElementById('note-picker-search').value = '';
+        renderPicker();
+        setTimeout(() => {
+            document.getElementById('note-picker-search').focus();
+            const hidePicker = (e) => {
+                if (!picker.contains(e.target) && e.target !== anchorEl) {
+                    picker.style.display = 'none';
+                    document.removeEventListener('mousedown', hidePicker);
+                    document.removeEventListener('keydown', handlePickerKeys);
+                }
+            };
+            const handlePickerKeys = (e) => {
+                if (e.key === 'Escape') {
+                    picker.style.display = 'none';
+                    document.removeEventListener('mousedown', hidePicker);
+                    document.removeEventListener('keydown', handlePickerKeys);
+                }
+                if (e.key === 'Enter') {
+                    const filtered = getFilteredNotes(pickerFilter);
+                    if (filtered.length > 0) pickerSelectNote(filtered[0].id);
+                    else pickerSelectNew();
+                }
+                // Number shortcuts 1-9
+                if (e.key >= '1' && e.key <= '9') {
+                    const idx = parseInt(e.key) - 1;
+                    const filtered = getFilteredNotes(pickerFilter);
+                    if (filtered[idx]) pickerSelectNote(filtered[idx].id);
+                }
+                if (e.key === '0') pickerSelectNew();
+            };
+            document.addEventListener('mousedown', hidePicker);
+            document.addEventListener('keydown', handlePickerKeys);
+        }, 10);
+    }
+
+    function pickerSelectNote(noteId) {
+        document.getElementById('note-picker').style.display = 'none';
+        linkNoteToTarget(pickerTargetInfo, noteId);
+    }
+
+    function pickerSelectNew() {
+        document.getElementById('note-picker').style.display = 'none';
+        openSplitNotePanel(null, pickerTargetInfo);
+    }
+
+    async function linkNoteToTarget(target, noteId) {
+        if (target.type === 'world') {
+            const field = worldFields.find(f => f.id === target.fieldId);
+            if (!field) return;
+            if (!field.linked_notes) field.linked_notes = [];
+            if (!field.linked_notes.includes(noteId)) {
+                field.linked_notes.push(noteId);
+                await persistWorldFields();
+                wmRender();
+            }
+        } else if (target.type === 'subtab') {
+            const field = worldFields.find(f => f.id === target.fieldId);
+            const subtab = (field?.subtabs || []).find(s => s.id === target.subtabId);
+            if (!subtab) return;
+            if (!subtab.linked_notes) subtab.linked_notes = [];
+            if (!subtab.linked_notes.includes(noteId)) {
+                subtab.linked_notes.push(noteId);
+                await persistWorldFields();
+                wmRender();
+            }
+        } else if (target.type === 'character') {
+            const char = storyCharacters.find(c => c.id === target.charId);
+            if (!char) return;
+            if (!char.linked_notes) char.linked_notes = {};
+            if (!char.linked_notes[target.charField]) char.linked_notes[target.charField] = [];
+            if (!char.linked_notes[target.charField].includes(noteId)) {
+                char.linked_notes[target.charField].push(noteId);
+                renderCharacterPills(char); // Re-render to show pills
+            }
+        }
+    }
+
+    function unlinkNoteFromTarget(target, noteId) {
+        if (target.type === 'world') {
+            const field = worldFields.find(f => f.id === target.fieldId);
+            if (field && field.linked_notes) {
+                field.linked_notes = field.linked_notes.filter(id => id !== noteId);
+                persistWorldFields();
+                wmRender();
+            }
+        } else if (target.type === 'subtab') {
+            const field = worldFields.find(f => f.id === target.fieldId);
+            const subtab = (field?.subtabs || []).find(s => s.id === target.subtabId);
+            if (subtab && subtab.linked_notes) {
+                subtab.linked_notes = subtab.linked_notes.filter(id => id !== noteId);
+                persistWorldFields();
+                wmRender();
+            }
+        } else if (target.type === 'character') {
+            const char = storyCharacters.find(c => c.id === target.charId);
+            if (char && char.linked_notes && char.linked_notes[target.charField]) {
+                char.linked_notes[target.charField] = char.linked_notes[target.charField].filter(id => id !== noteId);
+                renderCharacterPills(char);
+            }
+        }
+    }
+
+    // ── PILLS ────────────────────────────────────────────────────────────
+
+    function renderLinkedNotePills(noteIds, targetInfo) {
+        if (!noteIds || noteIds.length === 0) return '';
+        return noteIds.map(id => {
+            const note = creatorNotes.find(n => String(n.id) === String(id));
+            if (!note) return '';
+            return `
+                <div style="display:inline-flex;align-items:center;gap:6px;background:#f3f4f6;
+                    border:1px solid #e5e7eb;border-radius:4px;padding:2px 8px;margin-right:6px;
+                    margin-bottom:4px;font-size:11px;color:#374151;">
+                    <span onclick='openSplitNotePanel("${id}")' style="cursor:pointer;font-weight:600;">
+                        📄 ${escHtml(note.title || 'Untitled')}
+                    </span>
+                    <span onclick='unlinkNoteFromTarget(${JSON.stringify(targetInfo)}, "${id}")' 
+                        style="cursor:pointer;color:#9ca3af;font-size:14px;line-height:1;">×</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ── SPLIT SCREEN NOTE EDITOR ─────────────────────────────────────────
+
+    function openSplitNotePanel(noteId, autoLinkTarget) {
+        splitScreenNoteId = noteId;
+        const panel = document.getElementById('split-note-panel');
+        panel.style.display = 'flex';
+
+        // Shift world modal and character modal to left half
+        const worldModal = document.getElementById('world-modal');
+        const charModal  = document.getElementById('char-modal');
+        if (worldModal && worldModal.style.display === 'flex') {
+            worldModal.style.width = '50%';
+            worldModal.style.right = '50%';
+            worldModal.style.left = '0';
+            worldModal.querySelector('.modal-card').style.maxWidth = '100%';
+            worldModal.classList.add('split-active');
+        }
+        if (charModal && charModal.style.display === 'flex') {
+            charModal.style.width = '50%';
+            charModal.style.right = '50%';
+            charModal.style.left = '0';
+            charModal.querySelector('.modal-card').style.maxWidth = '100%';
+            charModal.classList.add('split-active');
+        }
+
+        if (noteId) {
+            // Load existing note
+            const note = creatorNotes.find(n => String(n.id) === String(noteId));
+            if (note) {
+                document.getElementById('split-note-title-input').value = note.title || '';
+                document.getElementById('split-note-body').value = note.body || '';
+                document.getElementById('split-note-tags').value = note.tags || '';
+                document.getElementById('split-note-title-display').textContent = note.title || 'Untitled';
+                document.getElementById('split-note-meta').textContent = 'Last edited ' + new Date(note.updated_at).toLocaleDateString();
+            }
+        } else {
+            // New note
+            document.getElementById('split-note-title-input').value = '';
+            document.getElementById('split-note-body').value = '';
+            document.getElementById('split-note-tags').value = '';
+            document.getElementById('split-note-title-display').textContent = 'New note';
+            document.getElementById('split-note-meta').textContent = '';
+            // Store auto-link target for after save
+            panel.dataset.autoLinkTarget = autoLinkTarget ? JSON.stringify(autoLinkTarget) : '';
+        }
+
+        // Update title display live
+        document.getElementById('split-note-title-input').oninput = function() {
+            document.getElementById('split-note-title-display').textContent = this.value || 'New note';
+        };
+
+        document.getElementById('split-note-body').focus();
+    }
+
+    function closeSplitNotePanel() {
+        const panel = document.getElementById('split-note-panel');
+        panel.style.display = 'none';
+        panel.dataset.autoLinkTarget = '';
+        splitScreenNoteId = null;
+
+        // Restore modals to full width
+        const worldModal = document.getElementById('world-modal');
+        const charModal  = document.getElementById('char-modal');
+        if (worldModal) {
+            worldModal.style.width = '';
+            worldModal.style.right = '';
+            worldModal.style.left = '';
+            worldModal.classList.remove('split-active');
+            const mc = worldModal.querySelector('.modal-card');
+            if (mc) mc.style.maxWidth = '';
+        }
+        if (charModal) {
+            charModal.style.width = '';
+            charModal.style.right = '';
+            charModal.style.left = '';
+            charModal.classList.remove('split-active');
+            const mc = charModal.querySelector('.modal-card');
+            if (mc) mc.style.maxWidth = '';
+        }
+    }
+
+    async function saveSplitNote() {
+        const titleRaw = document.getElementById('split-note-title-input').value.trim();
+        const bodyRaw  = document.getElementById('split-note-body').value.trim();
+        const tagsRaw  = document.getElementById('split-note-tags').value.trim();
+        if (!titleRaw && !bodyRaw) { showToast('Note is empty.', true); return; }
+
+        const btn = document.querySelector('#split-note-panel button[onclick="saveSplitNote()"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+        try {
+            const encTitle = await creatorEncrypt(titleRaw || 'Untitled');
+            const encBody  = await creatorEncrypt(bodyRaw);
+            const encTags  = await creatorEncrypt(tagsRaw);
+
+            if (splitScreenNoteId) {
+                // Update existing note
+                const res = await fetch(`${WORKER_URL}/notes/${splitScreenNoteId}`, {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({
+                        title: encTitle, body: encBody, tags: encTags,
+                        pinned: creatorNotes.find(n => String(n.id) === String(splitScreenNoteId))?.pinned || 0
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Update local cache
+                    const idx = creatorNotes.findIndex(n => String(n.id) === String(splitScreenNoteId));
+                    if (idx !== -1) {
+                        creatorNotes[idx].title = titleRaw || 'Untitled';
+                        creatorNotes[idx].body  = bodyRaw;
+                        creatorNotes[idx].tags  = tagsRaw;
+                        creatorNotes[idx].updated_at = new Date().toISOString();
+                    }
+                    document.getElementById('split-note-title-display').textContent = titleRaw || 'Untitled';
+                    document.getElementById('split-note-meta').textContent = 'Saved just now';
+                    showToast('Note saved.');
+                    // Re-render pills wherever this note appears
+                    wmRender && wmRender();
+                } else { showToast(data.error || 'Save failed.', true); }
+
+            } else {
+                // Create new note
+                const res = await fetch(`${WORKER_URL}/notes`, {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
+                });
+                const data = await res.json();
+                if (data.success && data.id) {
+                    const newNote = {
+                        id: data.id,
+                        title: titleRaw || 'Untitled',
+                        body: bodyRaw,
+                        tags: tagsRaw,
+                        pinned: 0,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    creatorNotes.unshift(newNote);
+                    splitScreenNoteId = data.id;
+
+                    // Auto-link to target if this was created from a field
+                    const panel = document.getElementById('split-note-panel');
+                    if (panel.dataset.autoLinkTarget) {
+                        try {
+                            const target = JSON.parse(panel.dataset.autoLinkTarget);
+                            linkNoteToTarget(target, data.id);
+                            panel.dataset.autoLinkTarget = '';
+                        } catch(e) {}
+                    }
+
+                    document.getElementById('split-note-title-display').textContent = titleRaw || 'Untitled';
+                    document.getElementById('split-note-meta').textContent = 'Created just now';
+                    showToast('Note created and linked.');
+                } else { showToast(data.error || 'Create failed.', true); }
+            }
+        } catch(e) { showToast('Error saving note.', true); }
+
+        if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+    }
 
     function showToast(msg, isError = false) {
         const t = document.getElementById('toast');
@@ -834,6 +1341,38 @@
         document.getElementById('char-motivations').value = c.motivations || '';
         document.getElementById('char-relationships').value = c.relationships || '';
         updateCharAvatar();
+        renderCharacterPills(c);
+    }
+
+    function renderCharacterPills(char) {
+        const fields = ['name', 'age', 'description', 'hobbies', 'backstory', 'personality', 'motivations', 'relationships'];
+        fields.forEach(f => {
+            const container = document.getElementById('char-pills-' + f);
+            if (!container) return;
+            const linkedIds = (char.linked_notes || {})[f] || [];
+            const targetInfo = { type: 'character', charId: char.id, charField: f };
+            container.innerHTML = renderLinkedNotePills(linkedIds, targetInfo);
+        });
+    }
+
+    function openPickerForCharField(anchorEl, fieldName) {
+        const char = editingCharId ? storyCharacters.find(c => c.id === editingCharId) : null;
+        if (!char) return;
+        openPicker({ type: 'character', charId: char.id, charField: fieldName }, anchorEl);
+    }
+
+    function charFieldSlashHandler(e, textarea, fieldName) {
+        if (e.key === '/') {
+            setTimeout(() => {
+                const val = textarea.value;
+                const pos = textarea.selectionStart;
+                if (val[pos - 1] === '/') {
+                    textarea.value = val.slice(0, pos - 1) + val.slice(pos);
+                    textarea.selectionStart = textarea.selectionEnd = pos - 1;
+                    openPickerForCharField(textarea, fieldName);
+                }
+            }, 0);
+        }
     }
 
     function closeCharacterModal() { document.getElementById('char-modal').style.display = 'none'; editingCharId = null; }
@@ -841,7 +1380,18 @@
     async function saveCharacter() {
         const name = document.getElementById('char-name').value.trim();
         if (!name) { showToast('Name is required.', true); return; }
-        const body = { name, age: document.getElementById('char-age').value.trim(), description: document.getElementById('char-desc').value.trim(), hobbies: document.getElementById('char-hobbies').value.trim(), backstory: document.getElementById('char-backstory').value.trim(), personality: document.getElementById('char-personality').value.trim(), motivations: document.getElementById('char-motivations').value.trim(), relationships: document.getElementById('char-relationships').value.trim() };
+        const char = editingCharId ? storyCharacters.find(c => c.id === editingCharId) : {};
+        const body = { 
+            name, 
+            age: document.getElementById('char-age').value.trim(), 
+            description: document.getElementById('char-desc').value.trim(), 
+            hobbies: document.getElementById('char-hobbies').value.trim(), 
+            backstory: document.getElementById('char-backstory').value.trim(), 
+            personality: document.getElementById('char-personality').value.trim(), 
+            motivations: document.getElementById('char-motivations').value.trim(), 
+            relationships: document.getElementById('char-relationships').value.trim(),
+            linked_notes: char.linked_notes || {}
+        };
         try {
             const method = editingCharId ? 'PUT' : 'POST';
             const url = editingCharId ? `${WORKER_URL}/characters/${editingCharId}` : `${WORKER_URL}/stories/${currentStoryId}/characters`;
@@ -973,6 +1523,9 @@ async function loadWorld() {
                         <button onclick="wmEditSubtab('${f.id}','${st.id}')"
                             style="padding:3px 8px;border:1px solid #e5e7eb;border-radius:5px;background:none;font-size:10px;color:#6b7280;cursor:pointer;">Edit</button>
                     </div>
+                </div>
+                <div id="wm-pills-${f.id}-${st.id}" style="margin-bottom:8px;padding:14px 14px 0;">
+                    ${renderLinkedNotePills(st.linked_notes, {type:'subtab', fieldId: f.id, subtabId: st.id})}
                 </div>
                 <div style="padding:14px;font-size:13px;color:#374151;line-height:1.75;white-space:pre-wrap;">${escHtml(st.content) || '<em style="color:#9ca3af;">No content yet. Click Edit to add.</em>'}</div>
             </div>
@@ -1186,7 +1739,12 @@ async function loadWorld() {
                     </div>
                 </div>
                 ${isHidden ? `<div style="font-size:10px;font-weight:600;color:#A32D2D;background:#FCEBEB;border:1px solid #FCA5A5;border-radius:4px;padding:3px 8px;display:inline-block;margin-bottom:10px;">Hidden from readers</div>` : ''}
-                ${hasSubtabs ? wmRenderSubtabSection(f) : `<div class="wm-content-text">${escHtml(f.content) || '<em style="color:#9ca3af;">No content yet.</em>'}</div>`}
+                ${hasSubtabs ? wmRenderSubtabSection(f) : `
+                    <div id="wm-pills-${f.id}" style="margin-bottom:8px;">
+                        ${renderLinkedNotePills(f.linked_notes, {type:'world', fieldId: f.id})}
+                    </div>
+                    <div class="wm-content-text">${escHtml(f.content) || '<em style="color:#9ca3af;">No content yet.</em>'}</div>
+                `}
             `;
             body.insertBefore(view, document.getElementById('wm-add-form'));
 
@@ -1290,6 +1848,28 @@ async function loadWorld() {
         await persistWorldFields();
         wmRender();
         showToast('Tab deleted.');
+    }
+
+    function wmOpenPickerFromBtn(btn) {
+        if (window._wmSubtabEdit) {
+            openPicker({ type: 'subtab', fieldId: window._wmSubtabEdit.fieldId, subtabId: window._wmSubtabEdit.subtabId }, btn);
+        } else if (wmEditingId) {
+            openPicker({ type: 'world', fieldId: wmEditingId }, btn);
+        }
+    }
+
+    function wmSlashHandler(e, textarea) {
+        if (e.key === '/') {
+            setTimeout(() => {
+                const val = textarea.value;
+                const pos = textarea.selectionStart;
+                if (val[pos - 1] === '/') {
+                    textarea.value = val.slice(0, pos - 1) + val.slice(pos);
+                    textarea.selectionStart = textarea.selectionEnd = pos - 1;
+                    wmOpenPickerFromBtn(textarea);
+                }
+            }, 0);
+        }
     }
 
     // ── HIDE TOGGLE ──────────────────────────────────────────────────────
@@ -1608,7 +2188,11 @@ async function loadWorld() {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');
         if (!saved || !token) { window.location.href = '/signin.html?redirect=' + encodeURIComponent(window.location.href); return; }
-        try { currentUser = JSON.parse(saved); } catch(e) { window.location.href = '/signin.html'; return; }
+        try { 
+            currentUser = JSON.parse(saved); 
+            await initCreatorCrypto(currentUser);
+            await loadCreatorNotes();
+        } catch(e) { window.location.href = '/signin.html'; return; }
 
         if (currentUser.role !== 'creator' && currentUser.role !== 'admin') {
             document.getElementById('loading-curtain').classList.add('lift');
@@ -1648,5 +2232,58 @@ async function loadWorld() {
         }
     });
 </script>
+<!-- NOTE PICKER -->
+<div id="note-picker" style="
+    display:none;position:fixed;z-index:2000;
+    background:white;border:1px solid #e5e7eb;border-radius:10px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.15);width:300px;overflow:hidden;
+    font-family:'Inter',sans-serif;">
+    <div style="padding:10px 12px;border-bottom:1px solid #f3f4f6;">
+        <input id="note-picker-search" type="text" placeholder="Search notes..."
+            style="width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;
+            font-size:13px;outline:none;color:#1f1e24;"
+            oninput="renderPicker(this.value)" />
+    </div>
+    <div id="note-picker-list" style="max-height:260px;overflow-y:auto;"></div>
+    <div id="note-picker-footer" style="display:none;padding:8px 12px;border-top:1px solid #f3f4f6;text-align:right;">
+        <button onclick="pickerNextPage()"
+            style="background:none;border:1px solid #e5e7eb;border-radius:6px;
+            padding:5px 14px;font-size:12px;cursor:pointer;color:#374151;">➜ Next 50</button>
+    </div>
+</div>
+
+<!-- SPLIT SCREEN NOTE EDITOR -->
+<div id="split-note-panel" style="
+    display:none;position:fixed;top:0;right:0;bottom:0;width:50%;
+    background:white;border-left:1px solid #e5e7eb;z-index:1500;
+    display:flex;flex-direction:column;overflow:hidden;">
+    <div style="background:#1f1e24;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+        <span id="split-note-title-display"
+            style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;color:white;"></span>
+        <button onclick="closeSplitNotePanel()"
+            style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:1.2rem;">✕</button>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;padding:1.5rem;overflow-y:auto;gap:12px;">
+        <input id="split-note-title-input" type="text" placeholder="Note title..."
+            maxlength="100"
+            style="font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1rem;
+            border:none;outline:none;color:#1f1e24;width:100%;" />
+        <input id="split-note-tags" type="text" placeholder="Tags (comma separated)"
+            style="border:1px solid #e5e7eb;border-radius:6px;padding:8px 12px;
+            font-size:0.875rem;font-family:'Inter',sans-serif;outline:none;color:#1f1e24;" />
+        <textarea id="split-note-body" placeholder="Write your note here..."
+            maxlength="10000"
+            style="flex:1;border:none;outline:none;resize:none;font-family:'Inter',sans-serif;
+            font-size:0.9rem;line-height:1.7;color:#374151;min-height:400px;
+            user-select:text;-webkit-user-select:text;"></textarea>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid #e5e7eb;display:flex;
+        align-items:center;justify-content:space-between;background:#f9fafb;">
+        <span id="split-note-meta" style="font-size:0.75rem;color:#9ca3af;"></span>
+        <button onclick="saveSplitNote()"
+            style="background:#1f1e24;color:white;border:none;border-radius:6px;
+            padding:8px 20px;font-size:0.875rem;font-weight:600;cursor:pointer;">Save</button>
+    </div>
+</div>
 </body>
 </html>

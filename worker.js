@@ -378,7 +378,11 @@ export default {
       if (request.method === 'GET') {
         try {
           const chars = await env.DB.prepare("SELECT * FROM characters WHERE story_id = ? ORDER BY name ASC").bind(storyId).all();
-          return new Response(JSON.stringify({ characters: chars.results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          const parsed = (chars.results || []).map(c => ({
+              ...c,
+              linked_notes: (() => { try { return JSON.parse(c.linked_notes || '{}'); } catch(e) { return {}; } })()
+          }));
+          return new Response(JSON.stringify({ characters: parsed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
       }
       if (request.method === 'POST') {
@@ -399,6 +403,9 @@ export default {
     // CHARACTER EDIT/DELETE
     if (characterMatch) {
       const charId = characterMatch[1];
+      try {
+        await env.DB.prepare("ALTER TABLE characters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run();
+      } catch(e) { /* column already exists, ignore */ }
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
@@ -407,8 +414,9 @@ export default {
         const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id = ?").bind(character.story_id).first();
         if (user.role !== 'admin' && String(story.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (request.method === 'PUT') {
-          const { name, age, description, hobbies, backstory, personality, motivations, relationships } = await request.json();
-          await env.DB.prepare("UPDATE characters SET name=?, age=?, description=?, hobbies=?, backstory=?, personality=?, motivations=?, relationships=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(name, age||'', description||'', hobbies||'', backstory||'', personality||'', motivations||'', relationships||'', charId).run();
+          const { name, age, description, hobbies, backstory, personality, motivations, relationships, linked_notes } = await request.json();
+          await env.DB.prepare("UPDATE characters SET name=?, age=?, description=?, hobbies=?, backstory=?, personality=?, motivations=?, relationships=?, linked_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?")
+              .bind(name, age||'', description||'', hobbies||'', backstory||'', personality||'', motivations||'', relationships||'', JSON.stringify(linked_notes||{}), charId).run();
           return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         if (request.method === 'DELETE') {
