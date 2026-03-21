@@ -897,15 +897,28 @@
     }
 
     // ── WORLD BUILDING — chrome-tab layout ──────────────────────────
-    async function loadWorld() {
-        if (!currentStoryId) return;
-        try {
-            const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`);
-            const data = await res.json();
-            worldFields = data.fields || [];
-        } catch(e) { worldFields = []; }
-        renderWorldPreview();
+const DEFAULT_WORLD_TABS = [
+    { title: 'History',                   content: '' },
+    { title: 'Groups',                   content: '' },
+    { title: 'Power System',              content: '' },
+    { title: 'Lore',                      content: '' },
+    { title: 'Important Places & Events', content: '' },
+];
+
+async function loadWorld() {
+    if (!currentStoryId) return;
+    try {
+        const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`);
+        const data = await res.json();
+        worldFields = data.fields || [];
+    } catch(e) { worldFields = []; }
+
+    if (worldFields.length === 0) {
+        worldFields = DEFAULT_WORLD_TABS.map(t => ({ id: uid(), title: t.title, content: '' }));
     }
+
+    renderWorldPreview();
+}
 
     function renderWorldPreview() {
         const preview = document.getElementById('world-preview');
