@@ -722,8 +722,8 @@ if (chapterMatch && request.method === 'PUT') {
         const owner = await env.DB.prepare("SELECT stories.user_id FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!owner) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (user.role !== 'admin' && String(owner.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const { title, body, chapter_number } = await request.json();
-        await env.DB.prepare("UPDATE chapters SET title=?, body=?, chapter_number=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(title, body, chapter_number, chapterId).run();
+const { title, body, chapter_number, linked_notes } = await request.json();
+        await env.DB.prepare("UPDATE chapters SET title=?, body=?, chapter_number=?, linked_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(title, body, chapter_number, JSON.stringify(linked_notes || []), chapterId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
