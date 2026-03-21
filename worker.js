@@ -685,6 +685,10 @@ export default {
         }
         const prev = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number < ? ORDER BY chapter_number DESC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
         const next = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number > ? ORDER BY chapter_number ASC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
+        if (chapter) {
+          try { chapter.linked_notes = JSON.parse(chapter.linked_notes || '[]'); }
+          catch(e) { chapter.linked_notes = []; }
+        }
         return new Response(JSON.stringify({ chapter, prev, next }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
