@@ -213,6 +213,7 @@ Worker & config:
 - **World Building — Hide Tabs & Subtabs**:
   - Added ability for creators to hide specific world tabs from readers.
   - Introduced subtabs within world tabs, allowing for better organization of lore (e.g., "Nations" tab with subtabs for each country).
+  - Implemented **drag-and-drop reordering for subtabs**, allowing creators to organize lore sections intuitively.
   - Subtabs can also be individually hidden or visible to readers.
   - Added a "Merge and turn off" feature that safely merges subtab content back into the main tab when subtabs are disabled.
   - Updated reader view (`stories/read.html`) to filter out hidden tabs and subtabs, and added a subtab navigation bar for lore-heavy sections.
