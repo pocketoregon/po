@@ -711,8 +711,10 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // CHAPTERS UPDATE
-    if (chapterMatch && request.method === 'PUT') {
+if (chapterMatch && request.method === 'PUT') {
+      try {
+        await env.DB.prepare("ALTER TABLE chapters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run();
+      } catch(e) { /* column already exists */ }
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
