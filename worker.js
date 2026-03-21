@@ -457,23 +457,37 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // STORY WORLD
+    // ── STORY WORLD (dynamic fields) ─────────────────────────────────
     if (storyWorldMatch) {
       const storyId = storyWorldMatch[1];
+
+      // Auto-migrate: ensure fields column exists
+      try {
+        await env.DB.prepare("ALTER TABLE story_world ADD COLUMN fields TEXT DEFAULT '[]'").run();
+      } catch(e) { /* column already exists, ignore */ }
+
       if (request.method === 'GET') {
         try {
-          const world = await env.DB.prepare("SELECT * FROM story_world WHERE story_id = ?").bind(storyId).first();
-          return new Response(JSON.stringify(world || { history: '', nation: '', power_system: '', lore: '', important_places: '' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          const world = await env.DB.prepare("SELECT fields FROM story_world WHERE story_id = ?").bind(storyId).first();
+          let fields = [];
+          if (world && world.fields) {
+            try { fields = JSON.parse(world.fields); } catch(e) { fields = []; }
+          }
+          return new Response(JSON.stringify({ fields }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
       }
+
       if (request.method === 'POST') {
         const user = await validateToken(request, env);
         if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         try {
           const story = await env.DB.prepare("SELECT user_id FROM stories WHERE id = ?").bind(storyId).first();
+          if (!story) return new Response(JSON.stringify({ error: 'Story not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           if (user.role !== 'admin' && String(story.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-          const { history, nation, power_system, lore, important_places } = await request.json();
-          await env.DB.prepare("INSERT INTO story_world (story_id, history, nation, power_system, lore, important_places) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(story_id) DO UPDATE SET history=excluded.history, nation=excluded.nation, power_system=excluded.power_system, lore=excluded.lore, important_places=excluded.important_places, updated_at=CURRENT_TIMESTAMP").bind(storyId, history||'', nation||'', power_system||'', lore||'', important_places||'').run();
+          const { fields } = await request.json();
+          if (!Array.isArray(fields)) return new Response(JSON.stringify({ error: 'fields must be an array' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          const fieldsJson = JSON.stringify(fields);
+          await env.DB.prepare("INSERT INTO story_world (story_id, fields) VALUES (?, ?) ON CONFLICT(story_id) DO UPDATE SET fields=excluded.fields, updated_at=CURRENT_TIMESTAMP").bind(storyId, fieldsJson).run();
           return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
       }
@@ -849,7 +863,6 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // FALLBACK
     return new Response('Not found', { status: 404 });
   },
 };
