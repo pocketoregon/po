@@ -208,3 +208,12 @@ Worker & config:
 ## ISP / NETWORK NOTES
 - api.pocketoregon.site is fully blocked locally in Pakistan (proxied through Cloudflare)
 - WORKER_URL must always be https://po.pocketoregon.workers.dev
+
+## Recent Changes (March 21, 2026)
+- **World Building — Hide Tabs & Subtabs**:
+  - Added ability for creators to hide specific world tabs from readers.
+  - Introduced subtabs within world tabs, allowing for better organization of lore (e.g., "Nations" tab with subtabs for each country).
+  - Subtabs can also be individually hidden or visible to readers.
+  - Added a "Merge and turn off" feature that safely merges subtab content back into the main tab when subtabs are disabled.
+  - Updated reader view (`stories/read.html`) to filter out hidden tabs and subtabs, and added a subtab navigation bar for lore-heavy sections.
+  - Implemented data migration in `loadWorld()` to ensure existing world data is compatible with the new structure.
