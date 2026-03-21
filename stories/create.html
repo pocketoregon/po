@@ -952,22 +952,6 @@ async function loadWorld() {
         const subtabs = f.subtabs || [];
         const activeSubId = subtabs.length > 0 ? subtabs[0].id : null;
 
-        const tabBarHtml = subtabs.map(st => `
-            <div id="wm-stab-${st.id}" onclick="wmSwitchSubtab('${f.id}','${st.id}')"
-                style="padding:6px 11px;border-radius:5px 5px 0 0;font-size:11px;cursor:pointer;white-space:nowrap;
-                display:flex;align-items:center;gap:4px;position:relative;bottom:-1px;
-                background:${st.id===activeSubId?'white':'transparent'};
-                border:${st.id===activeSubId?'1px solid #e5e7eb':'1px solid transparent'};
-                border-bottom:none;
-                font-weight:${st.id===activeSubId?'500':'400'};
-                color:${st.id===activeSubId?'#1f1e24':'#6b7280'};">
-                ${st.hidden ? `<span style="width:5px;height:5px;border-radius:50%;background:#E24B4A;display:inline-block;flex-shrink:0;"></span>` : ''}
-                ${escHtml(st.title)}
-                <button onclick="event.stopPropagation();wmDeleteSubtab('${f.id}','${st.id}')"
-                    style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:10px;padding:1px 3px;border-radius:3px;line-height:1;">✕</button>
-            </div>
-        `).join('');
-
         const contentHtml = subtabs.map(st => `
             <div id="wm-sview-${st.id}" style="display:${st.id===activeSubId?'block':'none'};">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid #f3f4f6;">
@@ -996,16 +980,110 @@ async function loadWorld() {
 
         return `
             <div style="background:#f9fafb;border-radius:8px 8px 0 0;padding:10px 14px 0;border:1px solid #e5e7eb;border-bottom:none;margin-top:4px;">
-                <div style="display:flex;align-items:flex-end;gap:2px;overflow-x:auto;">
-                    ${tabBarHtml}
-                    <button onclick="wmAddSubtab('${f.id}')"
-                        style="background:none;border:none;font-size:18px;color:#9ca3af;padding:4px 8px;cursor:pointer;position:relative;bottom:-1px;line-height:1;">+</button>
-                </div>
+                <div id="wm-stab-bar-${f.id}" style="display:flex;align-items:flex-end;gap:2px;overflow-x:auto;"></div>
             </div>
             <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;background:white;">
                 ${contentHtml.length > 0 ? contentHtml : '<div style="padding:14px;font-size:13px;color:#9ca3af;text-align:center;">No subtabs yet. Click + to add one.</div>'}
             </div>
         `;
+    }
+
+    function wmBuildSubtabBar(fieldId) {
+        const barEl = document.getElementById('wm-stab-bar-' + fieldId);
+        if (!barEl) return;
+        barEl.innerHTML = '';
+
+        const f = worldFields.find(x => x.id === fieldId);
+        if (!f || !f.subtabs) return;
+
+        const subtabs = f.subtabs;
+        const activeSubId = subtabs.length > 0 ? subtabs[0].id : null;
+
+        subtabs.forEach(st => {
+            const tab = document.createElement('div');
+            tab.id = 'wm-stab-' + st.id;
+            tab.draggable = true;
+            tab.style.cssText = `
+                padding:6px 11px;border-radius:5px 5px 0 0;font-size:11px;cursor:pointer;
+                white-space:nowrap;display:flex;align-items:center;gap:4px;
+                position:relative;bottom:-1px;
+                background:${st.id === activeSubId ? 'white' : 'transparent'};
+                border:${st.id === activeSubId ? '1px solid #e5e7eb' : '1px solid transparent'};
+                border-bottom:none;
+                font-weight:${st.id === activeSubId ? '500' : '400'};
+                color:${st.id === activeSubId ? '#1f1e24' : '#6b7280'};
+                user-select:none;
+            `;
+
+            const dot = st.hidden
+                ? `<span style="width:5px;height:5px;border-radius:50%;background:#E24B4A;display:inline-block;flex-shrink:0;"></span>`
+                : '';
+
+            tab.innerHTML = `
+                ${dot}
+                <span>${escHtml(st.title)}</span>
+                <button onclick="event.stopPropagation();wmDeleteSubtab('${fieldId}','${st.id}')"
+                    style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:10px;padding:1px 3px;border-radius:3px;line-height:1;">✕</button>
+            `;
+
+            tab.onclick = () => wmSwitchSubtab(fieldId, st.id);
+
+            // ── DRAG EVENTS ───────────────────────────────────────────────────
+            tab.addEventListener('dragstart', e => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', st.id);
+                tab.style.opacity = '0.4';
+            });
+
+            tab.addEventListener('dragend', () => {
+                tab.style.opacity = '';
+            });
+
+            tab.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                tab.style.background = '#e5e7eb';
+            });
+
+            tab.addEventListener('dragleave', () => {
+                tab.style.background = st.id === activeSubId ? 'white' : 'transparent';
+            });
+
+            tab.addEventListener('drop', e => {
+                e.preventDefault();
+                tab.style.background = '';
+                const draggedSubId = e.dataTransfer.getData('text/plain');
+                if (draggedSubId === st.id) return;
+
+                const fIdx = worldFields.findIndex(x => x.id === fieldId);
+                if (fIdx === -1) return;
+                const subs = worldFields[fIdx].subtabs;
+                const fromIdx = subs.findIndex(s => s.id === draggedSubId);
+                const toIdx   = subs.findIndex(s => s.id === st.id);
+                if (fromIdx === -1 || toIdx === -1) return;
+
+                // Reorder
+                subs.splice(toIdx, 0, subs.splice(fromIdx, 1)[0]);
+                persistWorldFields();
+
+                // Re-render just the subtab bar (not the full wmRender)
+                wmBuildSubtabBar(fieldId);
+                // Keep the active tab focused on the dragged tab
+                wmSwitchSubtab(fieldId, draggedSubId);
+            });
+
+            barEl.appendChild(tab);
+        });
+
+        // Add "+" button at the end
+        const addBtn = document.createElement('button');
+        addBtn.textContent = '+';
+        addBtn.style.cssText = `
+            background:none;border:none;font-size:18px;color:#9ca3af;
+            padding:4px 8px;cursor:pointer;position:relative;bottom:-1px;line-height:1;
+        `;
+        addBtn.onclick = () => wmAddSubtab(fieldId);
+        barEl.appendChild(addBtn);
     }
 
     function wmRender() {
@@ -1111,6 +1189,12 @@ async function loadWorld() {
                 ${hasSubtabs ? wmRenderSubtabSection(f) : `<div class="wm-content-text">${escHtml(f.content) || '<em style="color:#9ca3af;">No content yet.</em>'}</div>`}
             `;
             body.insertBefore(view, document.getElementById('wm-add-form'));
+
+            // If this tab has subtabs enabled, build its draggable subtab bar now
+            if (f.subtabs_enabled) {
+                // Use setTimeout(0) to ensure the DOM has settled before querying
+                setTimeout(() => wmBuildSubtabBar(f.id), 0);
+            }
         });
     }
 
@@ -1327,6 +1411,7 @@ async function loadWorld() {
         persistWorldFields();
         wmRender();
         wmSwitchTab(fieldId);
+        setTimeout(() => wmBuildSubtabBar(fieldId), 0);
     }
 
     // ── SUBTAB EDIT ──────────────────────────────────────────────────────
@@ -1356,6 +1441,7 @@ async function loadWorld() {
         persistWorldFields();
         wmRender();
         wmSwitchTab(fieldId);
+        setTimeout(() => wmBuildSubtabBar(fieldId), 0);
     }
 
     // ── SUBTAB HIDE TOGGLE ───────────────────────────────────────────────
@@ -1368,6 +1454,7 @@ async function loadWorld() {
         persistWorldFields();
         wmRender();
         wmSwitchTab(fieldId);
+        setTimeout(() => wmBuildSubtabBar(fieldId), 0);
     }
 
     function openWorldModal() {
