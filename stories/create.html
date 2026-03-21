@@ -101,43 +101,46 @@
         #char-modal .btn-cancel { padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; color: #6b7280; font-size: 13px; font-weight: 600; cursor: pointer; }
         #char-modal .btn-save { padding: 8px 20px; background: #1f1e24; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        /* ── WORLD MODAL ── */
+        /* ── WORLD MODAL — chrome-tab layout ── */
         #world-modal * { box-sizing: border-box; }
-        #world-modal .modal-card { background: white; border-radius: 12px; width: 95%; max-width: 680px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-family: 'Inter', sans-serif; }
-        #world-modal .modal-header { padding: 16px 28px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-        #world-modal .modal-header h2 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; margin: 0; color: #1f1e24; }
-        #world-modal .modal-header p { font-size: 11px; color: #9ca3af; margin: 3px 0 0; text-transform: uppercase; letter-spacing: 0.05em; }
-        #world-modal .close-btn { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; padding: 4px; }
-        #world-modal .modal-body { flex: 1; overflow-y: auto; padding: 24px 28px; }
-        #world-modal .modal-footer { background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 14px 28px; display: flex; justify-content: flex-end; }
-
-        /* world field cards */
-        .world-field-card { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; background: white; overflow: hidden; }
-        .world-field-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-        .world-field-title { font-weight: 700; font-size: 0.875rem; color: #1f1e24; flex: 1; }
-        .world-field-body { padding: 12px 14px; font-size: 0.875rem; color: #374151; line-height: 1.6; white-space: pre-wrap; }
-        .world-field-actions { display: flex; gap: 4px; flex-shrink: 0; }
-        .wf-btn { background: none; border: none; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 0.75rem; color: #9ca3af; transition: all 0.15s; }
-        .wf-btn:hover { background: #f3f4f6; color: #374151; }
-        .wf-btn.danger:hover { background: #fee2e2; color: #dc2626; }
-
-        /* add / edit field inline form */
-        .world-field-form { border: 1px dashed #d1d5db; border-radius: 8px; padding: 16px; margin-bottom: 10px; background: #fafafa; }
-        .world-field-form input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #1f1e24; margin-bottom: 10px; outline: none; }
-        .world-field-form input:focus { border-color: #f97316; }
-        .world-field-form textarea { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; color: #1f1e24; resize: vertical; min-height: 100px; outline: none; }
-        .world-field-form textarea:focus { border-color: #f97316; }
-        .world-field-form-actions { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-wf-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 7px 18px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-        .btn-wf-save:hover { background: #374151; }
-        .btn-wf-cancel { background: #f3f4f6; color: #374151; border: none; border-radius: 6px; padding: 7px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-        .btn-wf-cancel:hover { background: #e5e7eb; }
-
-        .btn-add-field { width: 100%; padding: 10px; border: 2px dashed #e5e7eb; border-radius: 8px; background: none; color: #9ca3af; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; }
-        .btn-add-field:hover { border-color: #f97316; color: #f97316; background: #fff8f5; }
-
-        .world-empty-state { text-align: center; padding: 2.5rem 1rem; color: #9ca3af; }
-        .world-empty-state p { font-size: 0.875rem; margin-top: 8px; }
+        #world-modal .modal-card { background: white; border-radius: 12px; width: 95%; max-width: 720px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-family: 'Inter', sans-serif; }
+        #world-modal .wm-topbar { padding: 16px 20px 0; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
+        #world-modal .wm-topbar-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        #world-modal .wm-topbar-row h2 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; margin: 0; color: #1f1e24; }
+        #world-modal .wm-close { background: none; border: none; font-size: 18px; color: #9ca3af; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        #world-modal .wm-close:hover { background: #e5e7eb; }
+        #world-modal .wm-tabs { display: flex; align-items: flex-end; gap: 2px; overflow-x: auto; padding-bottom: 0; scrollbar-width: none; }
+        #world-modal .wm-tabs::-webkit-scrollbar { display: none; }
+        #world-modal .wm-tab { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px 6px 0 0; background: transparent; border: 1px solid transparent; border-bottom: none; cursor: pointer; font-size: 13px; color: #6b7280; white-space: nowrap; position: relative; bottom: -1px; transition: background 0.1s; max-width: 180px; flex-shrink: 0; }
+        #world-modal .wm-tab:hover { background: white; color: #1f1e24; }
+        #world-modal .wm-tab.active { background: white; border-color: #e5e7eb; color: #1f1e24; font-weight: 600; }
+        #world-modal .wm-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; display: block; }
+        #world-modal .wm-tab-x { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 11px; padding: 1px 4px; border-radius: 3px; flex-shrink: 0; line-height: 1; }
+        #world-modal .wm-tab-x:hover { background: #f3f4f6; color: #374151; }
+        #world-modal .wm-tab-add { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 20px; padding: 5px 10px; border-radius: 6px 6px 0 0; flex-shrink: 0; line-height: 1; position: relative; bottom: -1px; transition: background 0.1s; }
+        #world-modal .wm-tab-add:hover { background: white; color: #1f1e24; }
+        #world-modal .wm-body { flex: 1; overflow-y: auto; padding: 24px 24px; min-height: 280px; }
+        #world-modal .wm-footer { background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 12px 24px; display: flex; justify-content: flex-end; }
+        #world-modal .wm-content-view { display: none; }
+        #world-modal .wm-content-view.active { display: block; }
+        #world-modal .wm-content-titlerow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        #world-modal .wm-content-title { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: #1f1e24; }
+        #world-modal .wm-edit-btn { background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 12px; font-size: 12px; color: #6b7280; cursor: pointer; }
+        #world-modal .wm-edit-btn:hover { background: #f3f4f6; }
+        #world-modal .wm-content-text { font-size: 0.9rem; color: #374151; line-height: 1.75; white-space: pre-wrap; }
+        #world-modal .wm-add-form { display: none; flex-direction: column; gap: 12px; }
+        #world-modal .wm-add-form.active { display: flex; }
+        #world-modal .wm-form-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 5px; display: block; }
+        #world-modal .wm-input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #1f1e24; background: white; outline: none; }
+        #world-modal .wm-input:focus { border-color: #f97316; }
+        #world-modal .wm-textarea { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; color: #1f1e24; resize: vertical; min-height: 160px; outline: none; line-height: 1.65; }
+        #world-modal .wm-textarea:focus { border-color: #f97316; }
+        #world-modal .wm-form-row { display: flex; gap: 8px; }
+        #world-modal .wm-btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 7px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        #world-modal .wm-btn-save:hover { background: #374151; }
+        #world-modal .wm-btn-cancel { background: #f3f4f6; color: #374151; border: none; border-radius: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        #world-modal .wm-btn-cancel:hover { background: #e5e7eb; }
+        #world-modal .wm-empty { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: 0.875rem; }
     </style>
 </head>
 <body>
@@ -441,32 +444,41 @@
     </div>
 </div>
 
-<!-- WORLD BUILDING MODAL -->
+<!-- WORLD BUILDING MODAL — chrome-tab layout -->
 <div id="world-modal" class="modal-overlay" onclick="if(event.target===this)closeWorldModal()">
     <div class="modal-card">
-        <div class="modal-header">
-            <div>
-                <h2>World Building</h2>
-                <p id="world-modal-story-title">Story world</p>
+        <div class="wm-topbar">
+            <div class="wm-topbar-row">
+                <h2>🌍 World Building</h2>
+                <button class="wm-close" onclick="closeWorldModal()">✕</button>
             </div>
-            <button class="close-btn" onclick="closeWorldModal()">✕</button>
+            <div class="wm-tabs" id="wm-tab-bar">
+                <!-- tabs injected by JS -->
+                <button class="wm-tab-add" onclick="wmOpenAddForm()" title="New tab">+</button>
+            </div>
         </div>
-        <div class="modal-body">
-            <div id="world-fields-list"></div>
-            <div id="world-add-form" style="display:none;" class="world-field-form">
-                <input type="text" id="wf-title-input" placeholder="Field title (e.g. History, Magic System...)" maxlength="60">
-                <textarea id="wf-content-input" placeholder="Write the content for this field..."></textarea>
-                <div class="world-field-form-actions">
-                    <button class="btn-wf-save" onclick="saveWorldField()">Save Field</button>
-                    <button class="btn-wf-cancel" onclick="cancelWorldField()">Cancel</button>
+        <div class="wm-body" id="wm-body">
+            <!-- content views injected by JS -->
+            <div class="wm-add-form" id="wm-add-form">
+                <div>
+                    <span class="wm-form-label">Tab title</span>
+                    <input type="text" class="wm-input" id="wm-title-input" placeholder="e.g. History, Magic system, Nations..." maxlength="50">
+                </div>
+                <div>
+                    <span class="wm-form-label">Content</span>
+                    <textarea class="wm-textarea" id="wm-content-input" placeholder="Write the details for this world field..."></textarea>
+                </div>
+                <div class="wm-form-row">
+                    <button class="wm-btn-save" onclick="wmSaveTab()">Save tab</button>
+                    <button class="wm-btn-cancel" onclick="wmCancelAdd()">Cancel</button>
                 </div>
             </div>
-            <button class="btn-add-field" id="world-add-btn" onclick="showAddWorldField()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Field
-            </button>
+            <div class="wm-empty" id="wm-empty" style="display:none;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin:0 auto 8px;display:block;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                No world tabs yet. Click <strong>+</strong> to add your first one.
+            </div>
         </div>
-        <div class="modal-footer">
+        <div class="wm-footer">
             <button onclick="closeWorldModal()" style="background:#1f1e24;color:white;border:none;border-radius:6px;padding:8px 20px;font-size:0.875rem;font-weight:600;cursor:pointer;">Done</button>
         </div>
     </div>
@@ -505,7 +517,6 @@
 
     // World state
     let worldFields = []; // [{ id, title, content }]
-    let editingWorldFieldId = null; // null = adding new, else = editing existing
 
     function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function getToken() { return localStorage.getItem('po_token') || ''; }
@@ -632,8 +643,6 @@
             vl.style.cssText = 'display:block!important;';
             document.getElementById('chapters-locked').style.display = 'none';
             document.getElementById('chapters-panel').style.display = 'block';
-            document.getElementById('world-modal-story-title').textContent = s.title;
-
             allChapters = data.chapters || [];
             renderChapterList(allChapters);
             loadCharacters();
@@ -887,7 +896,7 @@
         } catch(e) { showToast('Error removing character.', true); }
     }
 
-    // ── WORLD BUILDING ─────────────────────────────────────────────────
+    // ── WORLD BUILDING — chrome-tab layout ──────────────────────────
     async function loadWorld() {
         if (!currentStoryId) return;
         try {
@@ -901,7 +910,7 @@
     function renderWorldPreview() {
         const preview = document.getElementById('world-preview');
         if (worldFields.length === 0) {
-            preview.innerHTML = '<div class="text-gray-400 text-sm text-center py-4">No world fields yet. Open World to add some.</div>';
+            preview.innerHTML = '<div class="text-gray-400 text-sm text-center py-4">No world tabs yet. Open World to add some.</div>';
             return;
         }
         preview.innerHTML = worldFields.map(f => `
@@ -912,34 +921,129 @@
         `).join('');
     }
 
-    function renderWorldFields() {
-        const list = document.getElementById('world-fields-list');
+    let wmActiveId = null;
+    let wmEditingId = null;
+
+    function wmRender() {
+        const tabBar = document.getElementById('wm-tab-bar');
+        const body = document.getElementById('wm-body');
+        const addBtn = tabBar.querySelector('.wm-tab-add');
+        const emptyEl = document.getElementById('wm-empty');
+
+        // Clear old tabs and content views (keep add-form and empty)
+        tabBar.querySelectorAll('.wm-tab').forEach(t => t.remove());
+        body.querySelectorAll('.wm-content-view').forEach(v => v.remove());
+
         if (worldFields.length === 0) {
-            list.innerHTML = '<div class="world-empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin:0 auto 8px;display:block;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><p>No world fields yet.<br>Click "+ Add Field" to start building your world.</p></div>';
+            emptyEl.style.display = 'block';
+            wmActiveId = null;
             return;
         }
-        list.innerHTML = worldFields.map((f, idx) => `
-            <div class="world-field-card" id="wf-card-${f.id}">
-                <div class="world-field-header">
-                    <span class="world-field-title">${escHtml(f.title)}</span>
-                    <div class="world-field-actions">
-                        <button class="wf-btn" onclick="moveWorldField('${f.id}', -1)" title="Move up" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>↑</button>
-                        <button class="wf-btn" onclick="moveWorldField('${f.id}', 1)" title="Move down" ${idx === worldFields.length - 1 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>↓</button>
-                        <button class="wf-btn" onclick="editWorldField('${f.id}')" title="Edit">✏</button>
-                        <button class="wf-btn danger" onclick="deleteWorldField('${f.id}')" title="Delete">✕</button>
-                    </div>
+        emptyEl.style.display = 'none';
+
+        // If active tab was deleted, fall back to first
+        if (!wmActiveId || !worldFields.find(f => f.id === wmActiveId)) {
+            wmActiveId = worldFields[0].id;
+        }
+
+        worldFields.forEach(f => {
+            // Tab
+            const tab = document.createElement('div');
+            tab.className = 'wm-tab' + (f.id === wmActiveId ? ' active' : '');
+            tab.dataset.id = f.id;
+            tab.innerHTML = `<span class="wm-tab-title">${escHtml(f.title)}</span><button class="wm-tab-x" onclick="event.stopPropagation();wmDeleteTab('${f.id}')">✕</button>`;
+            tab.onclick = () => wmSwitchTab(f.id);
+            tabBar.insertBefore(tab, addBtn);
+
+            // Content view
+            const view = document.createElement('div');
+            view.className = 'wm-content-view' + (f.id === wmActiveId ? ' active' : '');
+            view.id = 'wm-view-' + f.id;
+            view.innerHTML = `
+                <div class="wm-content-titlerow">
+                    <span class="wm-content-title">${escHtml(f.title)}</span>
+                    <button class="wm-edit-btn" onclick="wmOpenEditForm('${f.id}')">Edit</button>
                 </div>
-                <div class="world-field-body">${escHtml(f.content)}</div>
-            </div>
-        `).join('');
+                <div class="wm-content-text">${escHtml(f.content) || '<em style="color:#9ca3af;">No content yet.</em>'}</div>`;
+            body.insertBefore(view, document.getElementById('wm-add-form'));
+        });
+    }
+
+    function wmSwitchTab(id) {
+        wmActiveId = id;
+        document.querySelectorAll('#wm-tab-bar .wm-tab').forEach(t => t.classList.toggle('active', t.dataset.id === id));
+        document.querySelectorAll('#wm-body .wm-content-view').forEach(v => v.classList.toggle('active', v.id === 'wm-view-' + id));
+        document.getElementById('wm-add-form').classList.remove('active');
+    }
+
+    function wmOpenAddForm() {
+        wmEditingId = null;
+        document.getElementById('wm-title-input').value = '';
+        document.getElementById('wm-content-input').value = '';
+        document.querySelectorAll('#wm-body .wm-content-view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('#wm-tab-bar .wm-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('wm-add-form').classList.add('active');
+        document.getElementById('wm-empty').style.display = 'none';
+        setTimeout(() => document.getElementById('wm-title-input').focus(), 50);
+    }
+
+    function wmOpenEditForm(id) {
+        wmEditingId = id;
+        const f = worldFields.find(x => x.id === id);
+        if (!f) return;
+        document.getElementById('wm-title-input').value = f.title;
+        document.getElementById('wm-content-input').value = f.content;
+        document.querySelectorAll('#wm-body .wm-content-view').forEach(v => v.classList.remove('active'));
+        document.getElementById('wm-add-form').classList.add('active');
+        setTimeout(() => document.getElementById('wm-title-input').focus(), 50);
+    }
+
+    function wmCancelAdd() {
+        wmEditingId = null;
+        document.getElementById('wm-add-form').classList.remove('active');
+        if (wmActiveId) {
+            document.querySelectorAll('#wm-tab-bar .wm-tab').forEach(t => t.classList.toggle('active', t.dataset.id === wmActiveId));
+            document.querySelectorAll('#wm-body .wm-content-view').forEach(v => v.classList.toggle('active', v.id === 'wm-view-' + wmActiveId));
+        }
+        if (worldFields.length === 0) document.getElementById('wm-empty').style.display = 'block';
+    }
+
+    async function wmSaveTab() {
+        const title = document.getElementById('wm-title-input').value.trim();
+        const content = document.getElementById('wm-content-input').value.trim();
+        if (!title) { document.getElementById('wm-title-input').style.borderColor = '#f97316'; return; }
+        document.getElementById('wm-title-input').style.borderColor = '';
+
+        if (wmEditingId) {
+            const idx = worldFields.findIndex(x => x.id === wmEditingId);
+            if (idx !== -1) { worldFields[idx].title = title; worldFields[idx].content = content; }
+            wmActiveId = wmEditingId;
+            wmEditingId = null;
+        } else {
+            const newId = uid();
+            worldFields.push({ id: newId, title, content });
+            wmActiveId = newId;
+        }
+
+        await persistWorldFields();
+        document.getElementById('wm-add-form').classList.remove('active');
+        wmRender();
+        showToast('Tab saved.');
+    }
+
+    async function wmDeleteTab(id) {
+        if (!confirm('Delete this world tab?')) return;
+        worldFields = worldFields.filter(f => f.id !== id);
+        if (wmActiveId === id) wmActiveId = worldFields.length > 0 ? worldFields[0].id : null;
+        await persistWorldFields();
+        wmRender();
+        showToast('Tab deleted.');
     }
 
     function openWorldModal() {
         document.getElementById('world-modal').style.display = 'flex';
-        editingWorldFieldId = null;
-        document.getElementById('world-add-form').style.display = 'none';
-        document.getElementById('world-add-btn').style.display = 'flex';
-        renderWorldFields();
+        document.getElementById('wm-add-form').classList.remove('active');
+        wmRender();
     }
 
     function closeWorldModal() {
@@ -947,75 +1051,11 @@
         renderWorldPreview();
     }
 
-    function showAddWorldField() {
-        editingWorldFieldId = null;
-        document.getElementById('wf-title-input').value = '';
-        document.getElementById('wf-content-input').value = '';
-        document.getElementById('world-add-form').style.display = 'block';
-        document.getElementById('world-add-btn').style.display = 'none';
-        document.getElementById('wf-title-input').focus();
-    }
-
-    function editWorldField(id) {
-        const f = worldFields.find(x => x.id === id);
-        if (!f) return;
-        editingWorldFieldId = id;
-        document.getElementById('wf-title-input').value = f.title;
-        document.getElementById('wf-content-input').value = f.content;
-        document.getElementById('world-add-form').style.display = 'block';
-        document.getElementById('world-add-btn').style.display = 'none';
-        document.getElementById('wf-title-input').focus();
-    }
-
-    function cancelWorldField() {
-        editingWorldFieldId = null;
-        document.getElementById('world-add-form').style.display = 'none';
-        document.getElementById('world-add-btn').style.display = 'flex';
-    }
-
-    async function saveWorldField() {
-        const title = document.getElementById('wf-title-input').value.trim();
-        const content = document.getElementById('wf-content-input').value.trim();
-        if (!title) { showToast('Field title is required.', true); return; }
-
-        if (editingWorldFieldId) {
-            const idx = worldFields.findIndex(x => x.id === editingWorldFieldId);
-            if (idx !== -1) { worldFields[idx].title = title; worldFields[idx].content = content; }
-        } else {
-            worldFields.push({ id: uid(), title, content });
-        }
-
-        await persistWorldFields();
-        cancelWorldField();
-        renderWorldFields();
-        showToast(editingWorldFieldId ? 'Field updated.' : 'Field added.');
-    }
-
-    async function deleteWorldField(id) {
-        if (!confirm('Delete this world field?')) return;
-        worldFields = worldFields.filter(f => f.id !== id);
-        await persistWorldFields();
-        renderWorldFields();
-        showToast('Field deleted.');
-    }
-
-    function moveWorldField(id, dir) {
-        const idx = worldFields.findIndex(f => f.id === id);
-        const newIdx = idx + dir;
-        if (newIdx < 0 || newIdx >= worldFields.length) return;
-        const temp = worldFields[idx];
-        worldFields[idx] = worldFields[newIdx];
-        worldFields[newIdx] = temp;
-        persistWorldFields();
-        renderWorldFields();
-    }
-
     async function persistWorldFields() {
         if (!currentStoryId) return;
         try {
             const res = await fetch(`${WORKER_URL}/stories/${currentStoryId}/world`, {
-                method: 'POST',
-                headers: authHeaders(),
+                method: 'POST', headers: authHeaders(),
                 body: JSON.stringify({ fields: worldFields })
             });
             const data = await res.json();
