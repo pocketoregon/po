@@ -180,28 +180,93 @@
 
                 // World — chrome tabs
                 const worldFields = worldData.fields || [];
-                if (worldFields.length > 0) {
+                const visibleFields = worldFields.filter(f => !f.hidden);
+                if (visibleFields.length > 0) {
                     document.getElementById('world-btn').classList.remove('hidden');
                     const tabBar = document.getElementById('world-tab-bar');
                     const tabBody = document.getElementById('world-tab-body');
-                    let activeWorldId = worldFields[0].id;
+                    let activeWorldId = visibleFields[0].id;
 
                     function renderWorldTabs() {
-                        tabBar.innerHTML = worldFields.map(f => `
-                            <div id="wtab-${f.id}" onclick="setWorldTab('${f.id}')" style="display:flex;align-items:center;padding:8px 16px;border-radius:6px 6px 0 0;background:${f.id===activeWorldId?'white':'transparent'};border:1px solid ${f.id===activeWorldId?'#e5e7eb':'transparent'};border-bottom:none;cursor:pointer;font-size:13px;font-weight:${f.id===activeWorldId?'600':'400'};color:${f.id===activeWorldId?'#1f1e24':'#6b7280'};white-space:nowrap;position:relative;bottom:-1px;max-width:160px;overflow:hidden;text-overflow:ellipsis;">
+                        tabBar.innerHTML = visibleFields.map(f => `
+                            <div id="wtab-${f.id}" onclick="setWorldTab('${f.id}')" style="
+                                display:flex;align-items:center;
+                                padding:8px 16px;border-radius:6px 6px 0 0;
+                                background:${f.id===activeWorldId?'white':'transparent'};
+                                border:1px solid ${f.id===activeWorldId?'#e5e7eb':'transparent'};
+                                border-bottom:none;cursor:pointer;
+                                font-size:13px;font-weight:${f.id===activeWorldId?'600':'400'};
+                                color:${f.id===activeWorldId?'#1f1e24':'#6b7280'};
+                                white-space:nowrap;position:relative;bottom:-1px;
+                                max-width:160px;overflow:hidden;text-overflow:ellipsis;">
                                 ${escHtml(f.title)}
                             </div>`).join('');
-                        tabBody.innerHTML = worldFields.map(f => `
-                            <div id="wview-${f.id}" style="display:${f.id===activeWorldId?'block':'none'};">
-                                <div style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#1f1e24;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #f97316;display:inline-block;">${escHtml(f.title)}</div>
-                                <div style="font-size:0.9rem;color:#374151;line-height:1.75;white-space:pre-wrap;">${escHtml(f.content)}</div>
-                            </div>`).join('');
+
+                        tabBody.innerHTML = visibleFields.map(f => {
+                            const hasSubtabs = f.subtabs_enabled && f.subtabs && f.subtabs.length > 0;
+                            const visibleSubtabs = hasSubtabs ? f.subtabs.filter(st => !st.hidden) : [];
+
+                            let bodyHtml = '';
+                            if (hasSubtabs && visibleSubtabs.length > 0) {
+                                const firstSubId = visibleSubtabs[0].id;
+                                const subTabBar = visibleSubtabs.map(st => `
+                                    <div id="r-stab-${st.id}" onclick="setSubtab('${f.id}','${st.id}')" style="
+                                        padding:6px 14px;border-radius:6px 6px 0 0;font-size:12px;cursor:pointer;
+                                        white-space:nowrap;position:relative;bottom:-1px;
+                                        background:${st.id===firstSubId?'white':'transparent'};
+                                        border:1px solid ${st.id===firstSubId?'#e5e7eb':'transparent'};
+                                        border-bottom:none;
+                                        font-weight:${st.id===firstSubId?'600':'400'};
+                                        color:${st.id===firstSubId?'#1f1e24':'#6b7280'};">
+                                        ${escHtml(st.title)}
+                                    </div>`).join('');
+
+                                const subContent = visibleSubtabs.map(st => `
+                                    <div id="r-sview-${st.id}" style="display:${st.id===firstSubId?'block':'none'};font-size:0.9rem;color:#374151;line-height:1.75;white-space:pre-wrap;">
+                                        ${escHtml(st.content)}
+                                    </div>`).join('');
+
+                                bodyHtml = `
+                                    <div style="background:#f9fafb;border-radius:6px 6px 0 0;padding:8px 12px 0;border:1px solid #e5e7eb;border-bottom:none;margin-bottom:0;">
+                                        <div style="display:flex;align-items:flex-end;gap:2px;overflow-x:auto;">${subTabBar}</div>
+                                    </div>
+                                    <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 6px 6px;padding:14px;">${subContent}</div>
+                                `;
+                            } else {
+                                bodyHtml = `<div style="font-size:0.9rem;color:#374151;line-height:1.75;white-space:pre-wrap;">${escHtml(f.content)}</div>`;
+                            }
+
+                            return `
+                                <div id="wview-${f.id}" style="display:${f.id===activeWorldId?'block':'none'};">
+                                    <div style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#1f1e24;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #f97316;display:inline-block;">${escHtml(f.title)}</div>
+                                    ${bodyHtml}
+                                </div>`;
+                        }).join('');
                     }
 
                     window.setWorldTab = function(id) {
                         activeWorldId = id;
                         renderWorldTabs();
                     };
+
+                    window.setSubtab = function(fieldId, subtabId) {
+                        const f = visibleFields.find(x => x.id === fieldId);
+                        if (!f) return;
+                        (f.subtabs || []).filter(st => !st.hidden).forEach(st => {
+                            const view = document.getElementById('r-sview-' + st.id);
+                            const tab  = document.getElementById('r-stab-' + st.id);
+                            const isActive = st.id === subtabId;
+                            if (view) view.style.display = isActive ? 'block' : 'none';
+                            if (tab) {
+                                tab.style.background   = isActive ? 'white' : 'transparent';
+                                tab.style.border       = isActive ? '1px solid #e5e7eb' : '1px solid transparent';
+                                tab.style.borderBottom = 'none';
+                                tab.style.fontWeight   = isActive ? '600' : '400';
+                                tab.style.color        = isActive ? '#1f1e24' : '#6b7280';
+                            }
+                        });
+                    };
+
                     renderWorldTabs();
                 }
 

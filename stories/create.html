@@ -899,7 +899,7 @@
     // ── WORLD BUILDING — chrome-tab layout ──────────────────────────
 const DEFAULT_WORLD_TABS = [
     { title: 'History',                   content: '' },
-    { title: 'Groups',                   content: '' },
+    { title: 'Nations',                   content: '' },
     { title: 'Power System',              content: '' },
     { title: 'Lore',                      content: '' },
     { title: 'Important Places & Events', content: '' },
@@ -913,8 +913,19 @@ async function loadWorld() {
         worldFields = data.fields || [];
     } catch(e) { worldFields = []; }
 
+    // Migrate old fields that lack new properties
+    worldFields = worldFields.map(f => ({
+        hidden: false,
+        subtabs_enabled: false,
+        subtabs: [],
+        ...f
+    }));
+
     if (worldFields.length === 0) {
-        worldFields = DEFAULT_WORLD_TABS.map(t => ({ id: uid(), title: t.title, content: '' }));
+        worldFields = DEFAULT_WORLD_TABS.map(t => ({
+            id: uid(), title: t.title, content: '',
+            hidden: false, subtabs_enabled: false, subtabs: []
+        }));
     }
 
     renderWorldPreview();
@@ -936,6 +947,66 @@ async function loadWorld() {
 
     let wmActiveId = null;
     let wmEditingId = null;
+
+    function wmRenderSubtabSection(f) {
+        const subtabs = f.subtabs || [];
+        const activeSubId = subtabs.length > 0 ? subtabs[0].id : null;
+
+        const tabBarHtml = subtabs.map(st => `
+            <div id="wm-stab-${st.id}" onclick="wmSwitchSubtab('${f.id}','${st.id}')"
+                style="padding:6px 11px;border-radius:5px 5px 0 0;font-size:11px;cursor:pointer;white-space:nowrap;
+                display:flex;align-items:center;gap:4px;position:relative;bottom:-1px;
+                background:${st.id===activeSubId?'white':'transparent'};
+                border:${st.id===activeSubId?'1px solid #e5e7eb':'1px solid transparent'};
+                border-bottom:none;
+                font-weight:${st.id===activeSubId?'500':'400'};
+                color:${st.id===activeSubId?'#1f1e24':'#6b7280'};">
+                ${st.hidden ? `<span style="width:5px;height:5px;border-radius:50%;background:#E24B4A;display:inline-block;flex-shrink:0;"></span>` : ''}
+                ${escHtml(st.title)}
+                <button onclick="event.stopPropagation();wmDeleteSubtab('${f.id}','${st.id}')"
+                    style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:10px;padding:1px 3px;border-radius:3px;line-height:1;">✕</button>
+            </div>
+        `).join('');
+
+        const contentHtml = subtabs.map(st => `
+            <div id="wm-sview-${st.id}" style="display:${st.id===activeSubId?'block':'none'};">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:1px solid #f3f4f6;">
+                    <span style="font-size:12px;font-weight:500;color:#1f1e24;">${escHtml(st.title)}
+                        ${st.hidden ? `<span style="margin-left:6px;font-size:10px;padding:2px 7px;border-radius:999px;background:#FCEBEB;color:#A32D2D;font-weight:500;">Hidden</span>` : ''}
+                    </span>
+                    <div style="display:flex;gap:6px;">
+                        <button onclick="wmToggleSubtabHidden('${f.id}','${st.id}')" style="
+                            display:flex;align-items:center;gap:3px;
+                            padding:3px 8px;border-radius:5px;font-size:10px;cursor:pointer;
+                            border:1px solid ${st.hidden ? '#E24B4A' : '#e5e7eb'};
+                            background:${st.hidden ? '#FCEBEB' : 'white'};
+                            color:${st.hidden ? '#A32D2D' : '#6b7280'};">
+                            ${st.hidden
+                                ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hidden`
+                                : `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Visible`
+                            }
+                        </button>
+                        <button onclick="wmEditSubtab('${f.id}','${st.id}')"
+                            style="padding:3px 8px;border:1px solid #e5e7eb;border-radius:5px;background:none;font-size:10px;color:#6b7280;cursor:pointer;">Edit</button>
+                    </div>
+                </div>
+                <div style="padding:14px;font-size:13px;color:#374151;line-height:1.75;white-space:pre-wrap;">${escHtml(st.content) || '<em style="color:#9ca3af;">No content yet. Click Edit to add.</em>'}</div>
+            </div>
+        `).join('');
+
+        return `
+            <div style="background:#f9fafb;border-radius:8px 8px 0 0;padding:10px 14px 0;border:1px solid #e5e7eb;border-bottom:none;margin-top:4px;">
+                <div style="display:flex;align-items:flex-end;gap:2px;overflow-x:auto;">
+                    ${tabBarHtml}
+                    <button onclick="wmAddSubtab('${f.id}')"
+                        style="background:none;border:none;font-size:18px;color:#9ca3af;padding:4px 8px;cursor:pointer;position:relative;bottom:-1px;line-height:1;">+</button>
+                </div>
+            </div>
+            <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;background:white;">
+                ${contentHtml.length > 0 ? contentHtml : '<div style="padding:14px;font-size:13px;color:#9ca3af;text-align:center;">No subtabs yet. Click + to add one.</div>'}
+            </div>
+        `;
+    }
 
     function wmRender() {
         const tabBar = document.getElementById('wm-tab-bar');
@@ -965,7 +1036,12 @@ async function loadWorld() {
             tab.className = 'wm-tab' + (f.id === wmActiveId ? ' active' : '');
             tab.dataset.id = f.id;
             tab.draggable = true;
-            tab.innerHTML = `<span class="wm-tab-title">${escHtml(f.title)}</span><button class="wm-tab-x" onclick="event.stopPropagation();wmDeleteTab('${f.id}')">✕</button>`;
+            const tabDot = f.hidden
+                ? `<span style="width:6px;height:6px;border-radius:50%;background:#E24B4A;display:inline-block;flex-shrink:0;"></span>`
+                : f.subtabs_enabled
+                ? `<span style="width:6px;height:6px;border-radius:50%;background:#1D9E75;display:inline-block;flex-shrink:0;"></span>`
+                : '';
+            tab.innerHTML = `${tabDot}<span class="wm-tab-title">${escHtml(f.title)}</span><button class="wm-tab-x" onclick="event.stopPropagation();wmDeleteTab('${f.id}')">✕</button>`;
             tab.onclick = () => wmSwitchTab(f.id);
 
             tab.addEventListener('dragstart', e => {
@@ -1001,12 +1077,39 @@ async function loadWorld() {
             const view = document.createElement('div');
             view.className = 'wm-content-view' + (f.id === wmActiveId ? ' active' : '');
             view.id = 'wm-view-' + f.id;
+            const isHidden = !!f.hidden;
+            const hasSubtabs = !!f.subtabs_enabled;
+
             view.innerHTML = `
                 <div class="wm-content-titlerow">
                     <span class="wm-content-title">${escHtml(f.title)}</span>
-                    <button class="wm-edit-btn" onclick="wmOpenEditForm('${f.id}')">Edit</button>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="wmToggleHidden('${f.id}')" style="
+                            display:flex;align-items:center;gap:4px;
+                            padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;
+                            border:1px solid ${isHidden ? '#E24B4A' : '#e5e7eb'};
+                            background:${isHidden ? '#FCEBEB' : 'white'};
+                            color:${isHidden ? '#A32D2D' : '#6b7280'};">
+                            ${isHidden
+                                ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hidden from readers`
+                                : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Visible to readers`
+                            }
+                        </button>
+                        <button onclick="wmToggleSubtabs('${f.id}')" style="
+                            display:flex;align-items:center;gap:4px;
+                            padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;
+                            border:1px solid ${hasSubtabs ? '#1D9E75' : '#e5e7eb'};
+                            background:${hasSubtabs ? '#E1F5EE' : 'white'};
+                            color:${hasSubtabs ? '#0F6E56' : '#6b7280'};">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M2 11h20M7 7V3m10 4V3"/></svg>
+                            ${hasSubtabs ? 'Subtabs on' : 'No subtabs'}
+                        </button>
+                        <button class="wm-edit-btn" onclick="wmOpenEditForm('${f.id}')">Edit</button>
+                    </div>
                 </div>
-                <div class="wm-content-text">${escHtml(f.content) || '<em style="color:#9ca3af;">No content yet.</em>'}</div>`;
+                ${isHidden ? `<div style="font-size:10px;font-weight:600;color:#A32D2D;background:#FCEBEB;border:1px solid #FCA5A5;border-radius:4px;padding:3px 8px;display:inline-block;margin-bottom:10px;">Hidden from readers</div>` : ''}
+                ${hasSubtabs ? wmRenderSubtabSection(f) : `<div class="wm-content-text">${escHtml(f.content) || '<em style="color:#9ca3af;">No content yet.</em>'}</div>`}
+            `;
             body.insertBefore(view, document.getElementById('wm-add-form'));
         });
     }
@@ -1041,6 +1144,7 @@ async function loadWorld() {
     }
 
     function wmCancelAdd() {
+        window._wmSubtabEdit = null;
         wmEditingId = null;
         document.getElementById('wm-add-form').classList.remove('active');
         if (wmActiveId) {
@@ -1051,6 +1155,28 @@ async function loadWorld() {
     }
 
     async function wmSaveTab() {
+        // If we're in subtab edit mode, save to subtab instead
+        if (window._wmSubtabEdit) {
+            const { fieldId, subtabId } = window._wmSubtabEdit;
+            const fIdx = worldFields.findIndex(f => f.id === fieldId);
+            const sIdx = fIdx !== -1 ? (worldFields[fIdx].subtabs || []).findIndex(s => s.id === subtabId) : -1;
+            if (fIdx !== -1 && sIdx !== -1) {
+                const title = document.getElementById('wm-title-input').value.trim();
+                const content = document.getElementById('wm-content-input').value.trim();
+                if (!title) { document.getElementById('wm-title-input').style.borderColor = '#f97316'; return; }
+                document.getElementById('wm-title-input').style.borderColor = '';
+                worldFields[fIdx].subtabs[sIdx].title = title;
+                worldFields[fIdx].subtabs[sIdx].content = content;
+                window._wmSubtabEdit = null;
+                await persistWorldFields();
+                document.getElementById('wm-add-form').classList.remove('active');
+                wmRender();
+                wmSwitchTab(fieldId);
+                showToast('Subtab saved.');
+            }
+            return;
+        }
+
         const title = document.getElementById('wm-title-input').value.trim();
         const content = document.getElementById('wm-content-input').value.trim();
         if (!title) { document.getElementById('wm-title-input').style.borderColor = '#f97316'; return; }
@@ -1080,6 +1206,168 @@ async function loadWorld() {
         await persistWorldFields();
         wmRender();
         showToast('Tab deleted.');
+    }
+
+    // ── HIDE TOGGLE ──────────────────────────────────────────────────────
+    function wmToggleHidden(id) {
+        const idx = worldFields.findIndex(f => f.id === id);
+        if (idx === -1) return;
+        worldFields[idx].hidden = !worldFields[idx].hidden;
+        persistWorldFields();
+        wmRender();
+    }
+
+    // ── SUBTABS TOGGLE ───────────────────────────────────────────────────
+    function wmToggleSubtabs(id) {
+        const idx = worldFields.findIndex(f => f.id === id);
+        if (idx === -1) return;
+        const f = worldFields[idx];
+
+        if (f.subtabs_enabled) {
+            // Turning OFF — show warning modal
+            wmShowMergeWarning(id);
+        } else {
+            // Turning ON — convert existing content into first subtab
+            const firstSubtab = {
+                id: uid(),
+                title: f.title,
+                content: f.content || '',
+                hidden: false
+            };
+            worldFields[idx].subtabs_enabled = true;
+            worldFields[idx].subtabs = f.content.trim() ? [firstSubtab] : [];
+            persistWorldFields();
+            wmRender();
+            // Switch to active tab to show changes
+            wmSwitchTab(id);
+        }
+    }
+
+    function wmShowMergeWarning(fieldId) {
+        const f = worldFields.find(x => x.id === fieldId);
+        if (!f) return;
+
+        // Build preview of merged content
+        const merged = (f.subtabs || []).map(st => `## ${st.title}\n${st.content}`).join('\n\n');
+        const preview = merged.length > 300 ? merged.slice(0, 300) + '...' : merged;
+
+        // Inject warning modal into wm-body temporarily
+        const body = document.getElementById('wm-body');
+        const existingWarning = document.getElementById('wm-merge-warning');
+        if (existingWarning) existingWarning.remove();
+
+        const warning = document.createElement('div');
+        warning.id = 'wm-merge-warning';
+        warning.style.cssText = 'position:absolute;inset:0;background:rgba(255,255,255,0.96);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;';
+        warning.innerHTML = `
+            <div style="background:#FAEEDA;border:1px solid #FAC775;border-radius:8px;padding:18px 20px;max-width:480px;width:100%;">
+                <div style="font-size:13px;font-weight:600;color:#633806;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#633806" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Turn off subtabs?
+                </div>
+                <div style="font-size:12px;color:#854F0B;line-height:1.65;margin-bottom:10px;">
+                    All subtab content will be merged into a single text block. Nothing is deleted — you can edit it afterwards.
+                </div>
+                ${preview ? `<div style="background:#FFF8EE;border:1px solid #FAC775;border-radius:5px;padding:10px 12px;font-size:11px;color:#633806;line-height:1.7;margin-bottom:12px;font-family:monospace;white-space:pre-wrap;max-height:120px;overflow-y:auto;">${escHtml(preview)}</div>` : ''}
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button onclick="document.getElementById('wm-merge-warning').remove()"
+                        style="padding:6px 14px;border:1px solid #e5e7eb;border-radius:6px;background:white;font-size:12px;color:#6b7280;cursor:pointer;">Keep subtabs</button>
+                    <button onclick="wmConfirmMerge('${fieldId}')"
+                        style="padding:6px 14px;border:none;border-radius:6px;background:#1f1e24;font-size:12px;color:white;cursor:pointer;">Merge and turn off</button>
+                </div>
+            </div>
+        `;
+        // Position relative to modal-card
+        const modalCard = body.closest('.modal-card') || body.parentElement;
+        modalCard.style.position = 'relative';
+        modalCard.appendChild(warning);
+    }
+
+    function wmConfirmMerge(fieldId) {
+        const idx = worldFields.findIndex(f => f.id === fieldId);
+        if (idx === -1) return;
+        const f = worldFields[idx];
+        const merged = (f.subtabs || []).map(st => `## ${st.title}\n${st.content}`).join('\n\n');
+        worldFields[idx].content = merged;
+        worldFields[idx].subtabs_enabled = false;
+        worldFields[idx].subtabs = [];
+        const warning = document.getElementById('wm-merge-warning');
+        if (warning) warning.remove();
+        persistWorldFields();
+        wmRender();
+        wmSwitchTab(fieldId);
+    }
+
+    // ── SUBTAB NAVIGATION ────────────────────────────────────────────────
+    function wmSwitchSubtab(fieldId, subtabId) {
+        const f = worldFields.find(x => x.id === fieldId);
+        if (!f) return;
+        (f.subtabs || []).forEach(st => {
+            const view = document.getElementById('wm-sview-' + st.id);
+            const tab  = document.getElementById('wm-stab-' + st.id);
+            if (view) view.style.display = st.id === subtabId ? 'block' : 'none';
+            if (tab) {
+                tab.style.background      = st.id === subtabId ? 'white' : 'transparent';
+                tab.style.border          = st.id === subtabId ? '1px solid #e5e7eb' : '1px solid transparent';
+                tab.style.borderBottom    = 'none';
+                tab.style.fontWeight      = st.id === subtabId ? '500' : '400';
+                tab.style.color           = st.id === subtabId ? '#1f1e24' : '#6b7280';
+            }
+        });
+    }
+
+    // ── SUBTAB ADD ───────────────────────────────────────────────────────
+    function wmAddSubtab(fieldId) {
+        const title = prompt('Subtab title:');
+        if (!title || !title.trim()) return;
+        const idx = worldFields.findIndex(f => f.id === fieldId);
+        if (idx === -1) return;
+        const newSub = { id: uid(), title: title.trim(), content: '', hidden: false };
+        worldFields[idx].subtabs.push(newSub);
+        persistWorldFields();
+        wmRender();
+        wmSwitchTab(fieldId);
+    }
+
+    // ── SUBTAB EDIT ──────────────────────────────────────────────────────
+    function wmEditSubtab(fieldId, subtabId) {
+        const f = worldFields.find(x => x.id === fieldId);
+        if (!f) return;
+        const st = (f.subtabs || []).find(s => s.id === subtabId);
+        if (!st) return;
+
+        // Reuse existing wm-add-form but pre-fill for subtab editing
+        document.getElementById('wm-title-input').value = st.title;
+        document.getElementById('wm-content-input').value = st.content;
+        document.querySelectorAll('#wm-body .wm-content-view').forEach(v => v.classList.remove('active'));
+        document.getElementById('wm-add-form').classList.add('active');
+
+        // Temporarily override save to target the subtab
+        window._wmSubtabEdit = { fieldId, subtabId };
+        setTimeout(() => document.getElementById('wm-content-input').focus(), 50);
+    }
+
+    // ── SUBTAB DELETE ────────────────────────────────────────────────────
+    function wmDeleteSubtab(fieldId, subtabId) {
+        if (!confirm('Delete this subtab?')) return;
+        const idx = worldFields.findIndex(f => f.id === fieldId);
+        if (idx === -1) return;
+        worldFields[idx].subtabs = worldFields[idx].subtabs.filter(s => s.id !== subtabId);
+        persistWorldFields();
+        wmRender();
+        wmSwitchTab(fieldId);
+    }
+
+    // ── SUBTAB HIDE TOGGLE ───────────────────────────────────────────────
+    function wmToggleSubtabHidden(fieldId, subtabId) {
+        const fIdx = worldFields.findIndex(f => f.id === fieldId);
+        if (fIdx === -1) return;
+        const sIdx = (worldFields[fIdx].subtabs || []).findIndex(s => s.id === subtabId);
+        if (sIdx === -1) return;
+        worldFields[fIdx].subtabs[sIdx].hidden = !worldFields[fIdx].subtabs[sIdx].hidden;
+        persistWorldFields();
+        wmRender();
+        wmSwitchTab(fieldId);
     }
 
     function openWorldModal() {
