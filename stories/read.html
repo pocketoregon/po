@@ -12,56 +12,49 @@
         ::-webkit-scrollbar { display: none; }
         html { -ms-overflow-style: none; scrollbar-width: none; }
         body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1f1e24; }
-        
         #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1); }
         #loading-curtain.lift { transform: translateY(-100%); }
         .loader-text { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.75rem; letter-spacing: -0.04em; color: #1f1e24; }
-        
         .outfit-font { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
         #main-nav { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #e5e7eb; }
         .nav-link-sub { color:#333238; font-size:0.9375rem; font-weight:500; padding:6px 12px; border-radius:6px; transition: all 0.3s; }
         .nav-link-sub:hover { background:rgba(0,0,0,0.04); }
-        
         .story-header { background: radial-gradient(circle at 0% 0%, #ffffff 0%, #fffafa 25%, #fbe9eb 100%); padding: 4rem 1.5rem; border-bottom: 1px solid #f3f4f6; }
         .story-header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.1; }
-        
         .chapter-content { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem; line-height: 1.8; font-size: 1.125rem; color: #374151; }
         .chapter-content p { margin-bottom: 1.5rem; }
         .chapter-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 2rem; color: #1f1e24; }
-        
         .chapter-nav { display: flex; justify-content: space-between; align-items: center; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; border-top: 1px solid #f3f4f6; }
         .nav-btn { display: flex; flex-direction: column; gap: 4px; padding: 12px 20px; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s; }
         .nav-btn:hover { background: #f9fafb; border-color: #d1d5db; }
         .nav-btn span:first-child { font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
         .nav-btn span:last-child { font-weight: 700; color: #1f1e24; }
-        
         .chapter-list-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s; cursor: pointer; }
         .chapter-list-item:hover { background: #f9fafb; }
         .chapter-num { font-family: 'Outfit', sans-serif; font-weight: 800; color: #f97316; font-size: 1.125rem; min-width: 40px; }
         .chapter-name { font-weight: 600; flex: 1; margin-left: 12px; }
-        
         #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: white; padding: 12px 24px; border-radius: 999px; font-size: 0.875rem; font-weight: 500; z-index: 10000; display: none; }
-        
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; }
         .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 180px; display: none; z-index: 500; }
         .user-dropdown.open { display: block; }
         .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; }
         .user-dropdown-btn:hover { background: #f3f4f6; }
-
         .tab-pill { padding: 6px 20px; border-radius: 999px; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; border: 1px solid #e5e7eb; color: #6b7280; }
         .tab-pill.active { background: #1f1e24; color: white; border-color: #1f1e24; }
         .character-card-read { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; }
-        .character-field { margin-top: 1rem; border-top: 1px solid #f3f4f6; pt-4; }
         .character-label { font-size: 0.7rem; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
         .character-value { font-size: 0.95rem; color: #374151; line-height: 1.6; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
         .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; padding: 2rem; }
+
+        /* World field display in read view */
+        .world-field-block { margin-bottom: 2rem; }
+        .world-field-block-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; color: #1f1e24; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #f97316; display: inline-block; }
+        .world-field-block-content { font-size: 0.95rem; color: #374151; line-height: 1.75; white-space: pre-wrap; }
     </style>
 </head>
 <body>
-    <div id="loading-curtain">
-        <div class="loader-text">PocketOregon</div>
-    </div>
+    <div id="loading-curtain"><div class="loader-text">PocketOregon</div></div>
 
     <nav id="main-nav">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -101,11 +94,9 @@
                 <div id="tab-chapters" onclick="switchStoryTab('chapters')" class="tab-pill active">Chapters</div>
                 <div id="tab-books" onclick="switchStoryTab('books')" class="tab-pill">Books</div>
             </div>
-            
             <div id="view-chapters">
                 <div id="chapter-list" class="border border-gray-100 rounded-xl overflow-hidden"></div>
             </div>
-
             <div id="view-books" class="hidden space-y-6">
                 <div id="book-list"></div>
             </div>
@@ -122,40 +113,31 @@
         <div class="chapter-content">
             <h1 id="chapter-display-title" class="chapter-title mb-2">Chapter Title</h1>
             <button id="chapter-info-btn" onclick="toggleChapterInfo()" class="hidden bg-[#f97316] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-8 hover:bg-[#ea580c] transition">Chapter Info</button>
-            
             <div id="chapter-info-display" class="hidden mb-12 p-6 bg-orange-50 rounded-xl border border-orange-100 space-y-6">
                 <div><div class="character-label">Main Idea</div><div id="ci-idea-read" class="character-value italic"></div></div>
                 <div><div class="character-label">Fundamental Theme</div><div id="ci-theme-read" class="character-value"></div></div>
                 <div><div class="character-label">Extended Synopsis</div><div id="ci-synopsis-read" class="character-value"></div></div>
             </div>
-
             <div id="chapter-body"></div>
         </div>
-
         <div id="chapter-characters-section" class="hidden max-w-4xl mx-auto px-6 py-12 border-t border-gray-100">
             <h3 class="outfit-font text-xl font-bold mb-6">Characters in this chapter</h3>
             <div id="chapter-character-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         </div>
-
         <div class="chapter-nav">
-            <a id="prev-chapter" href="#" class="nav-btn" style="visibility:hidden;">
-                <span>Previous</span>
-                <span id="prev-title">Title</span>
-            </a>
-            <a id="next-chapter" href="#" class="nav-btn" style="visibility:hidden;">
-                <span class="text-right">Next</span>
-                <span id="next-title">Title</span>
-            </a>
+            <a id="prev-chapter" href="#" class="nav-btn" style="visibility:hidden;"><span>Previous</span><span id="prev-title">Title</span></a>
+            <a id="next-chapter" href="#" class="nav-btn" style="visibility:hidden;"><span class="text-right">Next</span><span id="next-title">Title</span></a>
         </div>
     </div>
 
+    <!-- WORLD MODAL — dynamic fields -->
     <div id="world-modal" class="modal-overlay" onclick="if(event.target===this)closeWorldModal()">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-8">
-                <h3 class="outfit-font font-bold text-2xl">World Building</h3>
-                <button onclick="closeWorldModal()" class="text-gray-400 hover:text-gray-900 font-bold">✕</button>
+                <h3 class="outfit-font font-bold text-2xl">🌍 World Building</h3>
+                <button onclick="closeWorldModal()" class="text-gray-400 hover:text-gray-900 font-bold text-xl">✕</button>
             </div>
-            <div id="world-content" class="space-y-8"></div>
+            <div id="world-content"></div>
         </div>
     </div>
 
@@ -172,10 +154,8 @@
         function authHeaders() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }; }
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.background = isError ? '#ef4444' : '#1f1e24';
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
+            t.textContent = msg; t.style.background = isError ? '#ef4444' : '#1f1e24';
+            t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000);
         }
 
         async function loadStory() {
@@ -187,9 +167,9 @@
                     fetch(`${WORKER_URL}/stories/${storyId}/books`)
                 ]);
                 const data = await sRes.json();
-                const world = await wRes.json();
+                const worldData = await wRes.json();
                 const booksData = await bRes.json();
-                
+
                 const s = data.story;
                 document.getElementById('story-title').textContent = s.title;
                 document.getElementById('story-genre').textContent = s.genre;
@@ -199,15 +179,17 @@
                 document.getElementById('bookmark-btn').textContent = data.is_bookmarked ? '🔖 Bookmarked' : '🔖 Bookmark';
                 document.getElementById('bookmark-btn').style.color = data.is_bookmarked ? '#f97316' : '#1f1e24';
 
-                // World Button
-                if (world.history || world.nation || world.power_system || world.lore || world.important_places) {
+                // World — dynamic fields
+                const worldFields = worldData.fields || [];
+                if (worldFields.length > 0) {
                     document.getElementById('world-btn').classList.remove('hidden');
                     const wc = document.getElementById('world-content');
-                    wc.innerHTML = '';
-                    const fields = [['History', world.history], ['Nation', world.nation], ['Power System', world.power_system], ['Lore', world.lore], ['Important Places', world.important_places]];
-                    fields.forEach(([label, val]) => {
-                        if (val) wc.innerHTML += `<div><div class="character-label">${label}</div><div class="character-value">${escHtml(val).replace(/\n/g, '<br>')}</div></div>`;
-                    });
+                    wc.innerHTML = worldFields.map(f => `
+                        <div class="world-field-block">
+                            <div class="world-field-block-title">${escHtml(f.title)}</div>
+                            <div class="world-field-block-content">${escHtml(f.content)}</div>
+                        </div>
+                    `).join('');
                 }
 
                 // Chapters
@@ -255,6 +237,7 @@
             document.getElementById('view-chapters').classList.toggle('hidden', tab!=='chapters');
             document.getElementById('view-books').classList.toggle('hidden', tab!=='books');
         }
+
         function openWorldModal() { document.getElementById('world-modal').style.display = 'flex'; }
         function closeWorldModal() { document.getElementById('world-modal').style.display = 'none'; }
 
@@ -270,21 +253,16 @@
                 const data = await cRes.json();
                 const info = await iRes.json();
                 const charsData = await chRes.json();
-                
                 const c = data.chapter;
                 document.getElementById('chapter-display-title').textContent = c.title;
                 document.getElementById('reader-progress').textContent = `Chapter ${c.chapter_number}`;
                 document.getElementById('chapter-body').innerHTML = c.body.split('\n').map(p => p.trim() ? `<p>${escHtml(p)}</p>` : '').join('');
-                
-                // Chapter Info
                 if (info.main_idea || info.fundamental_theme || info.extended_synopsis) {
                     document.getElementById('chapter-info-btn').classList.remove('hidden');
                     document.getElementById('ci-idea-read').textContent = info.main_idea || '';
                     document.getElementById('ci-theme-read').textContent = info.fundamental_theme || '';
                     document.getElementById('ci-synopsis-read').textContent = info.extended_synopsis || '';
                 }
-
-                // Characters
                 if (charsData.characters && charsData.characters.length > 0) {
                     document.getElementById('chapter-characters-section').classList.remove('hidden');
                     document.getElementById('chapter-character-list').innerHTML = charsData.characters.map(ch => `
@@ -297,20 +275,9 @@
                         </div>
                     `).join('');
                 }
-
-                if (data.prev) {
-                    const btn = document.getElementById('prev-chapter');
-                    btn.style.visibility = 'visible';
-                    btn.href = `/stories/read.html?id=${storyId}&chapter=${data.prev.id}`;
-                    document.getElementById('prev-title').textContent = data.prev.title;
-                }
-                if (data.next) {
-                    const btn = document.getElementById('next-chapter');
-                    btn.style.visibility = 'visible';
-                    btn.href = `/stories/read.html?id=${storyId}&chapter=${data.next.id}`;
-                    document.getElementById('next-title').textContent = data.next.title;
-                }
-                window.scrollTo(0,0);
+                if (data.prev) { const btn = document.getElementById('prev-chapter'); btn.style.visibility = 'visible'; btn.href = `/stories/read.html?id=${storyId}&chapter=${data.prev.id}`; document.getElementById('prev-title').textContent = data.prev.title; }
+                if (data.next) { const btn = document.getElementById('next-chapter'); btn.style.visibility = 'visible'; btn.href = `/stories/read.html?id=${storyId}&chapter=${data.next.id}`; document.getElementById('next-title').textContent = data.next.title; }
+                window.scrollTo(0, 0);
             } catch (e) { showToast('Error loading chapter.', true); }
         }
 
@@ -332,11 +299,9 @@
             if (user) {
                 section.innerHTML = `
                     <div class="relative">
-                        <div class="user-avatar" onclick="document.getElementById('user-dropdown').classList.toggle('open')">
-                            ${user.name[0].toUpperCase()}
-                        </div>
+                        <div class="user-avatar" onclick="document.getElementById('user-dropdown').classList.toggle('open')">${user.name[0].toUpperCase()}</div>
                         <div id="user-dropdown" class="user-dropdown">
-                            <div class="px-2 py-1 font-bold text-sm border-bottom mb-1">${escHtml(user.name)}</div>
+                            <div class="px-2 py-1 font-bold text-sm mb-1">${escHtml(user.name)}</div>
                             <button onclick="window.location.href='/profile.html?id=${user.id}'" class="user-dropdown-btn">My Profile</button>
                             ${(user.role === 'creator' || user.role === 'admin') ? `<button onclick="window.location.href='/stories/create.html'" class="user-dropdown-btn">Create Story</button>` : ''}
                             <button onclick="logout()" class="user-dropdown-btn text-red-500">Sign Out</button>
