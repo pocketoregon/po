@@ -959,13 +959,42 @@ async function loadWorld() {
             wmActiveId = worldFields[0].id;
         }
 
-        worldFields.forEach(f => {
+ worldFields.forEach(f => {
             // Tab
             const tab = document.createElement('div');
             tab.className = 'wm-tab' + (f.id === wmActiveId ? ' active' : '');
             tab.dataset.id = f.id;
+            tab.draggable = true;
             tab.innerHTML = `<span class="wm-tab-title">${escHtml(f.title)}</span><button class="wm-tab-x" onclick="event.stopPropagation();wmDeleteTab('${f.id}')">✕</button>`;
             tab.onclick = () => wmSwitchTab(f.id);
+
+            tab.addEventListener('dragstart', e => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', f.id);
+                tab.style.opacity = '0.4';
+            });
+            tab.addEventListener('dragend', () => { tab.style.opacity = ''; });
+            tab.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                tab.style.background = '#e5e7eb';
+            });
+            tab.addEventListener('dragleave', () => {
+                tab.style.background = f.id === wmActiveId ? 'white' : '';
+            });
+            tab.addEventListener('drop', e => {
+                e.preventDefault();
+                tab.style.background = '';
+                const draggedId = e.dataTransfer.getData('text/plain');
+                if (draggedId === f.id) return;
+                const fromIdx = worldFields.findIndex(x => x.id === draggedId);
+                const toIdx   = worldFields.findIndex(x => x.id === f.id);
+                if (fromIdx === -1 || toIdx === -1) return;
+                worldFields.splice(toIdx, 0, worldFields.splice(fromIdx, 1)[0]);
+                persistWorldFields();
+                wmRender();
+            });
+
             tabBar.insertBefore(tab, addBtn);
 
             // Content view
