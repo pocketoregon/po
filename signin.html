@@ -12,8 +12,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000;
-            color: #fff;
+            background-color: #ffffff;
+            color: #1f1e24;
             margin: 0;
             overflow: hidden;
             display: flex;
@@ -22,51 +22,14 @@
             min-height: 100vh;
         }
 
-        /* ── ANIMATED BACKGROUND ── */
-        .bg-canvas {
+        /* ── DOT GRID BACKGROUND ── */
+        #dot-canvas {
             position: fixed;
             inset: 0;
+            width: 100%;
+            height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
-        }
-
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
-            animation: move 20s infinite alternate ease-in-out;
-        }
-
-        .orb-1 {
-            width: 400px; height: 400px;
-            background: rgba(249, 115, 22, 0.3); /* Orange */
-            top: -100px; left: -100px;
-        }
-
-        .orb-2 {
-            width: 500px; height: 500px;
-            background: rgba(124, 58, 237, 0.2); /* Purple */
-            bottom: -150px; right: -150px;
-            animation-delay: -5s;
-        }
-
-        .orb-3 {
-            width: 300px; height: 300px;
-            background: rgba(37, 99, 235, 0.2); /* Blue */
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            animation: move-center 25s infinite alternate ease-in-out;
-        }
-
-        @keyframes move {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, 50px) scale(1.1); }
-        }
-
-        @keyframes move-center {
-            0% { transform: translate(-50%, -50%) translate(-30px, -30px); }
-            100% { transform: translate(-50%, -50%) translate(30px, 30px); }
+            pointer-events: none;
         }
 
         /* ── SIGN IN CARD ── */
@@ -144,11 +107,7 @@
     </style>
 </head>
 <body>
-    <div class="bg-canvas">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
+    <canvas id="dot-canvas"></canvas>
 
     <div class="signin-card">
         <div class="logo-container">
@@ -167,6 +126,65 @@
     </div>
 
     <script>
+        (function() {
+            const canvas = document.getElementById('dot-canvas');
+            const ctx = canvas.getContext('2d');
+            const GAP = 18;
+            const DOT_R = 1.2;
+            const CURSOR_RADIUS = 50;
+            let mouse = { x: -9999, y: -9999 };
+            let dots = [];
+            let animId;
+
+            function buildDots() {
+                dots = [];
+                const offsetX = (canvas.width % GAP) / 2;
+                const offsetY = (canvas.height % GAP) / 2;
+                const cols = Math.ceil(canvas.width / GAP) + 1;
+                const rows = Math.ceil(canvas.height / GAP) + 1;
+                for (let r = 0; r < rows; r++)
+                    for (let c = 0; c < cols; c++)
+                        dots.push({ x: offsetX + c * GAP, y: offsetY + r * GAP });
+            }
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                buildDots();
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (const d of dots) {
+                    const dx = d.x - mouse.x;
+                    const dy = d.y - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, DOT_R, 0, Math.PI * 2);
+                    ctx.fillStyle = dist <= CURSOR_RADIUS ? '#f97316' : '#d1d5db';
+                    ctx.fill();
+                }
+                animId = requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('mousemove', e => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+            window.addEventListener('mouseleave', () => {
+                mouse.x = -9999;
+                mouse.y = -9999;
+            });
+            window.addEventListener('resize', () => {
+                cancelAnimationFrame(animId);
+                resize();
+                draw();
+            });
+
+            resize();
+            draw();
+        })();
+
         const WORKER_URL = 'https://po.pocketoregon.workers.dev';
         const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
 
