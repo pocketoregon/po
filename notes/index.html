@@ -93,6 +93,12 @@
         body.dark .note-list-body { color: #9ca3af; }
         .note-list-tags { font-size: 0.75rem; color: #9ca3af; min-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .note-list-date { font-size: 0.72rem; color: #9ca3af; min-width: 80px; text-align: right; }
+        .note-list-actions { display: flex; gap: 4px; align-items: center; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; margin-left: 8px; }
+        .note-list-item:hover .note-list-actions { opacity: 1; }
+        .note-list-pin-btn { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; font-size: 0.85rem; line-height: 1; transition: color 0.15s; }
+        .note-list-pin-btn:hover { color: #f97316; }
+        .note-list-del-btn { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; line-height: 1; transition: color 0.15s, background 0.15s; }
+        .note-list-del-btn:hover { color: #dc2626; background: #fee2e2; }
         #empty-state { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
         #empty-state svg { margin: 0 auto 1rem; display: block; }
         #editor-modal { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; }
@@ -634,13 +640,16 @@
                 <div class="note-list-body">${escHtml(preview)}</div>
                 <div class="note-list-tags">${escHtml(tagsText)}</div>
                 <div class="note-list-date">${formatDate(n.updated_at)}</div>
-                <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note" style="position: absolute; right: 10px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                        <path d="M10 11v6M14 11v6"/>
-                    </svg>
-                </button>
+                <div class="note-list-actions">
+                    <button class="note-list-pin-btn" onclick="togglePin(event, ${n.id})" title="${n.pinned ? 'Unpin' : 'Pin'} note">📌</button>
+                    <button class="note-list-del-btn" onclick="deleteNote(event, ${n.id})" title="Delete note">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         `;
     }
