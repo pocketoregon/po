@@ -103,6 +103,7 @@
             <button class="tab-btn active" onclick="switchTab('data')">Data</button>
             <button class="tab-btn" onclick="switchTab('stories')">📚 Stories</button>
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
+            <button class="tab-btn" onclick="switchTab('horizon')">🚀 Horizon</button>
         </div>
 
         <!-- DATA TAB -->
@@ -114,7 +115,7 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table>
-                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>⭐</th><th>Joined</th><th>Actions</th></tr></thead>
                         <tbody id="users-table-body"><tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr></tbody>
                     </table>
                 </div>
@@ -249,6 +250,33 @@
                 </div>
             </div>
         </div>
+
+        <!-- HORIZON TAB -->
+        <div id="tab-horizon" class="tab-panel">
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="outfit font-bold text-lg">🚀 Horizon Projects</h2>
+                        <p class="text-xs text-gray-400 mt-1">Create and manage projects for starred beta users.</p>
+                    </div>
+                    <button class="btn btn-dark btn-sm" onclick="toggleNewProjectForm()">+ New Project</button>
+                </div>
+                <div class="px-6 py-5">
+                    <div id="new-project-form" class="add-card-form" style="display:none;margin-bottom:1rem;">
+                        <p class="text-sm font-semibold text-gray-700 mb-3">New Project</p>
+                        <input id="hp-title" type="text" placeholder="Project title *" maxlength="80" />
+                        <textarea id="hp-desc" rows="2" placeholder="Short description..." maxlength="300"></textarea>
+                        <textarea id="hp-code" rows="14" placeholder="Paste full HTML code here..." style="font-family:monospace;font-size:0.78rem;"></textarea>
+                        <div class="flex gap-2 mt-1">
+                            <button class="btn btn-dark btn-sm" onclick="createHorizonProject()">Create Project</button>
+                            <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="toggleNewProjectForm()">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="horizon-projects-list"><div class="text-gray-400 text-sm text-center py-6">Loading projects...</div></div>
+                </div>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -282,6 +310,7 @@
         event.target.classList.add('active');
         if (name === 'content') loadContentEditor();
         if (name === 'stories') loadDashboard();
+        if (name === 'horizon') loadHorizonTab();
     }
 
     function handleAdminLogin(response) {
@@ -337,12 +366,22 @@
 
     function renderUsers(users) {
         const body = document.getElementById('users-table-body');
-        if (!users || users.error) { body.innerHTML = '<tr><td colspan="5" class="text-center text-red-400">Error loading users.</td></tr>'; return; }
+        if (!users || users.error) { body.innerHTML = '<tr><td colspan="6" class="text-center text-red-400">Error loading users.</td></tr>'; return; }
         body.innerHTML = users.map(u => `
             <tr>
                 <td><div class="font-semibold">${esc(u.name)}</div></td>
                 <td class="text-gray-500">${esc(u.email)}</td>
                 <td><span class="badge badge-${u.role}">${u.role}</span></td>
+                <td>
+                    ${u.email !== ADMIN_EMAIL ? `
+                        <button onclick="toggleHorizonStar(${u.id}, ${u.horizon_access ? 1 : 0})"
+                            title="${u.horizon_access ? 'Remove Horizon access' : 'Grant Horizon access'}"
+                            class="text-[14px] transition-opacity hover:opacity-70"
+                            style="background:none;border:none;cursor:pointer;padding:2px;">
+                            ${u.horizon_access ? '⭐' : '☆'}
+                        </button>
+                    ` : '<span class="text-xs text-gray-300">admin</span>'}
+                </td>
                 <td class="text-gray-400">${fmt(u.created_at)}</td>
                 <td>
                     <div class="flex gap-2 items-center">
@@ -372,6 +411,22 @@
             } else {
                 showCustomAlert(data.error || 'Failed to update role.');
             }
+        } catch(e) { showCustomAlert('Network error.'); }
+    }
+
+    async function toggleHorizonStar(userId, currentVal) {
+        const newVal = currentVal ? 0 : 1;
+        try {
+            const res = await fetch(`${WORKER_URL}/admin/users/${userId}/horizon`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify({ horizon_access: newVal })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert(newVal ? '⭐ Horizon access granted! User must re-login to see changes.' : 'Horizon access removed.');
+                loadDashboard();
+            } else { showCustomAlert(data.error || 'Failed to update.'); }
         } catch(e) { showCustomAlert('Network error.'); }
     }
 
@@ -637,6 +692,123 @@
             google.accounts.id.prompt();
         });
     });
+
+
+    // ── HORIZON ADMIN ──────────────────────────────────────────────
+    let horizonProjects = [];
+
+    async function loadHorizonTab() {
+        const list = document.getElementById('horizon-projects-list');
+        list.innerHTML = '<div class="text-gray-400 text-sm text-center py-4">Loading...</div>';
+        try {
+            const res = await fetch(WORKER_URL + '/horizon/projects', { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+            const data = await res.json();
+            horizonProjects = data.projects || [];
+            renderHorizonProjects();
+        } catch(e) {
+            list.innerHTML = '<p class="text-red-400 text-sm">Error loading projects.</p>';
+        }
+    }
+
+    function renderHorizonProjects() {
+        const list = document.getElementById('horizon-projects-list');
+        if (horizonProjects.length === 0) {
+            list.innerHTML = '<p class="text-gray-400 text-sm text-center py-6">No projects yet. Create one above.</p>';
+            return;
+        }
+        list.innerHTML = horizonProjects.map(p => `
+            <div class="card-item" id="hp-item-${p.id}">
+                <div class="card-item-info">
+                    <div class="card-item-title">${esc(p.title)}</div>
+                    <div class="card-item-date">${fmt(p.created_at)}</div>
+                    <div class="card-item-body">${esc(p.description || '')}</div>
+                </div>
+                <div class="flex flex-col gap-2 flex-shrink-0">
+                    <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;font-size:0.78rem;" onclick="editHorizonProject(${p.id})">Edit</button>
+                    <button class="btn btn-red btn-sm" style="font-size:0.78rem;" onclick="deleteHorizonProject(${p.id})">Delete</button>
+                </div>
+            </div>
+            <div id="hp-edit-${p.id}" style="display:none;" class="add-card-form mb-2">
+                <p class="text-sm font-semibold text-gray-700 mb-3">Editing: ${esc(p.title)}</p>
+                <input id="hpe-title-${p.id}" type="text" value="${esc(p.title)}" maxlength="80" />
+                <textarea id="hpe-desc-${p.id}" rows="2" maxlength="300">${esc(p.description || '')}</textarea>
+                <textarea id="hpe-code-${p.id}" rows="14" style="font-family:monospace;font-size:0.78rem;">${esc(p.html_code || '')}</textarea>
+                <div class="flex gap-2 mt-1">
+                    <button class="btn btn-dark btn-sm" onclick="saveHorizonProject(${p.id})">Save</button>
+                    <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="editHorizonProject(${p.id})">Cancel</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function toggleNewProjectForm() {
+        const f = document.getElementById('new-project-form');
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+        if (f.style.display === 'block') document.getElementById('hp-title').focus();
+    }
+
+    function editHorizonProject(id) {
+        const form = document.getElementById('hp-edit-' + id);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function createHorizonProject() {
+        const title = document.getElementById('hp-title').value.trim();
+        if (!title) { showCustomAlert('Title is required.'); return; }
+        const body = {
+            title,
+            description: document.getElementById('hp-desc').value.trim(),
+            html_code: document.getElementById('hp-code').value
+        };
+        try {
+            const res = await fetch(WORKER_URL + '/horizon/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                showCustomAlert('Project created!');
+                ['hp-title','hp-desc','hp-code'].forEach(id => document.getElementById(id).value = '');
+                toggleNewProjectForm();
+                loadHorizonTab();
+            } else { showCustomAlert(data.error || 'Create failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
+    }
+
+    async function saveHorizonProject(id) {
+        const title = document.getElementById('hpe-title-' + id).value.trim();
+        if (!title) { showCustomAlert('Title is required.'); return; }
+        const body = {
+            title,
+            description: document.getElementById('hpe-desc-' + id).value.trim(),
+            html_code: document.getElementById('hpe-code-' + id).value
+        };
+        try {
+            const res = await fetch(`${WORKER_URL}/horizon/projects/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) { showCustomAlert('Project saved!'); loadHorizonTab(); }
+            else { showCustomAlert(data.error || 'Save failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
+    }
+
+    async function deleteHorizonProject(id) {
+        if (!confirm('Delete this Horizon project?')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/horizon/projects/${id}`, {
+                method: 'DELETE',
+                headers: authHeader()
+            });
+            const data = await res.json();
+            if (data.success) { showCustomAlert('Project deleted.'); loadHorizonTab(); }
+            else { showCustomAlert(data.error || 'Delete failed.'); }
+        } catch(e) { showCustomAlert('Network error.'); }
+    }
+
 </script>
 </body>
 </html>

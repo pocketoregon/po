@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Horizon — PocketOregon</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #09090f;
+            --surface: #0f0f18;
+            --card: #13131e;
+            --card-hover: #17172a;
+            --border: #1c1c30;
+            --border-bright: #2a2a50;
+            --text: #e2e2f0;
+            --muted: #5a5a78;
+            --accent: #f97316;
+            --accent-dim: rgba(249,115,22,0.10);
+            --accent-glow: rgba(249,115,22,0.22);
+            --star: #fbbf24;
+            --green: #34d399;
+            --purple: #a78bfa;
+        }
+        html { -ms-overflow-style: none; scrollbar-width: none; }
+        html::-webkit-scrollbar { display: none; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── LOADING ── */
+        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; transition: transform 0.65s cubic-bezier(0.76,0,0.24,1); }
+        #loading-curtain.lift { transform: translateY(-100%); }
+        .loader-ring { width: 44px; height: 44px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-label { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+
+        /* ── GATE ── */
+        #gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+        .gate-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 3rem 2.5rem; max-width: 400px; width: 100%; text-align: center; }
+        .gate-icon { width: 56px; height: 56px; background: var(--accent-dim); border: 1px solid var(--accent-glow); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .gate-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .gate-sub { font-size: 0.875rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.6; }
+        .gate-btn { display: inline-block; background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 28px; font-size: 0.875rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+        .gate-btn:hover { background: #ea580c; }
+
+        /* ── NAV ── */
+        nav { background: rgba(9,9,15,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .nav-logo span { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1rem; color: var(--text); }
+        .nav-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--accent-dim); border: 1px solid var(--accent-glow); color: var(--accent); font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.08em; text-transform: uppercase; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .nav-user { font-size: 0.8rem; color: var(--muted); }
+        .nav-back { font-size: 0.8rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+        .nav-back:hover { color: var(--text); }
+
+        /* ── HERO ── */
+        .hero { border-bottom: 1px solid var(--border); padding: 4rem 1.5rem 3rem; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; top: -120px; left: 50%; transform: translateX(-50%); width: 600px; height: 300px; background: radial-gradient(ellipse, rgba(249,115,22,0.07) 0%, transparent 70%); pointer-events: none; }
+        .hero-inner { max-width: 1100px; margin: 0 auto; }
+        .hero-tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--accent); border: 1px solid var(--accent-glow); background: var(--accent-dim); padding: 4px 10px; border-radius: 999px; letter-spacing: 0.1em; margin-bottom: 1.25rem; }
+        .hero-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .hero h1 { font-family: 'Outfit', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -0.04em; margin-bottom: 0.75rem; color: var(--text); }
+        .hero h1 span { color: var(--accent); }
+        .hero-sub { font-size: 1rem; color: var(--muted); max-width: 500px; line-height: 1.65; }
+
+        /* ── GRID ── */
+        #app { display: none; }
+        .main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 12px; }
+        .section-title { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+        .project-count { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+        .project-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; position: relative; display: flex; flex-direction: column; }
+        .project-card:hover { border-color: var(--border-bright); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px var(--border-bright); background: var(--card-hover); }
+        .project-card-accent { height: 3px; background: linear-gradient(90deg, var(--accent), transparent); }
+        .project-card-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+        .project-card-number { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-bottom: 0.75rem; letter-spacing: 0.08em; }
+        .project-card-title { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 0.6rem; letter-spacing: -0.02em; }
+        .project-card-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.6; flex: 1; }
+        .project-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .project-card-date { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+        .project-open-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 700; color: var(--accent); border: 1px solid var(--accent-glow); background: var(--accent-dim); padding: 4px 10px; border-radius: 6px; transition: background 0.15s; }
+        .project-card:hover .project-open-btn { background: rgba(249,115,22,0.18); }
+
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align: center; padding: 6rem 2rem; }
+        .empty-icon { width: 64px; height: 64px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .empty-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+        .empty-sub { font-size: 0.875rem; color: var(--muted); }
+
+        /* ── FULLSCREEN VIEWER ── */
+        #project-viewer { display: none; position: fixed; inset: 0; z-index: 500; background: var(--bg); flex-direction: column; }
+        #project-viewer.open { display: flex; }
+        .viewer-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 48px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .viewer-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--text); }
+        .viewer-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; transition: background 0.15s, color 0.15s; }
+        .viewer-close:hover { background: var(--card); color: var(--text); }
+        #project-iframe { flex: 1; border: none; width: 100%; background: white; }
+
+        /* ── TOAST ── */
+        #toast { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 8px; z-index: 700; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+
+<div id="loading-curtain">
+    <div class="loader-ring"></div>
+    <div class="loader-label">Horizon</div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ACCESS GATE -->
+<div id="gate">
+    <div class="gate-card">
+        <div class="gate-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z"/><path d="M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+        </div>
+        <div class="gate-title">Project Horizon</div>
+        <div class="gate-sub">This is a restricted beta feature. You need a ⭐ star to access it. Sign in to verify your access.</div>
+        <a href="/signin.html?redirect=/horizon/" class="gate-btn">Sign in to continue</a>
+        <div style="margin-top:1rem;"><a href="/" style="font-size:0.8rem;color:var(--muted);text-decoration:none;">← Back to site</a></div>
+    </div>
+</div>
+
+<!-- MAIN APP (shown after auth check) -->
+<div id="app">
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo">
+                <a href="/" class="nav-logo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#f97316"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+                    <span>PocketOregon</span>
+                </a>
+                <span class="nav-badge" style="margin-left:10px;">⭐ Horizon Beta</span>
+            </div>
+            <div class="nav-right">
+                <span class="nav-user" id="nav-user-name"></span>
+                <a href="/" class="nav-back">← Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-inner">
+            <div class="hero-tag"><div class="hero-dot"></div> Beta Access</div>
+            <h1>Project <span>Horizon</span></h1>
+            <p class="hero-sub">Experimental projects and live demos — built and hosted exclusively for beta members.</p>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="section-header">
+            <div class="section-title">// Active Projects</div>
+            <div class="project-count" id="project-count-label"></div>
+        </div>
+        <div id="projects-grid" class="projects-grid">
+            <div class="empty-state">
+                <div class="loader-ring" style="margin:0 auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FULLSCREEN PROJECT VIEWER -->
+<div id="project-viewer">
+    <div class="viewer-bar">
+        <div class="viewer-title" id="viewer-title">Project</div>
+        <button class="viewer-close" onclick="closeViewer()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Close
+        </button>
+    </div>
+    <iframe id="project-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
+</div>
+
+<script>
+    const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+    let currentUser = null;
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+    function authHeader() { const tk = localStorage.getItem('po_token'); return tk ? { 'Authorization': 'Bearer ' + tk } : {}; }
+    function fmt(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+    function liftCurtain() {
+        const c = document.getElementById('loading-curtain');
+        c.classList.add('lift');
+        setTimeout(() => c.remove(), 700);
+    }
+
+    async function init() {
+        const saved = localStorage.getItem('po_user');
+        const token = localStorage.getItem('po_token');
+
+        if (!saved || !token) { liftCurtain(); return; } // show gate
+
+        try {
+            const user = JSON.parse(saved);
+            currentUser = user;
+
+            // Check horizon access: admin always in, starred users too
+            if (user.role !== 'admin' && !user.horizon_access) {
+                // Verify with server
+                const res = await fetch(`${WORKER_URL}/horizon/check`, { headers: authHeader() });
+                const data = await res.json();
+                if (!data.access) { liftCurtain(); return; }
+                // Update cached user
+                user.horizon_access = true;
+                localStorage.setItem('po_user', JSON.stringify(user));
+            }
+
+            showApp(user);
+        } catch(e) { liftCurtain(); }
+    }
+
+    function showApp(user) {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('nav-user-name').textContent = user.name || '';
+        liftCurtain();
+        loadProjects();
+    }
+
+    async function loadProjects() {
+        const grid = document.getElementById('projects-grid');
+        try {
+            const res = await fetch(`${WORKER_URL}/horizon/projects`, { headers: authHeader() });
+            const data = await res.json();
+            const projects = data.projects || [];
+            document.getElementById('project-count-label').textContent = projects.length + ' project' + (projects.length !== 1 ? 's' : '');
+            if (projects.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="empty-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5a5a78" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+                        </div>
+                        <div class="empty-title">No projects yet</div>
+                        <div class="empty-sub">The admin hasn't launched any projects yet. Check back soon.</div>
+                    </div>`;
+                return;
+            }
+            grid.innerHTML = projects.map((p, i) => `
+                <div class="project-card" onclick="openProject(${p.id}, '${esc(p.title)}')">
+                    <div class="project-card-accent"></div>
+                    <div class="project-card-body">
+                        <div class="project-card-number">PROJECT_${String(i+1).padStart(3,'0')}</div>
+                        <div class="project-card-title">${esc(p.title)}</div>
+                        <div class="project-card-desc">${esc(p.description || 'No description.')}</div>
+                        <div class="project-card-footer">
+                            <div class="project-card-date">${fmt(p.created_at)}</div>
+                            <div class="project-open-btn">
+                                Open
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-sub">Could not load projects. Try refreshing.</div></div>';
+        }
+    }
+
+    async function openProject(id, title) {
+        try {
+            const res = await fetch(`${WORKER_URL}/horizon/projects/${id}`, { headers: authHeader() });
+            const data = await res.json();
+            if (data.error) { toast('Could not open project.'); return; }
+            document.getElementById('viewer-title').textContent = title;
+            const iframe = document.getElementById('project-iframe');
+            const blob = new Blob([data.html_code || '<p>No code yet.</p>'], { type: 'text/html' });
+            iframe.src = URL.createObjectURL(blob);
+            document.getElementById('project-viewer').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        } catch(e) { toast('Error loading project.'); }
+    }
+
+    function closeViewer() {
+        document.getElementById('project-viewer').classList.remove('open');
+        document.getElementById('project-iframe').src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>
