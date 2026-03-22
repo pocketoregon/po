@@ -556,9 +556,11 @@
     let editingBookId = null;
     let storyCharacters = [];
     let allChapters = [];
+    let tempNewCharLinkedNotes = {};
 
     // World state
     let worldFields = [];
+    let tempNewWorldLinkedNotes = [];
     // Note linking state
     let creatorCryptoKey = null;
     let creatorNotes = [];
@@ -784,6 +786,16 @@
                 chapterLinkedNotes.push(noteId);
                 renderChapterLinkedNotes();
             }
+        } else if (target.type === 'newchar') {
+            if (!tempNewCharLinkedNotes[target.charField]) tempNewCharLinkedNotes[target.charField] = [];
+            if (!tempNewCharLinkedNotes[target.charField].includes(noteId)) {
+                tempNewCharLinkedNotes[target.charField].push(noteId);
+                renderTempCharPills();
+            }
+        } else if (target.type === 'newworld') {
+            if (!tempNewWorldLinkedNotes.includes(noteId)) {
+                tempNewWorldLinkedNotes.push(noteId);
+            }
         }
     }
 
@@ -812,6 +824,13 @@
         } else if (target.type === 'chapter') {
             chapterLinkedNotes = chapterLinkedNotes.filter(id => id !== noteId);
             renderChapterLinkedNotes();
+        } else if (target.type === 'newchar') {
+            if (tempNewCharLinkedNotes[target.charField]) {
+                tempNewCharLinkedNotes[target.charField] = tempNewCharLinkedNotes[target.charField].filter(id => id !== noteId);
+                renderTempCharPills();
+            }
+        } else if (target.type === 'newworld') {
+            tempNewWorldLinkedNotes = tempNewWorldLinkedNotes.filter(id => id !== noteId);
         }
     }
 
@@ -1311,6 +1330,7 @@
         document.getElementById('char-modal').style.display = 'flex';
         document.getElementById('char-modal-title').textContent = id ? 'Edit Character' : 'New Character';
         document.getElementById('delete-char-btn').style.display = id ? 'block' : 'none';
+        if (!id) tempNewCharLinkedNotes = {};
         const c = id ? (storyCharacters.find(x => x.id === id) || {}) : {};
         document.getElementById('char-name').value = c.name || '';
         document.getElementById('char-age').value = c.age || '';
@@ -1335,10 +1355,24 @@
         });
     }
 
+    function renderTempCharPills() {
+        const fields = ['name', 'age', 'description', 'hobbies', 'backstory', 'personality', 'motivations', 'relationships'];
+        fields.forEach(f => {
+            const container = document.getElementById('char-pills-' + f);
+            if (!container) return;
+            const linkedIds = tempNewCharLinkedNotes[f] || [];
+            container.innerHTML = renderLinkedNotePills(linkedIds, { type: 'newchar', charField: f });
+        });
+    }
+
     function openPickerForCharField(anchorEl, fieldName) {
-        const char = editingCharId ? storyCharacters.find(c => c.id === editingCharId) : null;
-        if (!char) return;
-        openPicker({ type: 'character', charId: char.id, charField: fieldName }, anchorEl);
+        if (editingCharId) {
+            const char = storyCharacters.find(c => c.id === editingCharId);
+            if (!char) return;
+            openPicker({ type: 'character', charId: editingCharId, charField: fieldName }, anchorEl);
+        } else {
+            openPicker({ type: 'newchar', charField: fieldName }, anchorEl);
+        }
     }
 
     // CHANGE 3: [[ trigger for character fields
@@ -1371,7 +1405,7 @@
             personality: document.getElementById('char-personality').value.trim(), 
             motivations: document.getElementById('char-motivations').value.trim(), 
             relationships: document.getElementById('char-relationships').value.trim(),
-            linked_notes: char.linked_notes || {}
+            linked_notes: editingCharId ? (char.linked_notes || {}) : tempNewCharLinkedNotes
         };
         try {
             const method = editingCharId ? 'PUT' : 'POST';
@@ -1729,6 +1763,7 @@
         wmEditingId = null;
         document.getElementById('wm-title-input').value = '';
         document.getElementById('wm-content-input').value = '';
+        tempNewWorldLinkedNotes = [];
         document.querySelectorAll('#wm-body .wm-content-view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('#wm-tab-bar .wm-tab').forEach(t => t.classList.remove('active'));
         document.getElementById('wm-add-form').classList.add('active');
@@ -1792,8 +1827,9 @@
             wmEditingId = null;
         } else {
             const newId = uid();
-            worldFields.push({ id: newId, title, content });
+            worldFields.push({ id: newId, title, content, linked_notes: tempNewWorldLinkedNotes });
             wmActiveId = newId;
+            tempNewWorldLinkedNotes = [];
         }
 
         await persistWorldFields();
@@ -1816,6 +1852,8 @@
             openPicker({ type: 'subtab', fieldId: window._wmSubtabEdit.fieldId, subtabId: window._wmSubtabEdit.subtabId }, btn);
         } else if (wmEditingId) {
             openPicker({ type: 'world', fieldId: wmEditingId }, btn);
+        } else {
+            openPicker({ type: 'newworld' }, btn);
         }
     }
 
