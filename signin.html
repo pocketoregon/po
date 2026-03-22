@@ -5,162 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in — PocketOregon</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #ffffff;
             color: #1f1e24;
-            margin: 0;
-            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            overflow: hidden;
         }
-
-        /* ── DOT GRID BACKGROUND ── */
         #dot-canvas {
             position: fixed;
             inset: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
+            z-index: 0;
             pointer-events: none;
         }
-
-        /* ── SIGN IN CARD ── */
         .signin-card {
+            position: relative;
+            z-index: 1;
             background: #ffffff;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid #e5e7eb;
             border-radius: 24px;
             padding: 3rem 2.5rem;
             width: 100%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.10);
-            animation: cardFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+            animation: cardFadeIn 0.7s cubic-bezier(0.16,1,0.3,1);
         }
-
         @keyframes cardFadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-
         .logo-container {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 64px;
             height: 64px;
-            background: rgba(249, 115, 22, 0.1);
+            background: rgba(249,115,22,0.08);
             border-radius: 16px;
             margin-bottom: 1.5rem;
         }
-
-        h1 {
+        .card-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 800;
             letter-spacing: -0.02em;
-            margin-bottom: 0.75rem;
             color: #1f1e24;
+            margin-bottom: 0.5rem;
         }
-
-        p {
-            color: #a1a1aa;
+        .card-subtitle {
+            color: #6b7280;
             font-size: 0.9375rem;
-            line-height: 1.5;
+            line-height: 1.6;
             margin-bottom: 2rem;
         }
-
         .google-btn-wrapper {
             display: flex;
             justify-content: center;
             min-height: 44px;
+            margin-bottom: 0.5rem;
         }
-
         .back-link {
             display: inline-block;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
             color: #9ca3af;
             font-size: 0.875rem;
             text-decoration: none;
             transition: color 0.2s;
         }
-
-        .back-link:hover {
-            color: #1f1e24;
-        }
-
-        /* Custom Google Button Overrides */
-        iframe {
-            color-scheme: light;
-        }
+        .back-link:hover { color: #1f1e24; }
     </style>
 </head>
 <body>
     <canvas id="dot-canvas"></canvas>
-
     <div class="signin-card">
         <div class="logo-container">
-            <svg class="text-orange-500" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#f97316">
+                <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/>
             </svg>
         </div>
-        <h1>Sign in</h1>
-        <p>Welcome back to PocketOregon. Sign in to join the community and explore the Pocketverse.</p>
-        
+        <div class="card-title">Sign in</div>
+        <div class="card-subtitle">Welcome back to PocketOregon. Sign in to join the community and explore the Pocketverse.</div>
         <div class="google-btn-wrapper">
             <div id="google-btn"></div>
         </div>
-
         <a href="/" class="back-link">← Back to home</a>
     </div>
-
     <script>
-        (function() {
+        (function () {
             const canvas = document.getElementById('dot-canvas');
-            const ctx = canvas.getContext('2d');
-            const GAP = 18;
-            const DOT_R = 1.2;
+            const ctx    = canvas.getContext('2d');
+            const GAP           = 18;
+            const DOT_R_IDLE    = 1.2;
+            const DOT_R_ACTIVE  = 2.8;
             const CURSOR_RADIUS = 50;
+            const LERP          = 0.18;
             let mouse = { x: -9999, y: -9999 };
-            let dots = [];
+            let dots  = [];
             let animId;
-
             function buildDots() {
                 dots = [];
-                const offsetX = (canvas.width % GAP) / 2;
+                const offsetX = (canvas.width  % GAP) / 2;
                 const offsetY = (canvas.height % GAP) / 2;
-                const cols = Math.ceil(canvas.width / GAP) + 1;
+                const cols = Math.ceil(canvas.width  / GAP) + 1;
                 const rows = Math.ceil(canvas.height / GAP) + 1;
                 for (let r = 0; r < rows; r++)
                     for (let c = 0; c < cols; c++)
                         dots.push({ x: offsetX + c * GAP, y: offsetY + r * GAP, r: DOT_R_IDLE });
             }
-
             function resize() {
-                canvas.width = window.innerWidth;
+                canvas.width  = window.innerWidth;
                 canvas.height = window.innerHeight;
                 buildDots();
             }
-
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (const d of dots) {
-                    const dx = d.x - mouse.x;
-                    const dy = d.y - mouse.y;
+                    const dx   = d.x - mouse.x;
+                    const dy   = d.y - mouse.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    ctx.beginPath();
-                    ctx.arc(d.x, d.y, DOT_R, 0, Math.PI * 2);
-                    const target = hit ? DOT_R_ACTIVE : DOT_R_IDLE;
-                    d.r += (target - d.r) * LERP;
+                    const hit  = dist <= CURSOR_RADIUS;
+                    d.r += ((hit ? DOT_R_ACTIVE : DOT_R_IDLE) - d.r) * LERP;
                     ctx.beginPath();
                     ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
                     ctx.fillStyle = hit ? '#f97316' : '#d1d5db';
@@ -168,45 +143,31 @@
                 }
                 animId = requestAnimationFrame(draw);
             }
-
-            window.addEventListener('mousemove', e => {
-                mouse.x = e.clientX;
-                mouse.y = e.clientY;
-            });
-            window.addEventListener('mouseleave', () => {
-                mouse.x = -9999;
-                mouse.y = -9999;
-            });
-            window.addEventListener('resize', () => {
-                cancelAnimationFrame(animId);
-                resize();
-                draw();
-            });
-
+            window.addEventListener('mousemove',  e  => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            window.addEventListener('mouseleave', ()  => { mouse.x = -9999; mouse.y = -9999; });
+            window.addEventListener('resize',     ()  => { cancelAnimationFrame(animId); resize(); draw(); });
             resize();
             draw();
         })();
 
-        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+        const WORKER_URL       = 'https://po.pocketoregon.workers.dev';
         const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
 
         function handleCredentialResponse(response) {
             fetch(WORKER_URL + '/auth', {
-                method: 'POST',
+                method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: response.credential })
+                body:    JSON.stringify({ token: response.credential })
             })
-            .then(res => res.json())
+            .then(r => r.json())
             .then(data => {
                 if (data.user && data.sessionToken) {
-                    localStorage.setItem('po_user', JSON.stringify(data.user));
+                    localStorage.setItem('po_user',  JSON.stringify(data.user));
                     localStorage.setItem('po_token', data.sessionToken);
-                    // Check if there's a return URL
-                    const params = new URLSearchParams(window.location.search);
-                    const redirect = params.get('redirect') || '/';
+                    const redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
                     window.location.href = redirect;
                 } else {
-                    console.error('Auth failed:', data.error || 'No session token returned');
+                    console.error('Auth failed:', data.error || 'Unknown error');
                 }
             })
             .catch(err => console.error('Auth error:', err));
@@ -215,11 +176,11 @@
         window.onload = function () {
             google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
-                callback: handleCredentialResponse
+                callback:  handleCredentialResponse
             });
             google.accounts.id.renderButton(
-                document.getElementById("google-btn"),
-                { theme: "outline", size: "large", width: 320, shape: "pill", logo_alignment: "center" }
+                document.getElementById('google-btn'),
+                { theme: 'outline', size: 'large', width: 320, shape: 'pill', logo_alignment: 'center' }
             );
         };
     </script>
