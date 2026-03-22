@@ -180,7 +180,7 @@
             Close
         </button>
     </div>
-    <iframe id="project-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
+    <iframe id="project-iframe"></iframe>
 </div>
 
 <script>
@@ -250,7 +250,7 @@
                 return;
             }
             grid.innerHTML = projects.map((p, i) => `
-                <div class="project-card" onclick="openProject(${p.id}, '${esc(p.title)}')">
+                <div class="project-card" onclick="openProject(${p.id}, '${esc(p.title)}', '${esc(p.slug)}')">
                     <div class="project-card-accent"></div>
                     <div class="project-card-body">
                         <div class="project-card-number">PROJECT_${String(i+1).padStart(3,'0')}</div>
@@ -271,18 +271,12 @@
         }
     }
 
-    async function openProject(id, title) {
-        try {
-            const res = await fetch(`${WORKER_URL}/horizon/projects/${id}`, { headers: authHeader() });
-            const data = await res.json();
-            if (data.error) { toast('Could not open project.'); return; }
-            document.getElementById('viewer-title').textContent = title;
-            const iframe = document.getElementById('project-iframe');
-            const blob = new Blob([data.html_code || '<p>No code yet.</p>'], { type: 'text/html' });
-            iframe.src = URL.createObjectURL(blob);
-            document.getElementById('project-viewer').classList.add('open');
-            document.body.style.overflow = 'hidden';
-        } catch(e) { toast('Error loading project.'); }
+    function openProject(id, title, slug) {
+        document.getElementById('viewer-title').textContent = title;
+        const iframe = document.getElementById('project-iframe');
+        iframe.src = `/horizon/projects/${slug}.html`;
+        document.getElementById('project-viewer').classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
 
     function closeViewer() {

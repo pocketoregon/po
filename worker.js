@@ -878,6 +878,26 @@ const { title, body, chapter_number, linked_notes } = await request.json();
     }
 
 
+    // ── GITHUB HELPER ─────────────────────────────────────────────
+    async function githubFile(env, method, filePath, content, sha) {
+      const body = { message: `horizon: ${method === 'DELETE' ? 'delete' : 'upsert'} ${filePath}`, content: btoa(unescape(encodeURIComponent(content || ''))) };
+      if (sha) body.sha = sha;
+      const res = await fetch(`https://api.github.com/repos/pocketoregon/po/contents/${filePath}`, {
+        method: sha || method === 'DELETE' ? 'PUT' : 'PUT',
+        headers: { 'Authorization': `Bearer ${env.GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'PocketOregon-Worker' },
+        body: JSON.stringify(method === 'DELETE' ? { message: `horizon: delete ${filePath}`, sha } : body)
+      });
+      return res.json();
+    }
+    async function getFileSha(env, filePath) {
+      const res = await fetch(`https://api.github.com/repos/pocketoregon/po/contents/${filePath}`, {
+        headers: { 'Authorization': `Bearer ${env.GITHUB_TOKEN}`, 'User-Agent': 'PocketOregon-Worker' }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.sha || null;
+    }
+
     // ── HORIZON CHECK ─────────────────────────────────────────────
     if (path === '/horizon/check' && request.method === 'GET') {
       const user = await validateToken(request, env);
@@ -896,22 +916,8 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       try {
         const row = await env.DB.prepare('SELECT horizon_access FROM users WHERE id=?').bind(user.id).first();
         if (user.role !== 'admin' && !(row?.horizon_access)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const projects = await env.DB.prepare('SELECT id, title, description, created_at FROM horizon_projects ORDER BY created_at DESC').all();
+        const projects = await env.DB.prepare('SELECT id, title, slug, description, created_at FROM horizon_projects ORDER BY created_at DESC').all();
         return new Response(JSON.stringify({ projects: projects.results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
-    }
-
-    // ── HORIZON PROJECTS GET ONE ───────────────────────────────────
-    const horizonProjectMatch = path.match(/^\/horizon\/projects\/(\d+)$/);
-    if (horizonProjectMatch && request.method === 'GET') {
-      const user = await validateToken(request, env);
-      if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      try {
-        const row = await env.DB.prepare('SELECT horizon_access FROM users WHERE id=?').bind(user.id).first();
-        if (user.role !== 'admin' && !(row?.horizon_access)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const project = await env.DB.prepare('SELECT * FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
-        if (!project) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        return new Response(JSON.stringify(project), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
@@ -920,20 +926,28 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
-        const { title, description, html_code } = await request.json();
-        if (!title) return new Response(JSON.stringify({ error: 'Title required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const result = await env.DB.prepare('INSERT INTO horizon_projects (title, description, html_code) VALUES (?,?,?)').bind(title, description||'', html_code||'').run();
+        const { title, slug, description, html_code } = await request.json();
+        if (!title || !slug) return new Response(JSON.stringify({ error: 'Title and slug required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const filePath = `horizon/projects/${slug}.html`;
+        await githubFile(env, 'PUT', filePath, html_code || '');
+        const result = await env.DB.prepare('INSERT INTO horizon_projects (title, slug, description) VALUES (?,?,?)').bind(title, slug, description||'').run();
         return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
     // ── HORIZON PROJECTS PUT ───────────────────────────────────────
+    const horizonProjectMatch = path.match(/^\/horizon\/projects\/(\d+)$/);
     if (horizonProjectMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
         const { title, description, html_code } = await request.json();
-        await env.DB.prepare('UPDATE horizon_projects SET title=?, description=?, html_code=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title, description||'', html_code||'', horizonProjectMatch[1]).run();
+        const project = await env.DB.prepare('SELECT slug FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
+        if (!project) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const filePath = `horizon/projects/${project.slug}.html`;
+        const sha = await getFileSha(env, filePath);
+        await githubFile(env, 'PUT', filePath, html_code || '', sha);
+        await env.DB.prepare('UPDATE horizon_projects SET title=?, description=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title, description||'', horizonProjectMatch[1]).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
@@ -943,6 +957,18 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
+        const project = await env.DB.prepare('SELECT slug FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
+        if (project) {
+          const filePath = `horizon/projects/${project.slug}.html`;
+          const sha = await getFileSha(env, filePath);
+          if (sha) {
+            await fetch(`https://api.github.com/repos/pocketoregon/po/contents/${filePath}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${env.GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'PocketOregon-Worker' },
+              body: JSON.stringify({ message: `horizon: delete ${filePath}`, sha })
+            });
+          }
+        }
         await env.DB.prepare('DELETE FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
