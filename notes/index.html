@@ -48,9 +48,11 @@
         .tag-pill { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; border-radius: 999px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
         body.dark .tag-pill { background: #404040; color: #9ca3af; border-color: #505050; }
         .tag-pill.active { background: #f97316; color: white; border-color: #f97316; }
+        body.dark .tag-pill.active { background: #f97316; color: white; border-color: #f97316; }
         .tag-pill:hover { background: #e5e7eb; }
         body.dark .tag-pill:hover { background: #505050; }
         .tag-pill.active:hover { background: #f97316; }
+        body.dark .tag-pill.active:hover { background: #ea580c; color: white; border-color: #ea580c; }
         .controls-row { display: flex; gap: 12px; align-items: center; }
         #notes-sort { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; background: white; color: #1f1e24; cursor: pointer; }
         body.dark #notes-sort { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
@@ -73,7 +75,7 @@
         .note-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
         .note-tag { background: #fee2e2; color: #f97316; font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
         .note-card-date { font-size: 0.72rem; color: #9ca3af; margin-top: 10px; }
-        .note-card-pin { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; font-size: 1rem; }
+        .note-card-pin { position: absolute; top: 10px; right: 36px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; font-size: 1rem; }
         .note-card:hover .note-card-pin { opacity: 1; }
         .note-card-pin:hover { color: #f97316; }
         .note-card-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; }
@@ -96,7 +98,7 @@
         #editor-modal { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; }
         #editor-modal.open { display: flex; }
         @media (min-width: 640px) { #editor-modal { align-items: center; } }
-        .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); }
+        .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
         body.dark .editor-box { background: #2d2d2d; color: #e5e7eb; }
         .editor-box.fullscreen { position: fixed; inset: 0; border-radius: 0; max-height: 100vh; z-index: 9999; }
         @media (min-width: 640px) { .editor-box { border-radius: 16px; animation: fadeIn 0.2s ease; } }
@@ -136,7 +138,7 @@
         #editor-body::placeholder { color: #d1d5db; }
         .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
         body.dark .editor-divider { border-color: #404040; }
-        .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+        .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; }
         .editor-meta { font-size: 0.75rem; color: #9ca3af; }
         .editor-shortcuts { font-size: 0.7rem; color: #9ca3af; }
         .btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
