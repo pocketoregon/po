@@ -822,6 +822,7 @@
         return noteIds.map(id => {
             const note = creatorNotes.find(n => String(n.id) === String(id));
             if (!note) return '';
+            const safeTarget = encodeURIComponent(JSON.stringify(targetInfo));
             return `
                 <div style="display:inline-flex;align-items:center;gap:6px;background:#f3f4f6;
                     border:1px solid #e5e7eb;border-radius:4px;padding:2px 8px;margin-right:6px;
@@ -829,8 +830,10 @@
                     <span onclick='openSplitNotePanel("${id}")' style="cursor:pointer;font-weight:600;">
                         📄 ${escHtml(note.title || 'Untitled')}
                     </span>
-                    <span onclick='unlinkNoteFromTarget(${JSON.stringify(targetInfo)}, "${id}")' 
-                        style="cursor:pointer;color:#9ca3af;font-size:14px;line-height:1;">×</span>
+                    <span class="pill-unlink-btn"
+                        data-target="${safeTarget}"
+                        data-note-id="${id}"
+                        style="cursor:pointer;color:#9ca3af;font-size:14px;line-height:1;padding:0 2px;">×</span>
                 </div>
             `;
         }).join('');
@@ -2172,6 +2175,14 @@
             document.getElementById('dashboard-view').style.display = 'block';
             loadMyStories();
         }
+    });
+
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.pill-unlink-btn');
+        if (!btn) return;
+        const targetInfo = JSON.parse(decodeURIComponent(btn.dataset.target));
+        const noteId = btn.dataset.noteId;
+        unlinkNoteFromTarget(targetInfo, noteId);
     });
 </script>
 
