@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piano — Project Horizon</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0a0a0f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: white;
+            user-select: none;
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            color: #f97316;
+        }
+        .subtitle {
+            font-size: 0.78rem;
+            color: #5a5a78;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .piano {
+            display: flex;
+            position: relative;
+            background: #1a0a00;
+            border-radius: 0 0 12px 12px;
+            padding: 20px 20px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 2px #2a1500;
+            gap: 4px;
+        }
+        .key {
+            position: relative;
+            border-radius: 0 0 8px 8px;
+            cursor: pointer;
+            transition: background 0.06s, transform 0.06s;
+        }
+        .white {
+            width: 52px;
+            height: 180px;
+            background: linear-gradient(180deg, #f5f5f0 0%, #e8e8e0 100%);
+            border: 1px solid #bbb;
+            border-top: none;
+            z-index: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            font-size: 0.65rem;
+            color: #999;
+            font-weight: 600;
+        }
+        .white:hover { background: linear-gradient(180deg, #fff 0%, #f0f0e8 100%); }
+        .white.active {
+            background: linear-gradient(180deg, #ffe0c0 0%, #f97316 100%);
+            transform: translateY(3px);
+            color: #fff;
+        }
+        .black {
+            width: 34px;
+            height: 110px;
+            background: linear-gradient(180deg, #2a2a2a 0%, #111 100%);
+            border-radius: 0 0 6px 6px;
+            position: absolute;
+            z-index: 2;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8px;
+            font-size: 0.55rem;
+            color: #555;
+            font-weight: 700;
+            border: 1px solid #000;
+            border-top: none;
+            box-shadow: 2px 4px 8px rgba(0,0,0,0.5);
+        }
+        .black:hover { background: linear-gradient(180deg, #3a3a3a 0%, #1a1a1a 100%); }
+        .black.active {
+            background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+            transform: translateY(3px);
+            color: #fff;
+        }
+        .controls {
+            margin-top: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .control-label { font-size: 0.75rem; color: #5a5a78; text-transform: uppercase; letter-spacing: 0.08em; }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 120px;
+            height: 4px;
+            background: #1c1c30;
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #f97316;
+            cursor: pointer;
+        }
+        .kbd-hint {
+            margin-top: 1.5rem;
+            font-size: 0.72rem;
+            color: #2a2a40;
+            text-align: center;
+            line-height: 1.8;
+        }
+        .kbd-hint span { color: #3a3a60; }
+    </style>
+</head>
+<body>
+    <h1>🎹 Piano</h1>
+    <div class="subtitle">Project Horizon</div>
+
+    <div class="piano" id="piano"></div>
+
+    <div class="controls">
+        <div class="control-label">Volume</div>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
+        <div class="control-label">Octave</div>
+        <input type="range" id="octave" min="2" max="6" step="1" value="4">
+        <span id="octave-label" style="font-size:0.8rem;color:#f97316;font-weight:700;">4</span>
+    </div>
+
+    <div class="kbd-hint">
+        Keyboard: <span>A S D F G H J K L</span> = white keys &nbsp;|&nbsp; <span>W E T Y U O P</span> = black keys
+    </div>
+
+<script>
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let volume = 0.5;
+    let octave = 4;
+
+    const notes = [
+        { note: 'C',  type: 'white', key: 'a' },
+        { note: 'C#', type: 'black', key: 'w', offset: 38 },
+        { note: 'D',  type: 'white', key: 's' },
+        { note: 'D#', type: 'black', key: 'e', offset: 94 },
+        { note: 'E',  type: 'white', key: 'd' },
+        { note: 'F',  type: 'white', key: 'f' },
+        { note: 'F#', type: 'black', key: 't', offset: 206 },
+        { note: 'G',  type: 'white', key: 'g' },
+        { note: 'G#', type: 'black', key: 'y', offset: 262 },
+        { note: 'A',  type: 'white', key: 'h' },
+        { note: 'A#', type: 'black', key: 'u', offset: 318 },
+        { note: 'B',  type: 'white', key: 'j' },
+        { note: 'C2', type: 'white', key: 'k' },
+        { note: 'C2#',type: 'black', key: 'o', offset: 430 },
+        { note: 'D2', type: 'white', key: 'l' },
+        { note: 'D2#',type: 'black', key: 'p', offset: 486 },
+        { note: 'E2', type: 'white', key: ';' },
+    ];
+
+    const noteFreqs = {
+        'C': 261.63, 'C#': 277.18, 'D': 293.66, 'D#': 311.13,
+        'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00,
+        'G#': 415.30, 'A': 440.00, 'A#': 466.16, 'B': 493.88,
+        'C2': 523.25, 'C2#': 554.37, 'D2': 587.33, 'D2#': 622.25, 'E2': 659.25
+    };
+
+    function playNote(note) {
+        const baseFreq = noteFreqs[note];
+        if (!baseFreq) return;
+        const octaveMultiplier = Math.pow(2, octave - 4);
+        const freq = baseFreq * octaveMultiplier;
+
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3000, ctx.currentTime);
+
+        gainNode.gain.setValueAtTime(volume * 0.6, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
+
+        osc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 1.8);
+    }
+
+    // Build piano
+    const piano = document.getElementById('piano');
+    const keyMap = {};
+
+    notes.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'key ' + n.type;
+        el.dataset.note = n.note;
+        el.innerHTML = `<span>${n.key.toUpperCase()}</span>`;
+
+        if (n.type === 'black') {
+            el.style.left = n.offset + 'px';
+            el.style.top = '20px';
+            el.style.position = 'absolute';
+        }
+
+        el.addEventListener('mousedown', () => {
+            if (ctx.state === 'suspended') ctx.resume();
+            playNote(n.note);
+            el.classList.add('active');
+        });
+        el.addEventListener('mouseup', () => el.classList.remove('active'));
+        el.addEventListener('mouseleave', () => el.classList.remove('active'));
+
+        piano.appendChild(el);
+        keyMap[n.key] = { el, note: n.note };
+    });
+
+    // Keyboard
+    const pressed = new Set();
+    document.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        if (pressed.has(k)) return;
+        pressed.add(k);
+        if (ctx.state === 'suspended') ctx.resume();
+        if (keyMap[k]) {
+            playNote(keyMap[k].note);
+            keyMap[k].el.classList.add('active');
+        }
+    });
+    document.addEventListener('keyup', e => {
+        const k = e.key.toLowerCase();
+        pressed.delete(k);
+        if (keyMap[k]) keyMap[k].el.classList.remove('active');
+    });
+
+    document.getElementById('volume').addEventListener('input', e => { volume = parseFloat(e.target.value); });
+    document.getElementById('octave').addEventListener('input', e => {
+        octave = parseInt(e.target.value);
+        document.getElementById('octave-label').textContent = octave;
+    });
+</script>
+</body>
+</html>
