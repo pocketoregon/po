@@ -98,7 +98,7 @@
         #editor-modal { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; }
         #editor-modal.open { display: flex; }
         @media (min-width: 640px) { #editor-modal { align-items: center; } }
-        .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
+        .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); overflow: visible; }
         body.dark .editor-box { background: #2d2d2d; color: #e5e7eb; }
         .editor-box.fullscreen { position: fixed; inset: 0; border-radius: 0; max-height: 100vh; z-index: 9999; }
         @media (min-width: 640px) { .editor-box { border-radius: 16px; animation: fadeIn 0.2s ease; } }
@@ -133,12 +133,12 @@
         .editor-preview code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
         body.dark .editor-preview code { background: #404040; }
         .editor-preview pre { background: #1f1e24; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; }
-        #editor-body { flex: 1; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; min-height: 220px; max-height: 50vh; user-select: text; -webkit-user-select: text; overflow-y: auto; background: transparent; }
+        #editor-body { flex: 0 1 auto; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; height: 240px; min-height: 120px; max-height: 36vh; user-select: text; -webkit-user-select: text; overflow-y: auto; background: transparent; }
         body.dark #editor-body { color: #e5e7eb; }
         #editor-body::placeholder { color: #d1d5db; }
         .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
         body.dark .editor-divider { border-color: #404040; }
-        .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; }
+        .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; overflow: visible; position: relative; z-index: 1; }
         .editor-meta { font-size: 0.75rem; color: #9ca3af; }
         .editor-shortcuts { font-size: 0.7rem; color: #9ca3af; }
         .btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
@@ -217,7 +217,7 @@
             <button class="editor-tab active" onclick="switchTab('write')">Write</button>
             <button class="editor-tab" onclick="switchTab('preview')">Preview</button>
         </div>
-        <div id="write-tab" style="display: flex; flex-direction: column; flex: 1;">
+        <div id="write-tab" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;">
             <div class="editor-toolbar" id="editor-toolbar">
                 <button class="toolbar-btn" onclick="insertMarkdown('**', '**')" title="Bold">B</button>
                 <button class="toolbar-btn" onclick="insertMarkdown('*', '*')" title="Italic">I</button>
