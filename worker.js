@@ -877,6 +877,89 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
+
+    // ── HORIZON CHECK ─────────────────────────────────────────────
+    if (path === '/horizon/check' && request.method === 'GET') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        const row = await env.DB.prepare('SELECT horizon_access FROM users WHERE id=?').bind(user.id).first();
+        const access = user.role === 'admin' || !!(row?.horizon_access);
+        return new Response(JSON.stringify({ access }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // ── HORIZON PROJECTS GET (list) ────────────────────────────────
+    if (path === '/horizon/projects' && request.method === 'GET') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        const row = await env.DB.prepare('SELECT horizon_access FROM users WHERE id=?').bind(user.id).first();
+        if (user.role !== 'admin' && !(row?.horizon_access)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const projects = await env.DB.prepare('SELECT id, title, description, created_at FROM horizon_projects ORDER BY created_at DESC').all();
+        return new Response(JSON.stringify({ projects: projects.results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // ── HORIZON PROJECTS GET ONE ───────────────────────────────────
+    const horizonProjectMatch = path.match(/^\/horizon\/projects\/(\d+)$/);
+    if (horizonProjectMatch && request.method === 'GET') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        const row = await env.DB.prepare('SELECT horizon_access FROM users WHERE id=?').bind(user.id).first();
+        if (user.role !== 'admin' && !(row?.horizon_access)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const project = await env.DB.prepare('SELECT * FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
+        if (!project) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify(project), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // ── HORIZON PROJECTS POST ──────────────────────────────────────
+    if (path === '/horizon/projects' && request.method === 'POST') {
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        const { title, description, html_code } = await request.json();
+        if (!title) return new Response(JSON.stringify({ error: 'Title required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const result = await env.DB.prepare('INSERT INTO horizon_projects (title, description, html_code) VALUES (?,?,?)').bind(title, description||'', html_code||'').run();
+        return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // ── HORIZON PROJECTS PUT ───────────────────────────────────────
+    if (horizonProjectMatch && request.method === 'PUT') {
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        const { title, description, html_code } = await request.json();
+        await env.DB.prepare('UPDATE horizon_projects SET title=?, description=?, html_code=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title, description||'', html_code||'', horizonProjectMatch[1]).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // ── HORIZON PROJECTS DELETE ────────────────────────────────────
+    if (horizonProjectMatch && request.method === 'DELETE') {
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        await env.DB.prepare('DELETE FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // ── ADMIN STAR TOGGLE ──────────────────────────────────────────
+    const adminHorizonMatch = path.match(/^\/admin\/users\/(\d+)\/horizon$/);
+    if (adminHorizonMatch && request.method === 'PUT') {
+      const user = await validateToken(request, env);
+      if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      try {
+        const { horizon_access } = await request.json();
+        await env.DB.prepare('UPDATE users SET horizon_access=? WHERE id=?').bind(horizon_access ? 1 : 0, adminHorizonMatch[1]).run();
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
     return new Response('Not found', { status: 404 });
   },
 };
