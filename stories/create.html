@@ -799,7 +799,7 @@
         }
     }
 
-    async async function unlinkNoteFromTarget(target, noteId) {
+    async function unlinkNoteFromTarget(target, noteId) {
         if (target.type === 'world') {
             const field = worldFields.find(f => f.id === target.fieldId);
             if (field && field.linked_notes) {
