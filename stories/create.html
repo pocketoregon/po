@@ -799,21 +799,23 @@
         }
     }
 
-    function unlinkNoteFromTarget(target, noteId) {
+    async async function unlinkNoteFromTarget(target, noteId) {
         if (target.type === 'world') {
             const field = worldFields.find(f => f.id === target.fieldId);
             if (field && field.linked_notes) {
                 field.linked_notes = field.linked_notes.filter(id => id !== noteId);
-                persistWorldFields();
+                await persistWorldFields();
                 wmRender();
+                wmSwitchTab(target.fieldId);
             }
         } else if (target.type === 'subtab') {
             const field = worldFields.find(f => f.id === target.fieldId);
             const subtab = (field?.subtabs || []).find(s => s.id === target.subtabId);
             if (subtab && subtab.linked_notes) {
                 subtab.linked_notes = subtab.linked_notes.filter(id => id !== noteId);
-                persistWorldFields();
+                await persistWorldFields();
                 wmRender();
+                wmSwitchTab(target.fieldId);
             }
         } else if (target.type === 'character') {
             const char = storyCharacters.find(c => c.id === target.charId);
