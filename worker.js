@@ -737,7 +737,6 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-
     // ── HORIZON CHECK ─────────────────────────────────────────────
     if (path === '/horizon/check' && request.method === 'GET') {
       const user = await validateToken(request, env);
@@ -749,7 +748,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON PROJECTS GET (list) ────────────────────────────────
+    // ── HORIZON PROJECTS GET ───────────────────────────────────────
     if (path === '/horizon/projects' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -768,8 +767,8 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       try {
         const { title, slug, description, html_code } = await request.json();
         if (!title || !slug) return new Response(JSON.stringify({ error: 'Title and slug required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const filePath = `horizon/projects/${slug}.html`;
-        await githubFile(env, 'PUT', filePath, html_code || '');
+        const filePath = 'horizon/projects/' + slug + '.html';
+        await githubFile(env, filePath, html_code || '');
         const result = await env.DB.prepare('INSERT INTO horizon_projects (title, slug, description) VALUES (?,?,?)').bind(title, slug, description||'').run();
         return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -784,9 +783,9 @@ const { title, body, chapter_number, linked_notes } = await request.json();
         const { title, description, html_code } = await request.json();
         const project = await env.DB.prepare('SELECT slug FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
         if (!project) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const filePath = `horizon/projects/${project.slug}.html`;
+        const filePath = 'horizon/projects/' + project.slug + '.html';
         const sha = await getFileSha(env, filePath);
-        await githubFile(env, 'PUT', filePath, html_code || '', sha);
+        await githubFile(env, filePath, html_code || '', sha);
         await env.DB.prepare('UPDATE horizon_projects SET title=?, description=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title, description||'', horizonProjectMatch[1]).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -799,7 +798,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       try {
         const project = await env.DB.prepare('SELECT slug FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
         if (project) {
-          const filePath = `horizon/projects/${project.slug}.html`;
+          const filePath = 'horizon/projects/' + project.slug + '.html';
           const sha = await getFileSha(env, filePath);
           if (sha) await deleteGithubFile(env, filePath, sha);
         }
@@ -819,6 +818,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
+
 
     return new Response('Not found', { status: 404 });
 
