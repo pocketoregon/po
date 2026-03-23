@@ -747,7 +747,9 @@
         const list = document.getElementById('horizon-projects-list');
         list.innerHTML = '<div class="text-gray-400 text-sm text-center py-4">Loading...</div>';
         try {
-            const res = await fetch(WORKER_URL + '/horizon/projects', { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+            const res = await fetch(WORKER_URL + '/horizon/projects', {
+                headers: { ...authHeader(), 'Content-Type': 'application/json' }
+            });
             const data = await res.json();
             horizonProjects = data.projects || [];
             renderHorizonProjects();
@@ -766,7 +768,10 @@
             <div class="card-item" id="hp-item-${p.id}">
                 <div class="card-item-info">
                     <div class="card-item-title">${esc(p.title)}</div>
-                    <div class="card-item-date">${fmt(p.created_at)} &nbsp;·&nbsp; <a href="/horizon/projects/${esc(p.slug)}.html" target="_blank" class="text-orange-500 hover:underline text-xs">/horizon/projects/${esc(p.slug)}.html ↗</a></div>
+                    <div class="card-item-date" style="display:flex;align-items:center;gap:8px;">
+                        <span>${fmt(p.created_at)}</span>
+                        ${p.slug ? `<a href="/horizon/projects/${esc(p.slug)}.html" target="_blank" style="font-size:0.72rem;color:#f97316;text-decoration:none;border:1px solid rgba(249,115,22,0.3);padding:1px 7px;border-radius:4px;background:rgba(249,115,22,0.08);">/horizon/projects/${esc(p.slug)}.html</a>` : ''}
+                    </div>
                     <div class="card-item-body">${esc(p.description || '')}</div>
                 </div>
                 <div class="flex flex-col gap-2 flex-shrink-0">
@@ -778,10 +783,11 @@
                 <p class="text-sm font-semibold text-gray-700 mb-3">Editing: ${esc(p.title)}</p>
                 <input id="hpe-title-${p.id}" type="text" value="${esc(p.title)}" maxlength="80" />
                 <textarea id="hpe-desc-${p.id}" rows="2" maxlength="300">${esc(p.description || '')}</textarea>
-                <textarea id="hpe-code-${p.id}" rows="16" style="font-family:monospace;font-size:0.78rem;">${esc(p.html_code || '')}</textarea>
+                <label style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;display:block;">HTML Code</label>
+                <textarea id="hpe-code-${p.id}" rows="16" style="font-family:monospace;font-size:0.78rem;">Loading...</textarea>
                 <div class="flex gap-2 mt-1">
                     <button class="btn btn-dark btn-sm" onclick="saveHorizonProject(${p.id})">Save</button>
-                    <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="editHorizonProject(${p.id})">Cancel</button>
+                    <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="closeEditHorizon(${p.id})">Cancel</button>
                 </div>
             </div>
         `).join('');
@@ -793,9 +799,28 @@
         if (f.style.display === 'block') document.getElementById('hp-title').focus();
     }
 
-    function editHorizonProject(id) {
+    async function editHorizonProject(id) {
         const form = document.getElementById('hp-edit-' + id);
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        const isOpen = form.style.display !== 'none';
+        document.querySelectorAll('[id^="hp-edit-"]').forEach(f => f.style.display = 'none');
+        if (isOpen) return;
+        form.style.display = 'block';
+        const project = horizonProjects.find(p => p.id === id);
+        const codeArea = document.getElementById('hpe-code-' + id);
+        if (project && project.slug) {
+            codeArea.value = 'Loading...';
+            try {
+                const res = await fetch('/horizon/projects/' + project.slug + '.html?nocache=' + Date.now());
+                codeArea.value = res.ok ? await res.text() : '';
+            } catch(e) { codeArea.value = ''; }
+        } else {
+            codeArea.value = '';
+        }
+    }
+
+    function closeEditHorizon(id) {
+        const form = document.getElementById('hp-edit-' + id);
+        if (form) form.style.display = 'none';
     }
 
     async function createHorizonProject() {
