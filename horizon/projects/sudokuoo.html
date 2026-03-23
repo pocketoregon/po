@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku — Project Horizon</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #09090f;
+            color: #e2e2f0;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            user-select: none;
+        }
+
+        h1 { font-size: 1.6rem; font-weight: 800; color: #f97316; letter-spacing: -0.03em; margin-bottom: 0.25rem; }
+        .subtitle { font-size: 0.72rem; color: #5a5a78; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.75rem; }
+
+        .top-bar { display: flex; align-items: center; gap: 24px; margin-bottom: 1.5rem; flex-wrap: wrap; justify-content: center; }
+        .stat { text-align: center; }
+        .stat-val { font-size: 1.4rem; font-weight: 800; color: #f97316; }
+        .stat-label { font-size: 0.65rem; color: #5a5a78; text-transform: uppercase; letter-spacing: 0.08em; }
+
+        .difficulty-btns { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+        .diff-btn { padding: 6px 16px; border-radius: 6px; border: 1px solid #1c1c30; background: #13131e; color: #5a5a78; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.06em; }
+        .diff-btn:hover { border-color: #f97316; color: #f97316; }
+        .diff-btn.active { background: #f97316; border-color: #f97316; color: white; }
+
+        .board-wrap { position: relative; }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            border: 2px solid #f97316;
+            border-radius: 8px;
+            overflow: hidden;
+            width: min(450px, 95vw);
+            height: min(450px, 95vw);
+            gap: 0;
+        }
+
+        .cell {
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            font-weight: 700;
+            cursor: pointer;
+            background: #0f0f18;
+            border: 1px solid #1c1c30;
+            transition: background 0.1s;
+            position: relative;
+        }
+        /* thick box borders */
+        .cell:nth-child(3n) { border-right: 2px solid #2a2a50; }
+        .cell:nth-child(9n) { border-right: 1px solid #1c1c30; }
+        .cell:nth-child(n+19):nth-child(-n+27) { border-bottom: 2px solid #2a2a50; }
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #2a2a50; }
+
+        .cell.given { color: #e2e2f0; }
+        .cell.user { color: #f97316; }
+        .cell.selected { background: #1a1a2e !important; }
+        .cell.highlight { background: #13131e; }
+        .cell.same-num { color: #fbbf24 !important; }
+        .cell.error { color: #ef4444 !important; }
+        .cell.correct-flash { animation: flash 0.4s ease; }
+        @keyframes flash { 0%,100% { background: #0f0f18; } 50% { background: #1a3a1a; } }
+
+        .notes-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%; height: 100%;
+            padding: 2px;
+        }
+        .note { font-size: clamp(0.4rem, 1.2vw, 0.55rem); color: #5a5a78; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+
+        .numpad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; width: min(450px, 95vw); margin-top: 1.25rem; }
+        .num-btn {
+            aspect-ratio: 1;
+            border-radius: 6px;
+            border: 1px solid #1c1c30;
+            background: #13131e;
+            color: #e2e2f0;
+            font-size: clamp(0.75rem, 2vw, 1rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.12s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .num-btn:hover { background: #1a1a2e; border-color: #f97316; color: #f97316; }
+        .num-btn.active-num { background: #f97316; border-color: #f97316; color: white; }
+
+        .actions { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; justify-content: center; }
+        .action-btn { padding: 8px 18px; border-radius: 7px; border: 1px solid #1c1c30; background: #13131e; color: #9ca3b0; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+        .action-btn:hover { border-color: #f97316; color: #f97316; }
+        .action-btn.notes-on { border-color: #a78bfa; color: #a78bfa; background: rgba(167,139,250,0.08); }
+
+        .win-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+        .win-overlay.show { display: flex; }
+        .win-card { background: #13131e; border: 1px solid #f97316; border-radius: 16px; padding: 2.5rem; text-align: center; max-width: 340px; }
+        .win-title { font-size: 2rem; font-weight: 900; color: #f97316; margin-bottom: 0.5rem; }
+        .win-sub { color: #5a5a78; font-size: 0.875rem; margin-bottom: 1.5rem; }
+        .win-btn { background: #f97316; color: white; border: none; border-radius: 8px; padding: 10px 28px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+        .win-btn:hover { background: #ea580c; }
+    </style>
+</head>
+<body>
+
+<h1>Sudoku</h1>
+<div class="subtitle">Project Horizon</div>
+
+<div class="top-bar">
+    <div class="stat"><div class="stat-val" id="timer">00:00</div><div class="stat-label">Time</div></div>
+    <div class="stat"><div class="stat-val" id="mistakes-val">0</div><div class="stat-label">Mistakes</div></div>
+    <div class="stat"><div class="stat-val" id="remaining-val">0</div><div class="stat-label">Empty</div></div>
+</div>
+
+<div class="difficulty-btns">
+    <button class="diff-btn active" onclick="setDiff('easy', this)">Easy</button>
+    <button class="diff-btn" onclick="setDiff('medium', this)">Medium</button>
+    <button class="diff-btn" onclick="setDiff('hard', this)">Hard</button>
+</div>
+
+<div class="board-wrap">
+    <div class="board" id="board"></div>
+</div>
+
+<div class="numpad" id="numpad"></div>
+
+<div class="actions">
+    <button class="action-btn" onclick="undoMove()">↩ Undo</button>
+    <button class="action-btn" onclick="eraseCell()">⌫ Erase</button>
+    <button class="action-btn" id="notes-btn" onclick="toggleNotes()">✏ Notes</button>
+    <button class="action-btn" onclick="newGame()">↺ New Game</button>
+</div>
+
+<div class="win-overlay" id="win-overlay">
+    <div class="win-card">
+        <div class="win-title">🎉 Solved!</div>
+        <div class="win-sub" id="win-sub">You completed the puzzle.</div>
+        <button class="win-btn" onclick="newGame(); document.getElementById('win-overlay').classList.remove('show')">Play Again</button>
+    </div>
+</div>
+
+<script>
+    let board = [], solution = [], given = [], notes = [];
+    let selected = -1, activeNum = 0, notesMode = false;
+    let mistakes = 0, timerSec = 0, timerInt = null;
+    let history = [];
+    let difficulty = 'easy';
+    const REMOVE = { easy: 36, medium: 46, hard: 54 };
+
+    // ── Sudoku Generator ──────────────────────────────────────────
+    function generateFull() {
+        const b = Array(81).fill(0);
+        fill(b, 0);
+        return b;
+    }
+    function fill(b, pos) {
+        if (pos === 81) return true;
+        const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+        for (const n of nums) {
+            if (valid(b, pos, n)) {
+                b[pos] = n;
+                if (fill(b, pos + 1)) return true;
+                b[pos] = 0;
+            }
+        }
+        return false;
+    }
+    function valid(b, pos, n) {
+        const r = Math.floor(pos / 9), c = pos % 9;
+        const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 9; i++) {
+            if (b[r * 9 + i] === n) return false;
+            if (b[i * 9 + c] === n) return false;
+            if (b[(br + Math.floor(i/3)) * 9 + bc + (i%3)] === n) return false;
+        }
+        return true;
+    }
+    function shuffle(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+    function makePuzzle(sol, remove) {
+        const p = [...sol];
+        const idx = shuffle([...Array(81).keys()]);
+        let removed = 0;
+        for (const i of idx) {
+            if (removed >= remove) break;
+            const prev = p[i]; p[i] = 0;
+            removed++;
+        }
+        return p;
+    }
+
+    // ── Game Init ─────────────────────────────────────────────────
+    function newGame() {
+        clearInterval(timerInt);
+        timerSec = 0; mistakes = 0; history = [];
+        updateTimer(); updateStats();
+        solution = generateFull();
+        board = makePuzzle(solution, REMOVE[difficulty]);
+        given = board.map(v => v !== 0);
+        notes = Array(81).fill(null).map(() => new Set());
+        selected = -1; activeNum = 0;
+        renderBoard(); renderNumpad();
+        timerInt = setInterval(() => { timerSec++; updateTimer(); }, 1000);
+    }
+
+    function setDiff(d, el) {
+        difficulty = d;
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        newGame();
+    }
+
+    // ── Render ────────────────────────────────────────────────────
+    function renderBoard() {
+        const el = document.getElementById('board');
+        el.innerHTML = '';
+        for (let i = 0; i < 81; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.idx = i;
+            cell.addEventListener('click', () => selectCell(i));
+            updateCell(cell, i);
+            el.appendChild(cell);
+        }
+    }
+
+    function updateCell(cell, i) {
+        cell.className = 'cell';
+        cell.innerHTML = '';
+        if (board[i] !== 0) {
+            cell.textContent = board[i];
+            if (given[i]) cell.classList.add('given');
+            else {
+                cell.classList.add('user');
+                if (board[i] !== solution[i]) cell.classList.add('error');
+            }
+        } else if (notes[i].size > 0) {
+            const grid = document.createElement('div');
+            grid.className = 'notes-grid';
+            for (let n = 1; n <= 9; n++) {
+                const nd = document.createElement('div');
+                nd.className = 'note';
+                nd.textContent = notes[i].has(n) ? n : '';
+                grid.appendChild(nd);
+            }
+            cell.appendChild(grid);
+        }
+        if (i === selected) cell.classList.add('selected');
+    }
+
+    function refreshBoard() {
+        const cells = document.querySelectorAll('.cell');
+        const selNum = selected !== -1 ? board[selected] : 0;
+        cells.forEach((cell, i) => {
+            updateCell(cell, i);
+            if (selected !== -1) {
+                const r = Math.floor(i/9), c = i%9, sr = Math.floor(selected/9), sc = selected%9;
+                const br = Math.floor(r/3), bc = Math.floor(c/3), sbr = Math.floor(sr/3), sbc = Math.floor(sc/3);
+                if (r===sr || c===sc || (br===sbr && bc===sbc)) cell.classList.add('highlight');
+            }
+            if (selNum && selNum === board[i] && board[i] !== 0) cell.classList.add('same-num');
+        });
+    }
+
+    function renderNumpad() {
+        const el = document.getElementById('numpad');
+        el.innerHTML = '';
+        for (let n = 1; n <= 9; n++) {
+            const btn = document.createElement('button');
+            btn.className = 'num-btn';
+            btn.id = 'num-' + n;
+            btn.textContent = n;
+            btn.addEventListener('click', () => inputNum(n));
+            el.appendChild(btn);
+        }
+    }
+
+    // ── Interaction ───────────────────────────────────────────────
+    function selectCell(i) {
+        selected = i;
+        refreshBoard();
+    }
+
+    function inputNum(n) {
+        if (selected === -1) return;
+        if (given[selected]) return;
+        if (notesMode && board[selected] === 0) {
+            notes[selected].has(n) ? notes[selected].delete(n) : notes[selected].add(n);
+            refreshBoard(); return;
+        }
+        history.push({ idx: selected, val: board[selected], notes: new Set(notes[selected]) });
+        board[selected] = n;
+        notes[selected].clear();
+        if (n !== solution[selected]) { mistakes++; updateStats(); }
+        refreshBoard(); updateStats();
+        checkWin();
+    }
+
+    function eraseCell() {
+        if (selected === -1 || given[selected]) return;
+        history.push({ idx: selected, val: board[selected], notes: new Set(notes[selected]) });
+        board[selected] = 0;
+        notes[selected].clear();
+        refreshBoard(); updateStats();
+    }
+
+    function undoMove() {
+        if (!history.length) return;
+        const { idx, val, notes: n } = history.pop();
+        board[idx] = val;
+        notes[idx] = n;
+        refreshBoard();
+    }
+
+    function toggleNotes() {
+        notesMode = !notesMode;
+        const btn = document.getElementById('notes-btn');
+        btn.classList.toggle('notes-on', notesMode);
+        btn.textContent = notesMode ? '✏ Notes ON' : '✏ Notes';
+    }
+
+    // ── Keyboard ──────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+        if (e.key >= '1' && e.key <= '9') inputNum(parseInt(e.key));
+        if (e.key === 'Backspace' || e.key === 'Delete') eraseCell();
+        if (selected === -1) return;
+        const r = Math.floor(selected/9), c = selected%9;
+        if (e.key === 'ArrowUp' && r > 0) selectCell(selected - 9);
+        if (e.key === 'ArrowDown' && r < 8) selectCell(selected + 9);
+        if (e.key === 'ArrowLeft' && c > 0) selectCell(selected - 1);
+        if (e.key === 'ArrowRight' && c < 8) selectCell(selected + 1);
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function updateTimer() {
+        const m = String(Math.floor(timerSec/60)).padStart(2,'0');
+        const s = String(timerSec%60).padStart(2,'0');
+        document.getElementById('timer').textContent = `${m}:${s}`;
+    }
+
+    function updateStats() {
+        document.getElementById('mistakes-val').textContent = mistakes;
+        document.getElementById('remaining-val').textContent = board.filter(v => v === 0).length;
+    }
+
+    function checkWin() {
+        if (board.every((v, i) => v === solution[i])) {
+            clearInterval(timerInt);
+            const m = Math.floor(timerSec/60), s = timerSec%60;
+            document.getElementById('win-sub').textContent =
+                `Solved in ${m}m ${s}s with ${mistakes} mistake${mistakes !== 1 ? 's' : ''}.`;
+            setTimeout(() => document.getElementById('win-overlay').classList.add('show'), 400);
+        }
+    }
+
+    newGame();
+</script>
+</body>
+</html>
