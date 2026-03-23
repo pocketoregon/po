@@ -28,6 +28,47 @@ function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── GITHUB HELPERS (top-level) ─────────────────────────────────────────
+async function githubFile(env, filePath, htmlContent, sha) {
+  const encoded = btoa(unescape(encodeURIComponent(htmlContent || '')));
+  const body = { message: 'horizon: upsert ' + filePath, content: encoded };
+  if (sha) body.sha = sha;
+  const res = await fetch('https://api.github.com/repos/pocketoregon/po/contents/' + filePath, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'Bearer ' + env.GITHUB_TOKEN,
+      'Content-Type': 'application/json',
+      'User-Agent': 'PocketOregon-Worker'
+    },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function getFileSha(env, filePath) {
+  const res = await fetch('https://api.github.com/repos/pocketoregon/po/contents/' + filePath, {
+    headers: {
+      'Authorization': 'Bearer ' + env.GITHUB_TOKEN,
+      'User-Agent': 'PocketOregon-Worker'
+    }
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.sha || null;
+}
+
+async function deleteGithubFile(env, filePath, sha) {
+  await fetch('https://api.github.com/repos/pocketoregon/po/contents/' + filePath, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': 'Bearer ' + env.GITHUB_TOKEN,
+      'Content-Type': 'application/json',
+      'User-Agent': 'PocketOregon-Worker'
+    },
+    body: JSON.stringify({ message: 'horizon: delete ' + filePath, sha: sha })
+  });
+}
+
 function renderCardPage(card) {
   const isSiteInfo = card.date && card.date.includes('Origin');
   const siteAgeDays = Math.floor((Date.now() - new Date('2026-03-13')) / 86400000);
@@ -162,9 +203,7 @@ export default {
         const user = await env.DB.prepare('SELECT id,name,email,role,created_at FROM users WHERE id=?').bind(userId).first();
         if (!user) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
         const requester = await validateToken(request, env);
-        if (!requester || (requester.id !== user.id && requester.role !== 'admin')) {
-          user.email = '[Hidden]';
-        }
+        if (!requester || (requester.id !== user.id && requester.role !== 'admin')) { user.email = '[Hidden]'; }
         const comments = await env.DB.prepare('SELECT id,text,chapter,created_at FROM comments WHERE user_id=? ORDER BY created_at DESC LIMIT 50').bind(userId).all();
         const chatCount = await env.DB.prepare('SELECT COUNT(*) as count FROM chat_history WHERE user_id=?').bind(userId).first();
         return new Response(JSON.stringify({user,comments:comments.results,chatCount:chatCount?.count||0}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -228,9 +267,7 @@ export default {
         const commentId=path.split('/comments/')[1];
         const comment=await env.DB.prepare('SELECT user_id FROM comments WHERE id=?').bind(commentId).first();
         if (!comment) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        if (user.role !== 'admin' && String(comment.user_id) !== String(user.id)) {
-          return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        }
+        if (user.role !== 'admin' && String(comment.user_id) !== String(user.id)) return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
         await env.DB.prepare('DELETE FROM comments WHERE id=?').bind(commentId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
@@ -347,6 +384,8 @@ export default {
     const bookMatch = path.match(/^\/books\/(\d+)$/);
     const bookChaptersMatch = path.match(/^\/books\/(\d+)\/chapters$/);
     const bookChapterDeleteMatch = path.match(/^\/books\/(\d+)\/chapters\/(\d+)$/);
+    const horizonProjectMatch = path.match(/^\/horizon\/projects\/(\d+)$/);
+    const adminHorizonMatch = path.match(/^\/admin\/users\/(\d+)\/horizon$/);
 
     // CHAPTER INFO
     if (chapterInfoMatch) {
@@ -378,10 +417,7 @@ export default {
       if (request.method === 'GET') {
         try {
           const chars = await env.DB.prepare("SELECT * FROM characters WHERE story_id = ? ORDER BY name ASC").bind(storyId).all();
-          const parsed = (chars.results || []).map(c => ({
-              ...c,
-              linked_notes: (() => { try { return JSON.parse(c.linked_notes || '{}'); } catch(e) { return {}; } })()
-          }));
+          const parsed = (chars.results || []).map(c => ({...c, linked_notes: (() => { try { return JSON.parse(c.linked_notes || '{}'); } catch(e) { return {}; } })()}));
           return new Response(JSON.stringify({ characters: parsed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
       }
@@ -403,9 +439,7 @@ export default {
     // CHARACTER EDIT/DELETE
     if (characterMatch) {
       const charId = characterMatch[1];
-      try {
-        await env.DB.prepare("ALTER TABLE characters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run();
-      } catch(e) { /* column already exists, ignore */ }
+      try { await env.DB.prepare("ALTER TABLE characters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run(); } catch(e) {}
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
@@ -415,8 +449,7 @@ export default {
         if (user.role !== 'admin' && String(story.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (request.method === 'PUT') {
           const { name, age, description, hobbies, backstory, personality, motivations, relationships, linked_notes } = await request.json();
-          await env.DB.prepare("UPDATE characters SET name=?, age=?, description=?, hobbies=?, backstory=?, personality=?, motivations=?, relationships=?, linked_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?")
-              .bind(name, age||'', description||'', hobbies||'', backstory||'', personality||'', motivations||'', relationships||'', JSON.stringify(linked_notes||{}), charId).run();
+          await env.DB.prepare("UPDATE characters SET name=?, age=?, description=?, hobbies=?, backstory=?, personality=?, motivations=?, relationships=?, linked_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(name, age||'', description||'', hobbies||'', backstory||'', personality||'', motivations||'', relationships||'', JSON.stringify(linked_notes||{}), charId).run();
           return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         if (request.method === 'DELETE') {
@@ -465,26 +498,18 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── STORY WORLD (dynamic fields) ─────────────────────────────────
+    // STORY WORLD
     if (storyWorldMatch) {
       const storyId = storyWorldMatch[1];
-
-      // Auto-migrate: ensure fields column exists
-      try {
-        await env.DB.prepare("ALTER TABLE story_world ADD COLUMN fields TEXT DEFAULT '[]'").run();
-      } catch(e) { /* column already exists, ignore */ }
-
+      try { await env.DB.prepare("ALTER TABLE story_world ADD COLUMN fields TEXT DEFAULT '[]'").run(); } catch(e) {}
       if (request.method === 'GET') {
         try {
           const world = await env.DB.prepare("SELECT fields FROM story_world WHERE story_id = ?").bind(storyId).first();
           let fields = [];
-          if (world && world.fields) {
-            try { fields = JSON.parse(world.fields); } catch(e) { fields = []; }
-          }
+          if (world && world.fields) { try { fields = JSON.parse(world.fields); } catch(e) { fields = []; } }
           return new Response(JSON.stringify({ fields }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
       }
-
       if (request.method === 'POST') {
         const user = await validateToken(request, env);
         if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -494,8 +519,7 @@ export default {
           if (user.role !== 'admin' && String(story.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           const { fields } = await request.json();
           if (!Array.isArray(fields)) return new Response(JSON.stringify({ error: 'fields must be an array' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-          const fieldsJson = JSON.stringify(fields);
-          await env.DB.prepare("INSERT INTO story_world (story_id, fields) VALUES (?, ?) ON CONFLICT(story_id) DO UPDATE SET fields=excluded.fields, updated_at=CURRENT_TIMESTAMP").bind(storyId, fieldsJson).run();
+          await env.DB.prepare("INSERT INTO story_world (story_id, fields) VALUES (?, ?) ON CONFLICT(story_id) DO UPDATE SET fields=excluded.fields, updated_at=CURRENT_TIMESTAMP").bind(storyId, JSON.stringify(fields)).run();
           return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
       }
@@ -564,9 +588,7 @@ export default {
         if (user.role !== 'admin' && String(story.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         const { chapter_id, sequence_order } = await request.json();
         const chapter = await env.DB.prepare("SELECT story_id FROM chapters WHERE id = ?").bind(chapter_id).first();
-        if (!chapter || String(chapter.story_id) !== String(book.story_id)) {
-          return new Response(JSON.stringify({ error: 'Invalid chapter' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
+        if (!chapter || String(chapter.story_id) !== String(book.story_id)) return new Response(JSON.stringify({ error: 'Invalid chapter' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         await env.DB.prepare("INSERT OR IGNORE INTO book_chapters (book_id, chapter_id, sequence_order) VALUES (?, ?, ?)").bind(bookId, chapter_id, sequence_order||0).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -610,9 +632,7 @@ export default {
         if (!story) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         const user = await validateToken(request, env);
         if (story.status === 'draft') {
-          if (!user || (String(user.id) !== String(story.user_id) && user.role !== 'admin')) {
-            return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-          }
+          if (!user || (String(user.id) !== String(story.user_id) && user.role !== 'admin')) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         const chapters = await env.DB.prepare("SELECT id, title, chapter_number, created_at FROM chapters WHERE story_id=? ORDER BY chapter_number ASC").bind(storyId).all();
         let is_bookmarked = false;
@@ -679,16 +699,11 @@ export default {
         if (!chapter) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         const user = await validateToken(request, env);
         if (chapter.story_status === 'draft') {
-          if (!user || (String(user.id) !== String(chapter.story_user_id) && user.role !== 'admin')) {
-            return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-          }
+          if (!user || (String(user.id) !== String(chapter.story_user_id) && user.role !== 'admin')) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         const prev = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number < ? ORDER BY chapter_number DESC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
         const next = await env.DB.prepare("SELECT id, title FROM chapters WHERE story_id=? AND chapter_number > ? ORDER BY chapter_number ASC LIMIT 1").bind(chapter.story_id, chapter.chapter_number).first();
-        if (chapter) {
-          try { chapter.linked_notes = JSON.parse(chapter.linked_notes || '[]'); }
-          catch(e) { chapter.linked_notes = []; }
-        }
+        try { chapter.linked_notes = JSON.parse(chapter.linked_notes || '[]'); } catch(e) { chapter.linked_notes = []; }
         return new Response(JSON.stringify({ chapter, prev, next }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
@@ -715,10 +730,9 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-if (chapterMatch && request.method === 'PUT') {
-      try {
-        await env.DB.prepare("ALTER TABLE chapters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run();
-      } catch(e) { /* column already exists */ }
+    // CHAPTERS UPDATE
+    if (chapterMatch && request.method === 'PUT') {
+      try { await env.DB.prepare("ALTER TABLE chapters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run(); } catch(e) {}
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
@@ -726,7 +740,7 @@ if (chapterMatch && request.method === 'PUT') {
         const owner = await env.DB.prepare("SELECT stories.user_id FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!owner) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (user.role !== 'admin' && String(owner.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-const { title, body, chapter_number, linked_notes } = await request.json();
+        const { title, body, chapter_number, linked_notes } = await request.json();
         await env.DB.prepare("UPDATE chapters SET title=?, body=?, chapter_number=?, linked_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(title, body, chapter_number, JSON.stringify(linked_notes || []), chapterId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -754,12 +768,8 @@ const { title, body, chapter_number, linked_notes } = await request.json();
         const storyId = storyLikeMatch[1];
         const existing = await env.DB.prepare("SELECT id FROM story_likes WHERE story_id=? AND user_id=?").bind(storyId, user.id).first();
         let liked = false;
-        if (existing) {
-          await env.DB.prepare("DELETE FROM story_likes WHERE id=?").bind(existing.id).run();
-        } else {
-          await env.DB.prepare("INSERT INTO story_likes (story_id, user_id) VALUES (?, ?)").bind(storyId, user.id).run();
-          liked = true;
-        }
+        if (existing) { await env.DB.prepare("DELETE FROM story_likes WHERE id=?").bind(existing.id).run(); }
+        else { await env.DB.prepare("INSERT INTO story_likes (story_id, user_id) VALUES (?, ?)").bind(storyId, user.id).run(); liked = true; }
         const count = await env.DB.prepare("SELECT COUNT(*) as count FROM story_likes WHERE story_id=?").bind(storyId).first();
         return new Response(JSON.stringify({ liked, like_count: count.count }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -773,12 +783,8 @@ const { title, body, chapter_number, linked_notes } = await request.json();
         const storyId = storyBookmarkMatch[1];
         const existing = await env.DB.prepare("SELECT id FROM story_bookmarks WHERE story_id=? AND user_id=?").bind(storyId, user.id).first();
         let bookmarked = false;
-        if (existing) {
-          await env.DB.prepare("DELETE FROM story_bookmarks WHERE id=?").bind(existing.id).run();
-        } else {
-          await env.DB.prepare("INSERT INTO story_bookmarks (story_id, user_id) VALUES (?, ?)").bind(storyId, user.id).run();
-          bookmarked = true;
-        }
+        if (existing) { await env.DB.prepare("DELETE FROM story_bookmarks WHERE id=?").bind(existing.id).run(); }
+        else { await env.DB.prepare("INSERT INTO story_bookmarks (story_id, user_id) VALUES (?, ?)").bind(storyId, user.id).run(); bookmarked = true; }
         return new Response(JSON.stringify({ bookmarked }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
@@ -877,28 +883,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-
-    // ── GITHUB HELPER ─────────────────────────────────────────────
-    async function githubFile(env, method, filePath, content, sha) {
-      const body = { message: `horizon: ${method === 'DELETE' ? 'delete' : 'upsert'} ${filePath}`, content: btoa(unescape(encodeURIComponent(content || ''))) };
-      if (sha) body.sha = sha;
-      const res = await fetch(`https://api.github.com/repos/pocketoregon/po/contents/${filePath}`, {
-        method: sha || method === 'DELETE' ? 'PUT' : 'PUT',
-        headers: { 'Authorization': `Bearer ${env.GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'PocketOregon-Worker' },
-        body: JSON.stringify(method === 'DELETE' ? { message: `horizon: delete ${filePath}`, sha } : body)
-      });
-      return res.json();
-    }
-    async function getFileSha(env, filePath) {
-      const res = await fetch(`https://api.github.com/repos/pocketoregon/po/contents/${filePath}`, {
-        headers: { 'Authorization': `Bearer ${env.GITHUB_TOKEN}`, 'User-Agent': 'PocketOregon-Worker' }
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data.sha || null;
-    }
-
-    // ── HORIZON CHECK ─────────────────────────────────────────────
+    // ── HORIZON CHECK ──────────────────────────────────────────────
     if (path === '/horizon/check' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -909,7 +894,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON PROJECTS GET (list) ────────────────────────────────
+    // ── HORIZON PROJECTS GET ───────────────────────────────────────
     if (path === '/horizon/projects' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -928,15 +913,14 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       try {
         const { title, slug, description, html_code } = await request.json();
         if (!title || !slug) return new Response(JSON.stringify({ error: 'Title and slug required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const filePath = `horizon/projects/${slug}.html`;
-        await githubFile(env, 'PUT', filePath, html_code || '');
+        const filePath = 'horizon/projects/' + slug + '.html';
+        await githubFile(env, filePath, html_code || '');
         const result = await env.DB.prepare('INSERT INTO horizon_projects (title, slug, description) VALUES (?,?,?)').bind(title, slug, description||'').run();
         return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
     // ── HORIZON PROJECTS PUT ───────────────────────────────────────
-    const horizonProjectMatch = path.match(/^\/horizon\/projects\/(\d+)$/);
     if (horizonProjectMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -944,9 +928,9 @@ const { title, body, chapter_number, linked_notes } = await request.json();
         const { title, description, html_code } = await request.json();
         const project = await env.DB.prepare('SELECT slug FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
         if (!project) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        const filePath = `horizon/projects/${project.slug}.html`;
+        const filePath = 'horizon/projects/' + project.slug + '.html';
         const sha = await getFileSha(env, filePath);
-        await githubFile(env, 'PUT', filePath, html_code || '', sha);
+        await githubFile(env, filePath, html_code || '', sha);
         await env.DB.prepare('UPDATE horizon_projects SET title=?, description=?, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title, description||'', horizonProjectMatch[1]).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -959,23 +943,16 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       try {
         const project = await env.DB.prepare('SELECT slug FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).first();
         if (project) {
-          const filePath = `horizon/projects/${project.slug}.html`;
+          const filePath = 'horizon/projects/' + project.slug + '.html';
           const sha = await getFileSha(env, filePath);
-          if (sha) {
-            await fetch(`https://api.github.com/repos/pocketoregon/po/contents/${filePath}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${env.GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'PocketOregon-Worker' },
-              body: JSON.stringify({ message: `horizon: delete ${filePath}`, sha })
-            });
-          }
+          if (sha) await deleteGithubFile(env, filePath, sha);
         }
         await env.DB.prepare('DELETE FROM horizon_projects WHERE id=?').bind(horizonProjectMatch[1]).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── ADMIN STAR TOGGLE ──────────────────────────────────────────
-    const adminHorizonMatch = path.match(/^\/admin\/users\/(\d+)\/horizon$/);
+    // ── ADMIN HORIZON STAR TOGGLE ──────────────────────────────────
     if (adminHorizonMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
