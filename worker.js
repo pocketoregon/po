@@ -439,7 +439,7 @@ export default {
     // CHARACTER EDIT/DELETE
     if (characterMatch) {
       const charId = characterMatch[1];
-      try { await env.DB.prepare("ALTER TABLE characters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run(); } catch(e) {}
+
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
@@ -501,7 +501,7 @@ export default {
     // STORY WORLD
     if (storyWorldMatch) {
       const storyId = storyWorldMatch[1];
-      try { await env.DB.prepare("ALTER TABLE story_world ADD COLUMN fields TEXT DEFAULT '[]'").run(); } catch(e) {}
+
       if (request.method === 'GET') {
         try {
           const world = await env.DB.prepare("SELECT fields FROM story_world WHERE story_id = ?").bind(storyId).first();
@@ -732,7 +732,7 @@ export default {
 
     // CHAPTERS UPDATE
     if (chapterMatch && request.method === 'PUT') {
-      try { await env.DB.prepare("ALTER TABLE chapters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run(); } catch(e) {}
+
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
