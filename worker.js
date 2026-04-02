@@ -1,6 +1,6 @@
-const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
-const ADMIN_EMAIL = 'pocketoregon@gmail.com';
-const SITE_URL = 'https://pocketoregon.site';
+const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
+const ADMIN_EMAIL = env.ADMIN_EMAIL;
+const SITE_URL = env.SITE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = `You are the official AI assistant for PocketOregon — a creative fiction website about the Pocketverse saga. Here is everything you know about this site:
 SITE INFO:
