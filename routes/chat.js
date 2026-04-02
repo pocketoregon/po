@@ -35,7 +35,7 @@ export async function handleChat(path, request, env) {
       const customPromptRow = await env.DB.prepare('SELECT value FROM content WHERE key = ?').bind('ai_system_instruction').first();
       const systemPrompt = customPromptRow?.value || DEFAULT_SYSTEM_PROMPT;
       const messages=[{role:'system',content:systemPrompt},...history.slice(-10),{role:'user',content:prompt}];
-      const aiResult = await env.AI.run('@cf/meta/llama-3.2-1b-instruct',{messages,max_tokens:256});
+      const aiResult = await env.AI.run('@cf/meta/llama-3.3-70b-instruct',{messages,max_tokens:256});
       const reply = aiResult?.response??"Sorry, I couldn't generate a response.";
       await env.DB.prepare('INSERT INTO chat_history (user_id,message,reply) VALUES (?,?,?)').bind(user.id,prompt,reply).run();
       return new Response(JSON.stringify({response:reply}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
