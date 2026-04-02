@@ -92,7 +92,52 @@
 
     <main class="max-w-5xl mx-auto px-4 py-10">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <div class="stat-card"><div id="stat-users" class="stat-num">—</div><div class="stat-label">Total Users</div></div>
+            <div class="stat-card"><div id="stat-users" class="stat-num">—</div>
+  <!-- Site Status Toggle -->
+  <div id="site-status-card" style="background:#1f1e24;border:2px solid #374151;border-radius:12px;padding:1.5rem 2rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:1rem;font-weight:700;color:#f9fafb;margin-bottom:4px;">🔧 Site Status</div>
+      <div id="status-label" style="font-size:0.85rem;color:#6b7280;">Checking...</div>
+    </div>
+    <button id="status-toggle-btn" onclick="toggleSiteStatus()" style="padding:10px 24px;border-radius:8px;border:none;font-weight:700;font-size:0.95rem;cursor:pointer;transition:all .2s;background:#22c55e;color:#fff;">Open</button>
+  </div>
+  <script>
+    async function loadSiteStatus() {
+      try {
+        const res = await fetch(API + '/content');
+        const data = await res.json();
+        const status = data.content?.site_status || 'open';
+        updateStatusUI(status);
+      } catch(e) {}
+    }
+    function updateStatusUI(status) {
+      const btn = document.getElementById('status-toggle-btn');
+      const label = document.getElementById('status-label');
+      if (status === 'closed') {
+        btn.textContent = 'Closed — click to Open';
+        btn.style.background = '#ef4444';
+        label.textContent = 'Site is currently CLOSED. Visitors see a maintenance page.';
+        label.style.color = '#ef4444';
+      } else {
+        btn.textContent = 'Open — click to Close';
+        btn.style.background = '#22c55e';
+        label.textContent = 'Site is currently OPEN and accessible to everyone.';
+        label.style.color = '#22c55e';
+      }
+    }
+    async function toggleSiteStatus() {
+      const btn = document.getElementById('status-toggle-btn');
+      const isClosed = btn.textContent.includes('Closed');
+      const newStatus = isClosed ? 'open' : 'closed';
+      if (!isClosed && !confirm('Close the site to all non-admin users?')) return;
+      try {
+        await fetch(API + '/content', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') }, body: JSON.stringify({ key: 'site_status', value: newStatus }) });
+        updateStatusUI(newStatus);
+      } catch(e) { alert('Failed to update status.'); }
+    }
+    loadSiteStatus();
+  </script>
+<div class="stat-label">Total Users</div></div>
             <div class="stat-card"><div id="stat-comments" class="stat-num">—</div><div class="stat-label">Comments</div></div>
             <div class="stat-card"><div id="stat-chats" class="stat-num">—</div><div class="stat-label">AI Chats</div></div>
             <div class="stat-card"><div id="stat-stories" class="stat-num">—</div><div class="stat-label">Stories</div></div>
