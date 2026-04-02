@@ -1,6 +1,3 @@
-const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
-const ADMIN_EMAIL = env.ADMIN_EMAIL;
-const SITE_URL = env.SITE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = `You are the official AI assistant for PocketOregon — a creative fiction website about the Pocketverse saga. Here is everything you know about this site:
 SITE INFO:
@@ -155,6 +152,9 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
+    const ADMIN_EMAIL = env.ADMIN_EMAIL;
+    const SITE_URL = env.SITE_URL;
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders, status: 204 });
 
