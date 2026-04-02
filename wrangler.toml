@@ -12,3 +12,8 @@ database_id = "5042c46f-e454-4af5-a203-391b8e1119d0"
 
 [observability]
 enabled = true
+
+[[routes]]
+pattern = "api.pocketoregon.site"
+zone_name = "pocketoregon.site"
+custom_domain = true
