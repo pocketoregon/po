@@ -184,6 +184,7 @@ export default {
 
     // AUTH
     if (path === '/auth' && request.method === 'POST') {
+      if (await checkRateLimit("auth", 10)) return new Response(JSON.stringify({error:"Too many requests"}),{status:429,headers:{...corsHeaders,"Content-Type":"application/json"}});
       try {
         const { token } = await request.json();
         const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
@@ -236,6 +237,7 @@ export default {
 
     // CHAT
     if (path === '/chat' && request.method === 'POST') {
+      if (await checkRateLimit("chat", 20)) return new Response(JSON.stringify({error:"Too many requests"}),{status:429,headers:{...corsHeaders,"Content-Type":"application/json"}});
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({error:'Sign in required.'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
@@ -263,6 +265,7 @@ export default {
 
     // COMMENTS POST
     if (path === '/comments' && request.method === 'POST') {
+      if (await checkRateLimit("comments", 15)) return new Response(JSON.stringify({error:"Too many requests"}),{status:429,headers:{...corsHeaders,"Content-Type":"application/json"}});
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
