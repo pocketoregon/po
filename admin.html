@@ -104,7 +104,7 @@
   <script>
     async function loadSiteStatus() {
       try {
-        const res = await fetch(API + '/content');
+        const res = await fetch(WORKER_URL + '/content');
         const data = await res.json();
         const status = data.content?.site_status || 'open';
         updateStatusUI(status);
@@ -131,7 +131,7 @@
       const newStatus = isClosed ? 'open' : 'closed';
       if (!isClosed && !confirm('Close the site to all non-admin users?')) return;
       try {
-        await fetch(API + '/content', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') }, body: JSON.stringify({ key: 'site_status', value: newStatus }) });
+        await fetch(WORKER_URL + '/content', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') }, body: JSON.stringify({ key: 'site_status', value: newStatus }) });
         updateStatusUI(newStatus);
       } catch(e) { alert('Failed to update status.'); }
     }
