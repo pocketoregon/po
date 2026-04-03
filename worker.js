@@ -13,6 +13,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders, status: 204 });
     // Maintenance mode
