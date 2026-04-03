@@ -30,11 +30,7 @@ export default {
       }
     }
 
-
-    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-
-    // Card page
-    const cardMatch = path.match(/^\/card\/(\d+)$/);
+        const cardMatch = path.match(/^\/card\/(\d+)$/);
     if (cardMatch && request.method === 'GET') {
       try {
         const card = await env.DB.prepare('SELECT * FROM cards WHERE id = ?').bind(cardMatch[1]).first();
