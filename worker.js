@@ -820,8 +820,6 @@ const { title, body, chapter_number, linked_notes } = await request.json();
     }
 
 
-    return new Response('Not found', { status: 404 });
-
     // Route to handlers
     return (
       await handleAuth(path, request, env) ||
