@@ -1,4 +1,4 @@
-import { corsHeaders, checkRateLimit } from './lib/shared.js';
+import { corsHeaders, checkRateLimit, validateToken } from './lib/shared.js';
 import { renderCardPage } from './lib/cards.js';
 import { handleAuth } from './routes/auth.js';
 import { handleNotes } from './routes/notes.js';
