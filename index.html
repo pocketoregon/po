@@ -154,6 +154,12 @@
         .card-skeleton { background: #f3f4f6; border-radius: 4px; height: 200px; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
+    <script type="module">
+        import { initNavDrawer, openNavDrawer, closeNavDrawer } from '/nav-drawer.js';
+        window._openNavDrawer = openNavDrawer;
+        window._closeNavDrawer = closeNavDrawer;
+        window._initNavDrawer = initNavDrawer;
+    </script>
 </head>
 <body class="antialiased">
 
@@ -450,11 +456,13 @@
             if (user.role === 'creator' || user.role === 'admin') document.getElementById('creator-btn').style.display = 'block';
             document.getElementById('comment-form-area').style.display = 'block';
             document.getElementById('comment-login-prompt').style.display = 'none';
+            if (window._initNavDrawer) window._initNavDrawer(user);
         }
 
         function goToProfile() { if (currentUser) window.location.href = 'profile.html?id=' + currentUser.id; }
 
         function signOut() {
+            if (window._closeNavDrawer) window._closeNavDrawer();
             const token = getToken();
             if (token) {
                 fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
@@ -471,7 +479,7 @@
             showCustomAlert('Signed out successfully.');
         }
 
-        document.getElementById('user-avatar').addEventListener('click', () => { document.getElementById('user-dropdown').classList.toggle('open'); });
+        document.getElementById('user-avatar').addEventListener('click', () => { if (window._openNavDrawer) window._openNavDrawer(); });
         document.addEventListener('click', (e) => { const area = document.getElementById('user-area'); if (area && !area.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open'); });
 
         async function loadPageContent() {
@@ -731,6 +739,7 @@
         window.addEventListener('resize', positionLogo);
         setInterval(updateClock, 1000);
         document.getElementById('mobile-menu-btn').addEventListener('click', toggleMenu);
+        window.addEventListener('nav-drawer-signout', signOut);
     </script>
 </body>
 </html>
