@@ -109,6 +109,12 @@
         /* —— TOAST —— */
         #toast { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 8px; z-index: 700; font-size: 0.875rem; }
     </style>
+    <script type="module">
+        import { initNavDrawer, openNavDrawer, closeNavDrawer } from '/nav-drawer.js';
+        window._openNavDrawer = openNavDrawer;
+        window._closeNavDrawer = closeNavDrawer;
+        window._initNavDrawer = initNavDrawer;
+    </script>
 </head>
 <body>
 
@@ -145,6 +151,7 @@
             </div>
             <div class="nav-right">
                 <span class="nav-user" id="nav-user-name"></span>
+                <div id="nav-avatar" onclick="if(window._openNavDrawer)window._openNavDrawer()" style="width:28px;height:28px;border-radius:50%;background:#e2e2f0;color:#1f1e24;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;cursor:pointer;" id="nav-avatar"></div>
                 <a href="/" class="nav-back">← Back</a>
             </div>
         </div>
@@ -222,6 +229,7 @@
     }
 
     function showApp(user) {
+        if (window._initNavDrawer) window._initNavDrawer(user);
         document.getElementById('gate').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('nav-user-name').textContent = user.name || '';
@@ -284,6 +292,7 @@
     }
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+    window.addEventListener('nav-drawer-signout', () => { localStorage.removeItem('po_user'); localStorage.removeItem('po_token'); window.location.href = '/'; });
     window.addEventListener('load', init);
 </script>
 </body>

@@ -186,6 +186,12 @@
         nav * { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .note-card, .note-list-item, .editor-box, #editor-tags, #editor-body, #notes-search, #notes-sort, .view-btn, .tag-pill, .btn-new, .btn-save { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
+    <script type="module">
+        import { initNavDrawer, openNavDrawer, closeNavDrawer } from '/nav-drawer.js';
+        window._openNavDrawer = openNavDrawer;
+        window._closeNavDrawer = closeNavDrawer;
+        window._initNavDrawer = initNavDrawer;
+    </script>
 </head>
 <body>
 
@@ -267,6 +273,7 @@
                 E2E Encrypted
             </span>
             <button class="dark-mode-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+            <div id="nav-avatar" style="width:28px;height:28px;border-radius:50%;background:#1f1e24;color:white;display:none;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;cursor:pointer;border:2px solid #e5e7eb;" id="nav-avatar"></div>
             <a href="/" style="font-size:.875rem;color:#6b7280;text-decoration:none;">← Back</a>
         </div>
     </div>
@@ -445,10 +452,13 @@
 
     // ── APP ──────────────────────────────────────────────────────────
     async function showApp() {
+        if (window._initNavDrawer) window._initNavDrawer(currentUser);
         document.getElementById('gate').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         initDarkMode();
         liftCurtain();
+        const av = document.getElementById('nav-avatar');
+        if (av) av.addEventListener('click', () => { if (window._openNavDrawer) window._openNavDrawer(); });
         await loadNotes();
     }
 
@@ -932,6 +942,7 @@
     function showAlert(msg) { const b=document.getElementById('custom-alert'); b.textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
 
     // ── INIT ─────────────────────────────────────────────────────────
+    window.addEventListener('nav-drawer-signout', () => { localStorage.removeItem('po_user'); localStorage.removeItem('po_token'); window.location.reload(); });
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');
