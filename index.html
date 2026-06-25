@@ -441,10 +441,6 @@
             document.getElementById('user-area').style.display = 'block';
             const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?';
             document.getElementById('user-avatar').textContent = initials;
-            document.getElementById('dropdown-name').textContent = user.name || 'User';
-            document.getElementById('dropdown-email').textContent = user.email || '';
-            if (user.role === 'admin') document.getElementById('admin-btn').style.display = 'block';
-            if (user.role === 'creator' || user.role === 'admin') document.getElementById('creator-btn').style.display = 'block';
             document.getElementById('comment-form-area').style.display = 'block';
             document.getElementById('comment-login-prompt').style.display = 'none';
             if (window._initNavDrawer) window._initNavDrawer(user);
