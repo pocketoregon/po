@@ -12,7 +12,7 @@
     <link rel="canonical" href="https://pocketoregon.site/">
     <meta name="google-site-verification" content="c2grpbLzoBR-Am_bH3hYVo9qQx82XdOSz6hm2tb-yK0" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -71,13 +71,6 @@
         @media (max-width: 399px) { .btn-login .btn-login-text { display: none; } .btn-login { padding: 6px 8px; } }
         .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s; }
         .user-avatar:hover { border-color: #1f1e24; }
-        .user-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); padding: 8px; min-width: 180px; z-index: 500; display: none; }
-        .user-dropdown.open { display: block; }
-        .user-dropdown-name { font-weight: 600; font-size: 0.875rem; padding: 6px 8px; color: #1f1e24; }
-        .user-dropdown-email { font-size: 0.75rem; padding: 0 8px 6px; color: #9ca3af; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px; }
-        .user-dropdown-btn { width: 100%; text-align: left; padding: 6px 8px; border-radius: 4px; font-size: 0.875rem; color: #1f1e24; background: none; border: none; cursor: pointer; transition: background 0.15s; }
-        .user-dropdown-btn:hover { background: #f3f4f6; }
-        .user-dropdown-btn.admin { color: #7c3aed; font-weight: 600; }
         #login-modal { display: none; position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
         #login-modal.open { display: flex; }
         .login-modal-box { background: white; border-radius: 12px; padding: 2rem; max-width: 360px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
@@ -154,12 +147,6 @@
         .card-skeleton { background: #f3f4f6; border-radius: 4px; height: 200px; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
-    <script type="module">
-        import { initNavDrawer, openNavDrawer, closeNavDrawer } from '/nav-drawer.js';
-        window._openNavDrawer = openNavDrawer;
-        window._closeNavDrawer = closeNavDrawer;
-        window._initNavDrawer = initNavDrawer;
-    </script>
 </head>
 <body class="antialiased">
 
@@ -244,18 +231,19 @@
                         <span class="btn-login-text">Sign in</span>
                     </button>
                     <div id="user-area" style="display:none; position:relative;">
-                        <div id="user-avatar" class="user-avatar"></div>
-
+                        <!-- Desktop avatar now directly triggers the universal layout drawer -->
+                        <div id="user-avatar" class="user-avatar" onclick="if(window.openNavDrawer) window.openNavDrawer()"></div>
                     </div>
                 </div>
-                <button id="mobile-menu-btn" class="lg:hidden p-1 text-gray-600">
+                <!-- Mobile button now directly triggers the universal drawer if logged in, otherwise handles the simple section scroll links menu -->
+                <button id="mobile-menu-btn" class="p-1 text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path id="menu-icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
                 </button>
             </div>
         </div>
-        <div id="mobile-menu" class="lg:hidden absolute w-full left-0 top-14 sm:top-16 bg-white shadow-xl opacity-0 pointer-events-none menu-transition">
+        <div id="mobile-menu" class="hidden absolute w-full left-0 top-14 sm:top-16 bg-white shadow-xl opacity-0 pointer-events-none menu-transition">
             <div class="menu-inner">
                 <div class="px-4 py-4 space-y-3 border-t border-gray-100">
                     <div class="flex items-center justify-between pb-2 mb-1 border-b border-gray-100">
@@ -359,7 +347,17 @@
         </div>
     </div>
 
-    <script>
+    <!-- Script converted to type="module" to cleanly interact with universal nav drawer files -->
+    <script type="module">
+        import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from './nav-drawer.js';
+
+        // Bind utility methods globally to handle legacy dynamic template layouts smoothly
+        window.openLoginModal = openLoginModal;
+        window.closeLoginModal = closeLoginModal;
+        window.toggleMenu = toggleMenu;
+        window.deleteComment = deleteComment;
+        window.signOut = signOut;
+
         const WORKER_URL = 'https://po.pocketoregon.workers.dev';
         const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
         let currentUser = null;
@@ -383,8 +381,10 @@
             curtainLifted = true;
             setTimeout(() => {
                 const curtain = document.getElementById('loading-curtain');
-                curtain.classList.add('lift');
-                setTimeout(() => curtain.remove(), 750);
+                if (curtain) {
+                    curtain.classList.add('lift');
+                    setTimeout(() => curtain.remove(), 750);
+                }
             }, 120);
         }
         setTimeout(liftCurtain, LOAD_TIMEOUT);
@@ -443,13 +443,12 @@
             document.getElementById('user-avatar').textContent = initials;
             document.getElementById('comment-form-area').style.display = 'block';
             document.getElementById('comment-login-prompt').style.display = 'none';
-            if (window._initNavDrawer) window._initNavDrawer(user);
+            
+            // Instantly sync context records into initialized wrapper framework
+            initNavDrawer(user);
         }
 
-        function goToProfile() { if (currentUser) window.location.href = 'profile.html?id=' + currentUser.id; }
-
         function signOut() {
-            if (window._closeNavDrawer) window._closeNavDrawer();
             const token = getToken();
             if (token) {
                 fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
@@ -465,7 +464,10 @@
             showCustomAlert('Signed out successfully.');
         }
 
-        document.getElementById('user-avatar').addEventListener('click', () => { if (window._openNavDrawer) window._openNavDrawer(); });
+        // Bridge universal drawer click event context directly to native front-end operations
+        window.addEventListener('nav-drawer-signout', () => {
+            signOut();
+        });
 
         async function loadPageContent() {
             try {
@@ -574,8 +576,8 @@
 
         function escapeHtml(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
         function formatTime(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
-        function showConnectionError() { const el = document.getElementById('connection-error'); el.style.display = 'flex'; }
-        function showCustomAlert(msg) { const box = document.getElementById('custom-alert'); box.textContent = msg; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000); }
+        function showConnectionError() { const el = document.getElementById('connection-error'); if (el) el.style.display = 'flex'; }
+        function showCustomAlert(msg) { const box = document.getElementById('custom-alert'); if (box) { box.textContent = msg; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000); } }
 
         const logo = document.getElementById('logo-traveller');
         const topAnchor = document.getElementById('logo-anchor');
@@ -601,6 +603,7 @@
 
         function positionLogo() {
             const scrolled = window.scrollY > 35;
+            if (!logoSvg || !navAnchor || !topAnchor || !spacer || !nav) return;
             if (scrolled) {
                 logoSvg.style.width = '28px'; logoSvg.style.height = '28px';
                 const dest = getCenter(navAnchor);
@@ -615,17 +618,26 @@
         }
 
         function toggleMenu() {
+            // Hand off navigation behavior straight to openNavDrawer component layer if authenticated
+            if (currentUser) {
+                openNavDrawer();
+                return;
+            }
             const mobileMenu = document.getElementById('mobile-menu');
             const menuIconPath = document.getElementById('menu-icon-path');
             const isOpen = mobileMenu.classList.contains('open');
             if (!isOpen) {
-                mobileMenu.classList.add('open', 'opacity-100', 'pointer-events-auto');
-                mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    mobileMenu.classList.add('open', 'opacity-100', 'pointer-events-auto');
+                    mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+                }, 10);
                 menuIconPath.setAttribute('d', 'M6 18L18 6M6 6l12 12');
             } else {
                 mobileMenu.classList.remove('open', 'opacity-100', 'pointer-events-auto');
                 mobileMenu.classList.add('opacity-0', 'pointer-events-none');
                 menuIconPath.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                setTimeout(() => mobileMenu.classList.add('hidden'), 300);
             }
         }
 
@@ -700,22 +712,26 @@
             chatSend.disabled = false; chatInput.focus();
         }
 
-        chatBtn.addEventListener('click', () => {
+        if (chatBtn) chatBtn.addEventListener('click', () => {
             chatWindow.classList.toggle('open');
             if (chatWindow.classList.contains('open')) {
                 if (!currentUser) { showChatLoginGate(); }
                 else { showChatForLoggedIn(); loadChatHistory(); chatInput.focus(); }
             }
         });
-        chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
-        chatSend.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+        if (chatClose) chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
+        if (chatSend) chatSend.addEventListener('click', sendMessage);
+        if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-        window.addEventListener('load', () => {
+        window.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('po_user');
             const savedToken = localStorage.getItem('po_token');
             if (saved && savedToken) {
-                try { const user = JSON.parse(saved); currentUser = user; updateAuthUI(user); } catch(e) {}
+                try { 
+                    const user = JSON.parse(saved); 
+                    currentUser = user; 
+                    updateAuthUI(user); 
+                } catch(e) {}
             }
             loadPageContent(); loadCards(); loadComments(); updateClock(); positionLogo();
         });
@@ -724,7 +740,6 @@
         window.addEventListener('resize', positionLogo);
         setInterval(updateClock, 1000);
         document.getElementById('mobile-menu-btn').addEventListener('click', toggleMenu);
-        window.addEventListener('nav-drawer-signout', signOut);
     </script>
 </body>
 </html>
