@@ -6,7 +6,7 @@
     <title>My Notes — PocketOregon</title>
     <meta name="robots" content="noindex">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#ffffff">
@@ -186,12 +186,6 @@
         nav * { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .note-card, .note-list-item, .editor-box, #editor-tags, #editor-body, #notes-search, #notes-sort, .view-btn, .tag-pill, .btn-new, .btn-save { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
-    <script type="module">
-        import { initNavDrawer, openNavDrawer, closeNavDrawer } from '/nav-drawer.js';
-        window._openNavDrawer = openNavDrawer;
-        window._closeNavDrawer = closeNavDrawer;
-        window._initNavDrawer = initNavDrawer;
-    </script>
 </head>
 <body>
 
@@ -265,16 +259,15 @@
     <div class="nav-inner">
         <a href="/" class="nav-logo-wrapper">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
-            <span class="outfit" style="font-weight:800;font-size:1rem;color:#1f1e24;">PocketOregon</span>
+            <span class="outfit font-bold text-sm tracking-tight text-[#1f1e24] dark:text-white">PocketOregon</span>
         </a>
-        <div style="display:flex;align-items:center;gap:12px;">
-            <span class="e2e-badge">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                E2E Encrypted
-            </span>
-            <button class="dark-mode-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
-            <div id="nav-avatar" style="width:28px;height:28px;border-radius:50%;background:#1f1e24;color:white;display:none;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;cursor:pointer;border:2px solid #e5e7eb;" id="nav-avatar"></div>
-            <a href="/" style="font-size:.875rem;color:#6b7280;text-decoration:none;">← Back</a>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button class="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+            <div id="user-profile-nav" style="display: none; align-items: center; gap: 8px;">
+                <button id="profileNavTrigger" class="w-8 h-8 rounded-full bg-[#1f1e24] text-white flex items-center justify-center font-bold text-xs border border-[#1f1e24] select-none focus:outline-none">
+                    PC
+                </button>
+            </div>
         </div>
     </div>
 </nav>
@@ -334,7 +327,7 @@
 </div>
 
 <script>
-    const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+    const WORKER_URL = '[https://po.pocketoregon.workers.dev](https://po.pocketoregon.workers.dev)';
     const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -452,14 +445,30 @@
 
     // ── APP ──────────────────────────────────────────────────────────
     async function showApp() {
-        if (window._initNavDrawer) window._initNavDrawer(currentUser);
         document.getElementById('gate').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         initDarkMode();
         liftCurtain();
-        const av = document.getElementById('nav-avatar');
-        if (av) av.addEventListener('click', () => { if (window._openNavDrawer) window._openNavDrawer(); });
         await loadNotes();
+
+        // 1. Reveal profile trigger icon container
+        const profileContainer = document.getElementById('user-profile-nav');
+        if (profileContainer) profileContainer.style.display = 'flex';
+
+        // 2. Load and attach the universal drawer component logic
+        import('./nav-drawer.js').then(nav => {
+            nav.initNavDrawer(currentUser);
+            
+            const trigger = document.getElementById('profileNavTrigger');
+            if (trigger) {
+                trigger.addEventListener('click', () => nav.openNavDrawer());
+                
+                // Set initials dynamically from the authenticated email prefix
+                if (currentUser && currentUser.email) {
+                    trigger.textContent = currentUser.email.substring(0, 2).toUpperCase();
+                }
+            }
+        }).catch(err => console.error("Could not mount universal nav drawer:", err));
     }
 
     async function loadNotes() {
@@ -613,6 +622,13 @@
             list.innerHTML = filteredNotes.map(n => renderNoteListItem(n)).join('');
         }
     }
+
+    // Intercept signout actions dispatched from the nav-drawer layout
+    window.addEventListener('nav-drawer-signout', () => {
+        localStorage.removeItem('po_user');
+        localStorage.removeItem('po_token');
+        window.location.href = '/';
+    });
 
     function renderNoteCard(n) {
         const preview = stripHtml(n.body || '').substring(0, 150);
@@ -942,7 +958,6 @@
     function showAlert(msg) { const b=document.getElementById('custom-alert'); b.textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
 
     // ── INIT ─────────────────────────────────────────────────────────
-    window.addEventListener('nav-drawer-signout', () => { localStorage.removeItem('po_user'); localStorage.removeItem('po_token'); window.location.reload(); });
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
         const token = localStorage.getItem('po_token');
