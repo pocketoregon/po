@@ -100,14 +100,14 @@ function injectStyles() {
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: #fff7ed;
-      border: 2px solid #f97316;
-      color: #f97316;
+      background: #1f1e24;       /* Changes the orange background to your original black theme */
+      border: 2px solid #1f1e24; /* Changes the orange border to a matching dark border */
+      color: #ffffff;            /* Keeps the text initials white */
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'Inter', sans-serif;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 1.25rem;
       margin-bottom: 1rem;
       text-transform: uppercase;
