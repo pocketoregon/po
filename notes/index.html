@@ -246,7 +246,7 @@
         flex-direction: column;
         min-height: 58px;
         background-color: white;
-        overflow: hidden;
+        overflow: visible;
         position: relative;
         inset-inline: auto;
         max-width: 298px;
@@ -255,22 +255,16 @@
     body.dark .dropdown { background-color: #1a1a1a; border-color: #404040; }
     .dropdown input:where(:checked) ~ .list {
         opacity: 1;
-        transform: translateY(-3rem) scale(1);
-        transition: all 500ms ease;
-        margin-top: 32px;
-        padding-top: 4px;
-        margin-bottom: -32px;
+        transform: translateY(0);
+        pointer-events: auto;
+        transition: opacity 220ms ease, transform 220ms ease;
     }
     .dropdown input:where(:not(:checked)) ~ .list {
         opacity: 0;
-        transform: translateY(3rem);
-        margin-top: -100%;
+        transform: translateY(-6px);
         user-select: none;
-        height: 0px;
-        max-height: 0px;
-        min-height: 0px;
         pointer-events: none;
-        transition: all 500ms ease-out;
+        transition: opacity 180ms ease-out, transform 180ms ease-out;
     }
     .trigger {
         cursor: pointer;
@@ -330,17 +324,25 @@
     }
     body.dark .trigger:before { color: #e5e7eb; }
     .list {
-        height: 100%;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
         max-height: 20rem;
-        width: calc(100% - calc(var(--w-scrollbar) / 2));
         display: grid;
         grid-auto-flow: row;
         overflow: hidden auto;
-        gap: 0.5rem;
-        padding: 0 1rem;
-        margin-right: -8px;
+        gap: 0.4rem;
+        padding: 0.5rem;
+        margin: 0;
+        background-color: white;
+        border: 1px solid #c1c2c5;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        z-index: 1000;
         --w-scrollbar: 8px;
     }
+    body.dark .list { background-color: #1a1a1a; border-color: #404040; box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
     .listitem {
         height: 100%;
         width: calc(100% + calc(calc(var(--w-scrollbar) / 2) + var(--w-scrollbar)));
@@ -362,6 +364,10 @@
     }
     .article:hover { border-color: #f97316; color: #f97316; }
     body.dark .article { background-color: #2d2d2d; border-color: #404040; color: #e5e7eb; }
+    .article.selected { background-color: #1f1e24; border-color: #1f1e24; color: white; }
+    .article.selected:hover { color: white; border-color: #1f1e24; }
+    body.dark .article.selected { background-color: #f97316; border-color: #f97316; color: #1f1e24; }
+    body.dark .article.selected:hover { color: #1f1e24; }
     </style>
 </head>
 <body>
@@ -512,11 +518,11 @@
                 <span id="sort-trigger-label">Newest</span>
             </label>
             <ul class="list">
-                <li class="listitem"><button type="button" class="article" onclick="selectSort('newest','Newest')">Newest</button></li>
-                <li class="listitem"><button type="button" class="article" onclick="selectSort('oldest','Oldest')">Oldest</button></li>
-                <li class="listitem"><button type="button" class="article" onclick="selectSort('a-z','A-Z')">A-Z</button></li>
-                <li class="listitem"><button type="button" class="article" onclick="selectSort('z-a','Z-A')">Z-A</button></li>
-                <li class="listitem"><button type="button" class="article" onclick="selectSort('longest','Longest')">Longest</button></li>
+                <li class="listitem"><button type="button" class="article selected" data-value="newest" onclick="selectSort('newest','Newest')">Newest</button></li>
+                <li class="listitem"><button type="button" class="article" data-value="oldest" onclick="selectSort('oldest','Oldest')">Oldest</button></li>
+                <li class="listitem"><button type="button" class="article" data-value="a-z" onclick="selectSort('a-z','A-Z')">A-Z</button></li>
+                <li class="listitem"><button type="button" class="article" data-value="z-a" onclick="selectSort('z-a','Z-A')">Z-A</button></li>
+                <li class="listitem"><button type="button" class="article" data-value="longest" onclick="selectSort('longest','Longest')">Longest</button></li>
             </ul>
         </div>
         <div class="view-toggle">
@@ -850,6 +856,9 @@
         currentSort = value;
         document.getElementById('sort-trigger-label').textContent = label;
         document.getElementById('sort-toggle').checked = false;
+        document.querySelectorAll('#sort-dropdown .article').forEach(btn => {
+            btn.classList.toggle('selected', btn.getAttribute('data-value') === value);
+        });
         applySort();
         renderNotes();
     }
