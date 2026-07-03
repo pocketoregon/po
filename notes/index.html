@@ -148,6 +148,10 @@
         body.dark .editor-divider { border-color: #404040; }
         .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; overflow: visible; position: relative; z-index: 1; }
         .editor-meta { font-size: 0.75rem; color: #9ca3af; }
+        .save-status { font-size: 0.72rem; color: #9ca3af; margin-left: 8px; }
+        .save-status.saving { color: #f97316; }
+        .save-status.saved { color: #16a34a; }
+        .save-status.unsaved { color: #9ca3af; }
         .editor-shortcuts { font-size: 0.7rem; color: #9ca3af; }
         .btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
         body.dark .btn-save { background: #f97316; }
@@ -256,11 +260,12 @@
         <div class="editor-footer">
             <div>
                 <span class="editor-meta" id="editor-meta">New note</span>
-                <div class="editor-shortcuts">⌘S Save  ·  ⌘N New  ·  Esc Close  ·  ⌘P Pin</div>
+                <span class="save-status" id="save-status"></span>
+                <div class="editor-shortcuts">Autosaves as you type  ·  ⌘N New  ·  Esc Close  ·  ⌘P Pin</div>
             </div>
             <div style="display: flex; gap: 12px; align-items: center;">
                 <button class="btn-export" onclick="exportNote()" title="Export as Markdown">↓ Export .md</button>
-                <button class="btn-save" id="save-btn" onclick="saveNote()">Save</button>
+                <button class="btn-save" id="save-btn" onclick="finishEditing()">Done</button>
             </div>
         </div>
     </div>
@@ -364,7 +369,7 @@
     window.togglePin = togglePin;
     window.deleteNote = deleteNote;
     window.exportNote = exportNote;
-    window.saveNote = saveNote;
+    window.finishEditing = finishEditing;
     window.toggleTagFilter = toggleTagFilter;
     window.clearSearch = clearSearch;
     window.openNavDrawer = openNavDrawer;
@@ -384,6 +389,10 @@
     let currentSort = 'newest';
     let selectedTag = null;
     let isFullscreen = false;
+    let autosaveTimer = null;
+    let autosaveFirstChangeAt = null;
+    let isSavingNow = false;
+    let lastSavedSnapshot = null;
 
     // ── LOADING CURTAIN ──────────────────────────────────────────────
     function liftCurtain() {
@@ -747,11 +756,15 @@
         document.getElementById('editor-body').value = '';
         document.getElementById('editor-tags').value = '';
         document.getElementById('editor-meta').textContent = 'New note';
-        document.getElementById('save-btn').textContent = 'Save';
+        document.getElementById('save-btn').textContent = 'Done';
         currentTab = 'write';
         switchTab('write');
         document.getElementById('editor-modal').classList.add('open');
         updateWordCount();
+        lastSavedSnapshot = null;
+        autosaveFirstChangeAt = null;
+        setSaveStatus('', '');
+        checkForDraft();
         setTimeout(() => document.getElementById('editor-title').focus(), 100);
     }
 
@@ -763,11 +776,15 @@
         document.getElementById('editor-body').value = note.body || '';
         document.getElementById('editor-tags').value = note.tags || '';
         document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
-        document.getElementById('save-btn').textContent = 'Save';
+        document.getElementById('save-btn').textContent = 'Done';
         currentTab = 'write';
         switchTab('write');
         document.getElementById('editor-modal').classList.add('open');
         updateWordCount();
+        lastSavedSnapshot = { title: note.title || '', body: note.body || '', tags: note.tags || '' };
+        autosaveFirstChangeAt = null;
+        setSaveStatus('', '');
+        checkForDraft();
         setTimeout(() => document.getElementById('editor-body').focus(), 100);
     }
 
@@ -776,9 +793,11 @@
             toggleFullscreen();
             return;
         }
+        if (autosaveTimer) { clearTimeout(autosaveTimer); performAutosave(); }
         document.getElementById('editor-modal').classList.remove('open');
         editingNoteId = null;
         isFullscreen = false;
+        autosaveFirstChangeAt = null;
     }
 
     function switchTab(tab) {
@@ -957,6 +976,161 @@
         btn.disabled = false; btn.textContent = 'Save';
     }
 
+    // ── AUTOSAVE + LOCAL DRAFT BACKUP ─────────────────────────────────
+    function draftKey() {
+        return 'po_draft_' + (editingNoteId || 'new');
+    }
+
+    function currentFormSnapshot() {
+        return {
+            title: document.getElementById('editor-title').value,
+            body: document.getElementById('editor-body').value,
+            tags: document.getElementById('editor-tags').value
+        };
+    }
+
+    function saveDraftLocal() {
+        try {
+            const snap = currentFormSnapshot();
+            localStorage.setItem(draftKey(), JSON.stringify({ ...snap, ts: Date.now() }));
+        } catch(e) {}
+    }
+
+    function clearDraftLocal() {
+        try { localStorage.removeItem(draftKey()); } catch(e) {}
+    }
+
+    function setSaveStatus(text, cls) {
+        const el = document.getElementById('save-status');
+        if (!el) return;
+        el.textContent = text;
+        el.className = 'save-status' + (cls ? ' ' + cls : '');
+    }
+
+    function handleEditorInput() {
+        saveDraftLocal();
+        setSaveStatus('Unsaved changes…', 'unsaved');
+        if (!autosaveFirstChangeAt) autosaveFirstChangeAt = Date.now();
+        clearTimeout(autosaveTimer);
+        const elapsed = Date.now() - autosaveFirstChangeAt;
+        const delay = elapsed > 10000 ? 0 : 1800;
+        autosaveTimer = setTimeout(performAutosave, delay);
+    }
+
+    async function performAutosave() {
+        if (isSavingNow) { autosaveTimer = setTimeout(performAutosave, 500); return; }
+        const snap = currentFormSnapshot();
+        if (!snap.title.trim() && !snap.body.trim()) return;
+        if (lastSavedSnapshot && lastSavedSnapshot.title === snap.title && lastSavedSnapshot.body === snap.body && lastSavedSnapshot.tags === snap.tags) return;
+
+        isSavingNow = true;
+        setSaveStatus('Saving…', 'saving');
+        const ok = await persistNote();
+        isSavingNow = false;
+        autosaveFirstChangeAt = null;
+
+        if (ok) {
+            lastSavedSnapshot = snap;
+            clearDraftLocal();
+            setSaveStatus('Saved', 'saved');
+        } else {
+            setSaveStatus('Save failed — will retry', 'unsaved');
+            autosaveTimer = setTimeout(performAutosave, 4000);
+        }
+    }
+
+    async function persistNote() {
+        const titleRaw = document.getElementById('editor-title').value.trim();
+        const bodyRaw = document.getElementById('editor-body').value.trim();
+        const tagsRaw = document.getElementById('editor-tags').value.trim();
+        if (!titleRaw && !bodyRaw) return false;
+
+        try {
+            const encTitle = await encrypt(titleRaw || 'Untitled');
+            const encBody = await encrypt(bodyRaw);
+            const encTags = await encrypt(tagsRaw);
+
+            if (editingNoteId) {
+                const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...authHeader() },
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: notes.find(n => n.id === editingNoteId)?.pinned || 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const idx = notes.findIndex(n => n.id === editingNoteId);
+                    if (idx !== -1) {
+                        notes[idx].title = titleRaw || 'Untitled';
+                        notes[idx].body = bodyRaw;
+                        notes[idx].tags = tagsRaw;
+                        notes[idx].updated_at = new Date().toISOString();
+                    }
+                    applyFilters(); applySort(); renderFilterTags(); renderNotes();
+                    return true;
+                }
+                return false;
+            } else {
+                const res = await fetch(`${WORKER_URL}/notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...authHeader() },
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    clearDraftLocal();
+                    editingNoteId = data.id;
+                    const newNote = {
+                        id: data.id, user_id: currentUser.id, title: titleRaw || 'Untitled',
+                        body: bodyRaw, tags: tagsRaw, pinned: 0,
+                        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+                    };
+                    notes.unshift(newNote);
+                    applyFilters(); applySort(); renderFilterTags(); renderNotes();
+                    return true;
+                }
+                return false;
+            }
+        } catch(e) { return false; }
+    }
+
+    function checkForDraft() {
+        const raw = localStorage.getItem(draftKey());
+        if (!raw) return;
+        try {
+            const d = JSON.parse(raw);
+            const hasDraftContent = (d.title || '').trim() || (d.body || '').trim();
+            if (!hasDraftContent) { clearDraftLocal(); return; }
+            const note = editingNoteId ? notes.find(n => n.id === editingNoteId) : null;
+            const savedTs = note ? new Date(note.updated_at || 0).getTime() : 0;
+            const draftDiffers = d.title !== (note?.title || '') || d.body !== (note?.body || '') || d.tags !== (note?.tags || '');
+            if (draftDiffers && d.ts > savedTs) {
+                if (confirm('Restore unsaved draft from last session?')) {
+                    document.getElementById('editor-title').value = d.title || '';
+                    document.getElementById('editor-body').value = d.body || '';
+                    document.getElementById('editor-tags').value = d.tags || '';
+                    updateWordCount();
+                    setSaveStatus('Unsaved changes…', 'unsaved');
+                    return;
+                }
+            }
+            clearDraftLocal();
+        } catch(e) {}
+    }
+
+    async function finishEditing() {
+        clearTimeout(autosaveTimer);
+        setSaveStatus('Saving…', 'saving');
+        const ok = await persistNote();
+        if (ok) {
+            lastSavedSnapshot = currentFormSnapshot();
+            clearDraftLocal();
+            showAlert('Note saved.');
+        } else {
+            showAlert('Could not save note.');
+        }
+        closeEditor();
+    }
+
     async function deleteNote(e, noteId) {
         e.stopPropagation();
         if (!confirm('Delete this note? This cannot be undone.')) return;
@@ -983,6 +1157,11 @@
     });
 
     document.getElementById('editor-body').addEventListener('keyup', updateWordCount);
+    document.getElementById('editor-body').addEventListener('input', handleEditorInput);
+    document.getElementById('editor-title').addEventListener('input', handleEditorInput);
+    document.getElementById('editor-tags').addEventListener('input', handleEditorInput);
+    document.addEventListener('visibilitychange', () => { if (document.hidden && document.getElementById('editor-modal').classList.contains('open')) saveDraftLocal(); });
+    window.addEventListener('beforeunload', () => { if (document.getElementById('editor-modal').classList.contains('open')) saveDraftLocal(); });
 
     document.getElementById('notes-search').addEventListener('input', (e) => {
         document.getElementById('search-clear').style.display = e.target.value ? 'block' : 'none';
@@ -993,7 +1172,7 @@
     document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
-            if (document.getElementById('editor-modal').classList.contains('open')) saveNote();
+            if (document.getElementById('editor-modal').classList.contains('open')) { clearTimeout(autosaveTimer); performAutosave(); }
         }
         if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
             e.preventDefault();
