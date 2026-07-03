@@ -65,9 +65,33 @@
         body.dark .view-btn.active { background: #f97316; border-color: #f97316; }
         #notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         #notes-list { display: flex; flex-direction: column; gap: 8px; }
-        .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; animation: fadeInUp 0.32s ease both; }
+        .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; z-index: 0; overflow: hidden; animation: fadeInUp 0.32s ease both; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .note-card:before {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            top: -16px;
+            right: -16px;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            height: 32px;
+            width: 32px;
+            border-radius: 32px;
+            transform: scale(1);
+            transform-origin: 50% 50%;
+            transition: transform 0.35s ease-out;
+        }
+        .note-card:hover:before { transform: scale(28); }
+        .note-card:hover .note-card-title { transition: color 0.5s ease-out; color: #ffffff; }
+        .note-card:hover .note-card-preview { transition: color 0.5s ease-out; color: rgba(255,255,255,0.85); }
+        .note-card:hover .note-card-date { transition: color 0.5s ease-out; color: rgba(255,255,255,0.7); }
+        .note-card:hover .note-tag { transition: background 0.5s ease-out, color 0.5s ease-out; background: rgba(255,255,255,0.25); color: #fff; }
+        .note-card:hover .pinned-badge { transition: color 0.5s ease-out; color: #fff; }
+        .note-card:hover .note-card-pin, .note-card:hover .note-card-delete { color: rgba(255,255,255,0.85); }
+        .note-card:hover .note-card-delete:hover { color: #fff; background: rgba(255,255,255,0.2); }
+        .note-card.pinned:hover { border-left-color: #fff; }
         body.dark .note-card { background: #2d2d2d; border-color: #404040; }
+        body.dark .note-card:before { background: linear-gradient(135deg, #f97316, #c2410c); }
         .note-card.pinned { border-left: 3px solid #f97316; }
         .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
         body.dark .note-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
