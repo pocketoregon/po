@@ -19,9 +19,9 @@
         body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; user-select: none; -webkit-user-select: none; transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         body.dark { background: #1a1a1a; color: #e5e7eb; }
         .outfit { font-family: 'Outfit', sans-serif; }
-        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.76,0,0.24,1); }
-        body.dark #loading-curtain { background: #1a1a1a; }
-        #loading-curtain.lift { transform: translateY(-100%); }
+        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: rgba(255,255,255,0.55); display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.76,0,0.24,1), opacity 0.6s ease; }
+        body.dark #loading-curtain { background: rgba(26,26,26,0.55); }
+        #loading-curtain.lift { transform: translateY(-100%); opacity: 0; }
         .loader-icon { animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
         @keyframes iconPop { from { opacity:0; transform:scale(0.4) rotate(-15deg); } to { opacity:1; transform:scale(1) rotate(0); } }
         .loader-text { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.5rem; letter-spacing:-0.04em; color:#1f1e24; animation: textRise 0.4s ease 0.3s both; }
@@ -73,7 +73,7 @@
             z-index: -1;
             top: -16px;
             right: -16px;
-            background: linear-gradient(135deg, #f97316, #ea580c);
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
             height: 32px;
             width: 32px;
             border-radius: 32px;
@@ -91,7 +91,7 @@
         .note-card:hover .note-card-delete:hover { color: #fff; background: rgba(255,255,255,0.2); }
         .note-card.pinned:hover { border-left-color: #fff; }
         body.dark .note-card { background: #2d2d2d; border-color: #404040; }
-        body.dark .note-card:before { background: linear-gradient(135deg, #f97316, #c2410c); }
+        body.dark .note-card:before { background: linear-gradient(135deg, #38bdf8, #0284c7); }
         .note-card.pinned { border-left: 3px solid #f97316; }
         .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
         body.dark .note-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
