@@ -162,7 +162,9 @@
         body.dark .btn-new { background: #f97316; }
         .btn-new:hover { background: #374151; }
         body.dark .btn-new:hover { background: #ea580c; }
-        .e2e-badge { display: inline-flex; align-items: center; gap: 5px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+        .e2e-badge { display: inline-flex; align-items: center; gap: 4px; background: #f3f4f6; border: 1px solid #e5e7eb; color: #6b7280; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; padding: 4px 8px; border-radius: 6px; cursor: default; }
+        .e2e-badge svg { color: #f97316; }
+        body.dark .e2e-badge { background: #404040; border-color: #505050; color: #9ca3af; }
         #custom-alert { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: #fff; padding: 10px 22px; border-radius: 8px; z-index: 700; font-size: 0.875rem; }
         body.dark #custom-alert { background: #f97316; }
         #login-modal { display: none; position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
@@ -183,6 +185,10 @@
         body.dark .nav-logo-wrapper span { color: #1f1e24; transform: skewX(15deg); display: inline-block; }
         .nav-logo-wrapper svg { transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .nav-logo-wrapper span { transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-back-link { font-size: 0.8rem; color: #9ca3af; text-decoration: none; padding-left: 16px; border-left: 1px solid #e5e7eb; transition: color 0.15s; }
+        .nav-back-link:hover { color: #1f1e24; }
+        body.dark .nav-back-link { color: #6b7280; border-color: #404040; }
+        body.dark .nav-back-link:hover { color: #e5e7eb; }
         nav * { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .note-card, .note-list-item, .editor-box, #editor-tags, #editor-body, #notes-search, #notes-sort, .view-btn, .tag-pill, .btn-new, .btn-save { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .nav-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s, background 0.2s; }
@@ -260,21 +266,23 @@
 
 <nav>
     <div class="nav-inner">
-        <a href="/" class="nav-logo-wrapper">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
-            <span class="outfit" style="font-weight:800;font-size:1rem;color:#1f1e24;">PocketOregon</span>
-        </a>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <a href="/" class="nav-logo-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+                <span class="outfit" style="font-weight:800;font-size:1rem;color:#1f1e24;">PocketOregon</span>
+            </a>
+            <a href="/" class="nav-back-link">← Back</a>
+        </div>
         <div style="display:flex;align-items:center;gap:12px;">
-            <span class="e2e-badge">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                E2E Encrypted
+            <span class="e2e-badge" title="End-to-end encrypted">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                E2E
             </span>
             <button class="dark-mode-btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
             <!-- Universal nav drawer trigger -->
             <div id="nav-user-area" style="display:none;align-items:center;">
                 <div id="nav-user-avatar" class="nav-user-avatar" onclick="if(window.openNavDrawer) window.openNavDrawer()" title="Account menu"></div>
             </div>
-            <a href="/" style="font-size:.875rem;color:#6b7280;text-decoration:none;">← Back</a>
         </div>
     </div>
 </nav>
