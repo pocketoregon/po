@@ -45,7 +45,7 @@
         .filter-tags-section { margin-bottom: 1rem; }
         .filter-tags-label { font-size: 0.75rem; color: #9ca3af; margin-bottom: 8px; display: block; }
         .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-        .tag-pill { display: inline-block; position: relative; color: #fff; font-size: 0.78rem; font-weight: 600; background-color: #f97316; border: none; padding: 7px 16px 7px 24px; border-radius: 8px; cursor: pointer; text-transform: lowercase; transition: transform 0.2s ease, background-color 0.2s ease; }
+        .tag-pill { display: inline-block; position: relative; color: #fff; font-size: 0.78rem; font-weight: 600; background-color: #f97316; border: none; padding: 7px 16px 7px 24px; border-radius: 8px; cursor: pointer; text-transform: lowercase; transition: transform 0.2s ease, background-color 0.35s ease; }
         .tag-pill::before { content: ""; position: absolute; top: 50%; left: 9px; transform: translateY(-50%); width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0.85; }
         .tag-pill:hover { transform: scale(1.08); background-color: #ea580c; }
         .tag-pill.active { background-color: #1f1e24; }
@@ -55,7 +55,7 @@
         body.dark .tag-pill.active { background-color: #f3f4f6; color: #1f1e24; }
         body.dark .tag-pill.active::before { background: #1f1e24; }
         body.dark .tag-pill.active:hover { background-color: #e5e7eb; }
-        .controls-row { display: flex; gap: 12px; align-items: center; }
+        .controls-row { display: flex; gap: 12px; align-items: center; margin-bottom: 1.75rem; }
         #notes-sort { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; background: white; color: #1f1e24; cursor: pointer; }
         body.dark #notes-sort { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
         .view-toggle { display: flex; gap: 4px; }
@@ -65,7 +65,8 @@
         body.dark .view-btn.active { background: #f97316; border-color: #f97316; }
         #notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         #notes-list { display: flex; flex-direction: column; gap: 8px; }
-        .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; }
+        .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; animation: fadeInUp 0.32s ease both; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         body.dark .note-card { background: #2d2d2d; border-color: #404040; }
         .note-card.pinned { border-left: 3px solid #f97316; }
         .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
@@ -84,7 +85,7 @@
         .note-card:hover .note-card-delete { opacity: 1; }
         .note-card-delete:hover { color: #dc2626; background: #fee2e2; }
         .pinned-badge { position: absolute; top: 8px; left: 8px; font-size: 0.65rem; color: #f97316; font-weight: 700; }
-        .note-list-item { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 1rem; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; position: relative; }
+        .note-list-item { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 1rem; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; position: relative; animation: fadeInUp 0.32s ease both; }
         body.dark .note-list-item { background: #2d2d2d; border-color: #404040; }
         .note-list-item.pinned { border-left: 3px solid #f97316; }
         .note-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #d1d5db; }
