@@ -369,6 +369,24 @@
     .article.selected:hover { color: white; border-color: #1f1e24; }
     body.dark .article.selected { background-color: #f97316; border-color: #f97316; color: #1f1e24; }
     body.dark .article.selected:hover { color: #1f1e24; }
+    html { scrollbar-gutter: stable; }
+    html { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s ease; }
+    html.is-scrolling { scrollbar-color: #F90 transparent; }
+    html::-webkit-scrollbar { width: 10px; background-color: transparent; }
+    html::-webkit-scrollbar-track { background-color: transparent; box-shadow: none; }
+    html::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        transition: background-color 0.3s ease;
+        background-image: -webkit-linear-gradient(45deg,
+            rgba(255, 255, 255, .2) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, .2) 50%,
+            rgba(255, 255, 255, .2) 75%,
+            transparent 75%,
+            transparent);
+    }
+    html.is-scrolling::-webkit-scrollbar-thumb { background-color: #F90; }
     </style>
 </head>
 <body>
@@ -1391,6 +1409,15 @@
             }
         }
     });
+
+    let scrollFadeTimer;
+    window.addEventListener('scroll', () => {
+        document.documentElement.classList.add('is-scrolling');
+        clearTimeout(scrollFadeTimer);
+        scrollFadeTimer = setTimeout(() => {
+            document.documentElement.classList.remove('is-scrolling');
+        }, 1200);
+    }, { passive: true });
 
     function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function formatDate(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}); }
