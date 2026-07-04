@@ -80,15 +80,14 @@
             border-radius: 32px;
             transform: scale(1);
             transform-origin: 50% 50%;
-            transition: transform 0.35s ease-out, opacity 0.45s ease 0.35s;
+            transition: transform 0.35s ease-out;
         }
         .note-card:hover:before { transform: scale(28); }
-        .note-card:hover:before { opacity: 0; }
-        .note-card:hover .note-card-title { transition: color 0.15s ease-out 0.3s; color: #ffffff; }
-        .note-card:hover .note-card-preview { transition: color 0.15s ease-out 0.3s; color: rgba(255,255,255,0.85); }
-        .note-card:hover .note-card-date { transition: color 0.15s ease-out 0.3s; color: rgba(255,255,255,0.7); }
-        .note-card:hover .note-tag { transition: background 0.15s ease-out 0.3s, color 0.15s ease-out 0.3s; background: rgba(255,255,255,0.25); color: #fff; }
-        .note-card:hover .pinned-badge { transition: color 0.15s ease-out 0.3s; color: #fff; }
+        .note-card:hover .note-card-title { transition: color 0.35s ease-out; color: #ffffff; }
+        .note-card:hover .note-card-preview { transition: color 0.35s ease-out; color: rgba(255,255,255,0.85); }
+        .note-card:hover .note-card-date { transition: color 0.35s ease-out; color: rgba(255,255,255,0.7); }
+        .note-card:hover .note-tag { transition: background 0.35s ease-out, color 0.35s ease-out; background: rgba(255,255,255,0.25); color: #fff; }
+        .note-card:hover .pinned-badge { transition: color 0.35s ease-out; color: #fff; }
         .note-card:hover .note-card-pin, .note-card:hover .note-card-delete { color: rgba(255,255,255,0.85); }
         .note-card:hover .note-card-delete:hover { color: #fff; background: rgba(255,255,255,0.2); }
         .note-card.pinned:hover { border-left-color: #fff; }
