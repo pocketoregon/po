@@ -225,7 +225,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         });
         const container = document.getElementById('filter-tags');
         container.innerHTML = Array.from(allTags).sort().map(tag => `
-            <button class="tag-pill ${selectedTag === tag ? 'active' : ''}" onclick="toggleTagFilter('${escHtml(tag)}')">${escHtml(tag)}</button>
+            <button class="tag-pill ${selectedTag === tag ? 'active' : ''}" onclick="toggleTagFilter('${escHtml(tag)}')"><svg viewBox="0 0 400 130" preserveAspectRatio="none"><path d="M20,15 L380,15 L360,32 L385,48 L358,64 L383,80 L360,98 L380,115 L20,115 L40,98 L15,80 L42,64 L17,48 L40,32 L20,15 Z"/></svg><span class="tag-pill-label">${escHtml(tag)}</span></button>
         `).join('');
     }
 
