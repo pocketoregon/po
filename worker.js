@@ -42,9 +42,24 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+
+    // Subdomain routing: notes.pocketoregon.site -> notes handler
+    if (url.hostname === 'notes.pocketoregon.site') {
+      const notesPath = (path === '/' || path === '')
+        ? '/notes'
+        : (path === '/notes' || path.startsWith('/notes/'))
+          ? path
+          : `/notes${path}`;
+      const notesUrl = new URL(request.url);
+      notesUrl.pathname = notesPath;
+      const notesRequest = new Request(notesUrl.toString(), request);
+      return await handleNotes(notesPath, notesRequest, env);
+    }
+
     const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders, status: 204 });
+    
     // Maintenance mode
     if (path !== '/auth' && path !== '/auth/logout' && path !== '/content') {
       const siteStatus = await env.DB.prepare("SELECT value FROM content WHERE key='site_status'").first();
@@ -54,13 +69,18 @@ export default {
         if (auth?.startsWith('Bearer ')) {
           const tok = auth.split('Bearer ')[1];
           const sess = await env.DB.prepare('SELECT user_id FROM sessions WHERE token=?').bind(tok).first();
-          if (sess) { const u = await env.DB.prepare('SELECT role FROM users WHERE id=?').bind(sess.user_id).first(); isAdmin = u?.role==='admin'; }
+          if (sess) { 
+            const u = await env.DB.prepare('SELECT role FROM users WHERE id=?').bind(sess.user_id).first(); 
+            isAdmin = u?.role === 'admin'; 
+          }
         }
-        if (!isAdmin) return new Response(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PocketOregon — Maintenance</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#1f1e24;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem}.wrap{max-width:480px}.logo{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:#f97316;margin-bottom:2.5rem;display:flex;align-items:center;justify-content:center;gap:8px}.icon{font-size:3.5rem;margin-bottom:1.5rem}h1{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;margin-bottom:1rem;color:#fff}p{color:#6b7280;font-size:1rem;line-height:1.7}</style></head><body><div class="wrap"><div class="logo">🔸 PocketOregon</div><div class="icon">🔧</div><h1>Under Maintenance</h1><p>We're doing some work behind the scenes. PocketOregon will be back shortly — thanks for your patience!</p></div></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8'}});
+        if (!isAdmin) {
+          return new Response(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PocketOregon — Maintenance</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#1f1e24;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem}.wrap{max-width:480px}.logo{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:#f97316;margin-bottom:2.5rem;display:flex;align-items:center;justify-content:center;gap:8px}.icon{font-size:3.5rem;margin-bottom:1.5rem}h1{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;margin-bottom:1rem;color:#fff}p{color:#6b7280;font-size:1rem;line-height:1.7}</style></head><body><div class="wrap"><div class="logo">🔸 PocketOregon</div><div class="icon">🔧</div><h1>Under Maintenance</h1><p>We're doing some work behind the scenes. PocketOregon will be back shortly — thanks for your patience!</p></div></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8'}});
+        }
       }
     }
 
-        const cardMatch = path.match(/^\/card\/(\d+)$/);
+    const cardMatch = path.match(/^\/card\/(\d+)$/);
     if (cardMatch && request.method === 'GET') {
       try {
         const card = await env.DB.prepare('SELECT * FROM cards WHERE id = ?').bind(cardMatch[1]).first();
@@ -85,8 +105,8 @@ export default {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const commentId=path.split('/comments/')[1];
-        const comment=await env.DB.prepare('SELECT user_id FROM comments WHERE id=?').bind(commentId).first();
+        const commentId = path.split('/comments/')[1];
+        const comment = await env.DB.prepare('SELECT user_id FROM comments WHERE id=?').bind(commentId).first();
         if (!comment) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
         if (user.role !== 'admin' && String(comment.user_id) !== String(user.id)) {
           return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -99,8 +119,9 @@ export default {
     // CONTENT GET
     if (path === '/content' && request.method === 'GET') {
       try {
-        const rows=await env.DB.prepare('SELECT key,value FROM content').all();
-        const content={};(rows.results||[]).forEach(r=>{content[r.key]=r.value;});
+        const rows = await env.DB.prepare('SELECT key,value FROM content').all();
+        const content = {};
+        (rows.results || []).forEach(r => { content[r.key] = r.value; });
         return new Response(JSON.stringify({content}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -110,7 +131,7 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const {key,value}=await request.json();
+        const {key,value} = await request.json();
         if (!key) return new Response(JSON.stringify({error:'Missing key'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
         await env.DB.prepare('INSERT INTO content (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=CURRENT_TIMESTAMP').bind(key,value).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -120,7 +141,7 @@ export default {
     // CARDS GET
     if (path === '/cards' && request.method === 'GET') {
       try {
-        const cards=await env.DB.prepare('SELECT * FROM cards ORDER BY sort_order ASC,created_at ASC').all();
+        const cards = await env.DB.prepare('SELECT * FROM cards ORDER BY sort_order ASC,created_at ASC').all();
         return new Response(JSON.stringify({cards:cards.results}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -130,9 +151,9 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const {title,body,date,link_text,link_url,sort_order,page_content}=await request.json();
+        const {title,body,date,link_text,link_url,sort_order,page_content} = await request.json();
         if (!title) return new Response(JSON.stringify({error:'Missing title'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-        const result=await env.DB.prepare('INSERT INTO cards (title,body,date,link_text,link_url,sort_order,page_content) VALUES (?,?,?,?,?,?,?)').bind(title,body||'',date||'',link_text||'',link_url||'',sort_order||0,page_content||'').run();
+        const result = await env.DB.prepare('INSERT INTO cards (title,body,date,link_text,link_url,sort_order,page_content) VALUES (?,?,?,?,?,?,?)').bind(title,body||'',date||'',link_text||'',link_url||'',sort_order||0,page_content||'').run();
         return new Response(JSON.stringify({success:true,id:result.meta?.last_row_id}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -142,8 +163,8 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const cardId=path.split('/cards/')[1];
-        const {title,body,date,link_text,link_url,sort_order,page_content}=await request.json();
+        const cardId = path.split('/cards/')[1];
+        const {title,body,date,link_text,link_url,sort_order,page_content} = await request.json();
         await env.DB.prepare('UPDATE cards SET title=?,body=?,date=?,link_text=?,link_url=?,sort_order=?,page_content=? WHERE id=?').bind(title,body||'',date||'',link_text||'',link_url||'',sort_order||0,page_content||'',cardId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
@@ -154,7 +175,7 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const cardId=path.split('/cards/')[1];
+        const cardId = path.split('/cards/')[1];
         await env.DB.prepare('DELETE FROM cards WHERE id=?').bind(cardId).run();
         return new Response(JSON.stringify({success:true}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
@@ -165,7 +186,7 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const users=await env.DB.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
+        const users = await env.DB.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
         return new Response(JSON.stringify(users.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -175,7 +196,7 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const comments=await env.DB.prepare('SELECT * FROM comments ORDER BY created_at DESC LIMIT 100').all();
+        const comments = await env.DB.prepare('SELECT * FROM comments ORDER BY created_at DESC LIMIT 100').all();
         return new Response(JSON.stringify(comments.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -185,7 +206,7 @@ export default {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{...corsHeaders,'Content-Type':'application/json'}});
       try {
-        const chats=await env.DB.prepare('SELECT * FROM chat_history ORDER BY created_at DESC LIMIT 100').all();
+        const chats = await env.DB.prepare('SELECT * FROM chat_history ORDER BY created_at DESC LIMIT 100').all();
         return new Response(JSON.stringify(chats.results),{headers:{...corsHeaders,'Content-Type':'application/json'}});
       } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
     }
@@ -263,9 +284,6 @@ export default {
     // CHARACTER EDIT/DELETE
     if (characterMatch) {
       const charId = characterMatch[1];
-      try {
-        await env.DB.prepare("ALTER TABLE characters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run();
-      } catch(e) { /* column already exists, ignore */ }
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
@@ -325,15 +343,9 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── STORY WORLD (dynamic fields) ─────────────────────────────────
+    // STORY WORLD (dynamic fields)
     if (storyWorldMatch) {
       const storyId = storyWorldMatch[1];
-
-      // Auto-migrate: ensure fields column exists
-      try {
-        await env.DB.prepare("ALTER TABLE story_world ADD COLUMN fields TEXT DEFAULT '[]'").run();
-      } catch(e) { /* column already exists, ignore */ }
-
       if (request.method === 'GET') {
         try {
           const world = await env.DB.prepare("SELECT fields FROM story_world WHERE story_id = ?").bind(storyId).first();
@@ -366,11 +378,11 @@ export default {
       const storyId = storyBooksMatch[1];
       if (request.method === 'GET') {
         try {
-          const books = await env.DB.prepare("SELECT * FROM books WHERE story_id = ? ORDER BY sort_order ASC").bind(storyId).all();
+          const books = await env.DB.prepare("SELECT * FROM books WHERE story_id = ? ORDER BY sort_order ASC").all();
           const results = [];
-          for (const book of books.results) {
+          for (const book of (books.results || [])) {
             const chapters = await env.DB.prepare("SELECT chapters.id as chapter_id, chapters.title, chapters.chapter_number, book_chapters.sequence_order FROM chapters JOIN book_chapters ON chapters.id = book_chapters.chapter_id WHERE book_chapters.book_id = ? ORDER BY book_chapters.sequence_order ASC").bind(book.id).all();
-            book.chapters = chapters.results;
+            book.chapters = chapters.results || [];
             results.push(book);
           }
           return new Response(JSON.stringify({ books: results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -575,10 +587,8 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-if (chapterMatch && request.method === 'PUT') {
-      try {
-        await env.DB.prepare("ALTER TABLE chapters ADD COLUMN linked_notes TEXT DEFAULT '[]'").run();
-      } catch(e) { /* column already exists */ }
+    // CHAPTERS UPDATE
+    if (chapterMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       try {
@@ -586,7 +596,7 @@ if (chapterMatch && request.method === 'PUT') {
         const owner = await env.DB.prepare("SELECT stories.user_id FROM chapters JOIN stories ON chapters.story_id=stories.id WHERE chapters.id=?").bind(chapterId).first();
         if (!owner) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (user.role !== 'admin' && String(owner.user_id) !== String(user.id)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-const { title, body, chapter_number, linked_notes } = await request.json();
+        const { title, body, chapter_number, linked_notes } = await request.json();
         await env.DB.prepare("UPDATE chapters SET title=?, body=?, chapter_number=?, linked_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(title, body, chapter_number, JSON.stringify(linked_notes || []), chapterId).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -737,7 +747,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON CHECK ─────────────────────────────────────────────
+    // HORIZON CHECK
     if (path === '/horizon/check' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -748,7 +758,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ access: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON PROJECTS GET ───────────────────────────────────────
+    // HORIZON PROJECTS GET
     if (path === '/horizon/projects' && request.method === 'GET') {
       const user = await validateToken(request, env);
       if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -760,7 +770,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON PROJECTS POST ──────────────────────────────────────
+    // HORIZON PROJECTS POST
     if (path === '/horizon/projects' && request.method === 'POST') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -774,7 +784,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON PROJECTS PUT ───────────────────────────────────────
+    // HORIZON PROJECTS PUT
     const horizonProjectMatch = path.match(/^\/horizon\/projects\/(\d+)$/);
     if (horizonProjectMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
@@ -791,7 +801,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── HORIZON PROJECTS DELETE ────────────────────────────────────
+    // HORIZON PROJECTS DELETE
     if (horizonProjectMatch && request.method === 'DELETE') {
       const user = await validateToken(request, env);
       if (!user || user.role !== 'admin') return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -807,7 +817,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-    // ── ADMIN STAR TOGGLE ──────────────────────────────────────────
+    // ADMIN STAR TOGGLE
     const adminHorizonMatch = path.match(/^\/admin\/users\/(\d+)\/horizon$/);
     if (adminHorizonMatch && request.method === 'PUT') {
       const user = await validateToken(request, env);
@@ -819,8 +829,7 @@ const { title, body, chapter_number, linked_notes } = await request.json();
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
-
-    // Route to handlers
+    // Route fallback to sub-handlers
     return (
       await handleAuth(path, request, env) ||
       await handleNotes(path, request, env) ||
