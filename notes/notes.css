@@ -402,15 +402,24 @@
         border-radius: 6px;
     }
     html.is-scrolling::-webkit-scrollbar-thumb { background-color: #F90; }
-.notes-title { cursor: default; transition: color 0.2s ease; }
-.notes-title:hover {
+.notes-title { position: relative; cursor: default; }
+.notes-title::after {
+content: attr(data-text);
+position: absolute;
+left: 0;
+top: 0;
+width: 100%;
+opacity: 0;
+transition: opacity 3s ease;
 background-image: linear-gradient(#fff2, #0001), linear-gradient(90deg, #d8ff7c, #fbff13);
 background-clip: text;
 -webkit-background-clip: text;
 -webkit-text-fill-color: transparent;
 animation: notes-title-hue 3s infinite linear;
 -webkit-animation: notes-title-hue 3s infinite linear;
+pointer-events: none;
 }
+.notes-title:hover::after { opacity: 1; }
 @keyframes notes-title-hue {
 0%, 100% { filter: hue-rotate(0deg); -webkit-filter: hue-rotate(0deg); }
 50% { filter: hue-rotate(-70deg); -webkit-filter: hue-rotate(-70deg); }
