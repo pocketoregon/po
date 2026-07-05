@@ -402,3 +402,16 @@
         border-radius: 6px;
     }
     html.is-scrolling::-webkit-scrollbar-thumb { background-color: #F90; }
+.notes-title { cursor: default; transition: color 0.2s ease; }
+.notes-title:hover {
+background-image: linear-gradient(#fff2, #0001), linear-gradient(90deg, #d8ff7c, #fbff13);
+background-clip: text;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+animation: notes-title-hue 3s infinite linear;
+-webkit-animation: notes-title-hue 3s infinite linear;
+}
+@keyframes notes-title-hue {
+0%, 100% { filter: hue-rotate(0deg); -webkit-filter: hue-rotate(0deg); }
+50% { filter: hue-rotate(-70deg); -webkit-filter: hue-rotate(-70deg); }
+}
