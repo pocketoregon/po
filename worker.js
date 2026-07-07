@@ -43,17 +43,37 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // Subdomain routing: notes.pocketoregon.site -> notes handler
+    // Subdomain reverse proxy: notes.pocketoregon.site -> pocketoregon.site/notes
+    // Root domain A records are DNS-only/unproxied -> GitHub Pages, so this fetch
+    // cannot loop back into this Worker. Using pocketoregon.site (not
+    // pocketoregon.github.io) means the natural Host header already matches what
+    // GitHub Pages expects for this repo -> no Host override needed.
+    // Only the document root and the two page-owned assets live under /notes;
+    // everything else (shared modules like nav-drawer.js, favicon.ico, etc.) lives
+    // at the repo root and must be passed through unprefixed.
     if (url.hostname === 'notes.pocketoregon.site') {
-      const notesPath = (path === '/' || path === '')
-        ? '/notes'
+      const targetPath = (path === '/' || path === '')
+        ? '/notes/'
         : (path === '/notes' || path.startsWith('/notes/'))
           ? path
-          : `/notes${path}`;
-      const notesUrl = new URL(request.url);
-      notesUrl.pathname = notesPath;
-      const notesRequest = new Request(notesUrl.toString(), request);
-      return await handleNotes(notesPath, notesRequest, env);
+          : (path === '/notes.css' || path === '/notes.js')
+            ? `/notes${path}`
+            : path;
+
+      const originUrl = new URL(`https://pocketoregon.site${targetPath}`);
+      originUrl.search = url.search;
+
+      const proxyHeaders = new Headers(request.headers);
+      proxyHeaders.delete('host');
+
+      const originResponse = await fetch(originUrl.toString(), {
+        method: request.method,
+        headers: proxyHeaders,
+        body: (request.method === 'GET' || request.method === 'HEAD') ? undefined : request.body,
+        redirect: 'follow'
+      });
+
+      return new Response(originResponse.body, originResponse);
     }
 
     const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
