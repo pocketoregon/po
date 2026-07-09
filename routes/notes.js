@@ -1,7 +1,8 @@
-import { corsHeaders } from '../lib/shared.js';
+import { corsHeaders, getCorsHeaders } from '../lib/shared.js';
 import { validateToken } from '../lib/shared.js';
 
 export async function handleNotes(path, request, env) {
+  const corsHeaders = getCorsHeaders(request);
   if (path === '/notes' && request.method === 'GET') {
     const user = await validateToken(request, env);
     if (!user) return new Response(JSON.stringify({error:'Unauthorized'}),{status:401,headers:{...corsHeaders,'Content-Type':'application/json'}});
