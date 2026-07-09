@@ -24,7 +24,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     window.openNavDrawer = openNavDrawer;
     window.signOut = signOut;
 
-    const WORKER_URL = 'https://api.pocketoregon.site';
+    const WORKER_URL = 'https://po.pocketoregon.workers.dev';
     const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -54,9 +54,8 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
 
     // ── SESSION HELPER ───────────────────────────────────────────────
     function authHeader() {
-        // Auth now flows via the po_token HttpOnly cookie, sent automatically
-        // by the browser when credentials:'include' is set on each fetch.
-        return {};
+        const token = localStorage.getItem('po_token');
+        return token ? { 'Authorization': 'Bearer ' + token } : {};
     }
 
     // ── DARK MODE ────────────────────────────────────────────────────
@@ -91,12 +90,16 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     }
 
     function signOut() {
-        fetch(WORKER_URL + '/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+        const token = localStorage.getItem('po_token');
+        if (token) {
+            fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+        }
         currentUser = null;
         cryptoKey = null;
         notes = [];
         filteredNotes = [];
         localStorage.removeItem('po_user');
+        localStorage.removeItem('po_token');
         document.getElementById('app').style.display = 'none';
         document.getElementById('gate').style.display = 'flex';
         updateNavAvatar(null);
@@ -130,12 +133,13 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
 
     function handleGoogleLogin(response) {
         document.getElementById('login-modal').classList.remove('open');
-        fetch(WORKER_URL + '/auth', { method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:response.credential}) })
+        fetch(WORKER_URL + '/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:response.credential}) })
         .then(r => r.json())
         .then(async data => {
-            if (data.user) {
+            if (data.user && data.sessionToken) {
                 currentUser = data.user;
                 localStorage.setItem('po_user', JSON.stringify(data.user));
+                localStorage.setItem('po_token', data.sessionToken);
                 await initCryptoKey(data.user);
                 initNavDrawer(data.user);
                 updateNavAvatar(data.user);
@@ -189,18 +193,8 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     async function loadNotes() {
         try {
             const res = await fetch(WORKER_URL + '/notes', {
-                credentials: 'include',
                 headers: authHeader()
             });
-            if (res.status === 401) {
-                currentUser = null;
-                cryptoKey = null;
-                localStorage.removeItem('po_user');
-                document.getElementById('app').style.display = 'none';
-                document.getElementById('gate').style.display = 'flex';
-                liftCurtain();
-                return;
-            }
             const data = await res.json();
             const raw = data.notes || [];
             notes = await Promise.all(raw.map(async n => ({
@@ -556,7 +550,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         try {
             const res = await fetch(`${WORKER_URL}/notes/${noteId}`, {
                 method: 'PUT',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json', ...authHeader() },
                 body: JSON.stringify({ 
                     title: await encrypt(note.title || 'Untitled'),
@@ -592,7 +585,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
             if (editingNoteId) {
                 const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
                     method: 'PUT',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json', ...authHeader() },
                     body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: notes.find(n => n.id === editingNoteId)?.pinned || 0 })
                 });
@@ -615,7 +607,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
             } else {
                 const res = await fetch(`${WORKER_URL}/notes`, {
                     method: 'POST',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json', ...authHeader() },
                     body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
                 });
@@ -721,7 +712,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
             if (editingNoteId) {
                 const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
                     method: 'PUT',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json', ...authHeader() },
                     body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: notes.find(n => n.id === editingNoteId)?.pinned || 0 })
                 });
@@ -741,7 +731,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
             } else {
                 const res = await fetch(`${WORKER_URL}/notes`, {
                     method: 'POST',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json', ...authHeader() },
                     body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
                 });
@@ -807,7 +796,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         try {
             const res = await fetch(`${WORKER_URL}/notes/${noteId}`, {
                 method: 'DELETE',
-                credentials: 'include',
                 headers: authHeader()
             });
             const data = await res.json();
@@ -874,10 +862,11 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     // ── INIT ─────────────────────────────────────────────────────────
     window.addEventListener('load', async () => {
         const saved = localStorage.getItem('po_user');
+        const token = localStorage.getItem('po_token');
         const savedView = localStorage.getItem('po_notes_view');
         if (savedView) currentView = savedView;
         
-        if (saved) {
+        if (saved && token) {
             try {
                 const user = JSON.parse(saved);
                 currentUser = user;
