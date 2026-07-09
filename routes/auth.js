@@ -1,7 +1,8 @@
-import { corsHeaders } from '../lib/shared.js';
+import { corsHeaders, getCorsHeaders } from '../lib/shared.js';
 import { validateToken } from '../lib/shared.js';
 
 export async function handleAuth(path, request, env) {
+  const corsHeaders = getCorsHeaders(request);
   const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
   const ADMIN_EMAIL = env.ADMIN_EMAIL;
 
@@ -17,17 +18,26 @@ export async function handleAuth(path, request, env) {
       const sessionToken = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 7*24*60*60*1000).toISOString();
       await env.DB.prepare('INSERT INTO sessions (token, user_id, email, expires_at) VALUES (?, ?, ?, ?)').bind(sessionToken, user.id, email, expiresAt).run();
-      return new Response(JSON.stringify({user, sessionToken}),{headers:{...corsHeaders,'Content-Type':'application/json'}});
+      const cookie = `po_token=${sessionToken}; Domain=.pocketoregon.site; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=${7*24*60*60}`;
+      return new Response(JSON.stringify({user, sessionToken}),{headers:{...corsHeaders,'Content-Type':'application/json','Set-Cookie':cookie}});
     } catch(e){return new Response(JSON.stringify({error:e.message}),{status:500,headers:{...corsHeaders,'Content-Type':'application/json'}});}
   }
 
   if (path === '/auth/logout' && request.method === 'POST') {
     const auth = request.headers.get('Authorization');
+    let token = null;
     if (auth && auth.startsWith('Bearer ')) {
-      const token = auth.split('Bearer ')[1];
+      token = auth.split('Bearer ')[1];
+    } else {
+      const cookieHeader = request.headers.get('Cookie') || '';
+      const match = cookieHeader.match(/(?:^|;\s*)po_token=([^;]+)/);
+      if (match) token = decodeURIComponent(match[1]);
+    }
+    if (token) {
       await env.DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
     }
-    return new Response(JSON.stringify({success:true}), { headers: corsHeaders });
+    const clearCookie = 'po_token=; Domain=.pocketoregon.site; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0';
+    return new Response(JSON.stringify({success:true}), { headers: {...corsHeaders, 'Set-Cookie': clearCookie} });
   }
 
   if (path === '/profile' && request.method === 'GET') {
