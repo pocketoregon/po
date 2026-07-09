@@ -254,6 +254,13 @@ export default {
       const chapterId = chapterInfoMatch[1];
       if (request.method === 'GET') {
         try {
+          const chapterOwner = await env.DB.prepare("SELECT stories.user_id as story_user_id, stories.status as story_status FROM chapters JOIN stories ON chapters.story_id = stories.id WHERE chapters.id = ?").bind(chapterId).first();
+          if (chapterOwner && chapterOwner.story_status === 'draft') {
+            const user = await validateToken(request, env);
+            if (!user || (String(user.id) !== String(chapterOwner.story_user_id) && user.role !== 'admin')) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
           const info = await env.DB.prepare("SELECT * FROM chapter_info WHERE chapter_id = ?").bind(chapterId).first();
           return new Response(JSON.stringify(info || { main_idea: '', fundamental_theme: '', extended_synopsis: '' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -278,6 +285,13 @@ export default {
       const storyId = storyCharactersMatch[1];
       if (request.method === 'GET') {
         try {
+          const storyCheck = await env.DB.prepare("SELECT user_id, status FROM stories WHERE id = ?").bind(storyId).first();
+          if (storyCheck && storyCheck.status === 'draft') {
+            const user = await validateToken(request, env);
+            if (!user || (String(user.id) !== String(storyCheck.user_id) && user.role !== 'admin')) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
           const chars = await env.DB.prepare("SELECT * FROM characters WHERE story_id = ? ORDER BY name ASC").bind(storyId).all();
           const parsed = (chars.results || []).map(c => ({
               ...c,
@@ -330,6 +344,13 @@ export default {
       const chapterId = chapterCharactersMatch[1];
       if (request.method === 'GET') {
         try {
+          const chapterOwner2 = await env.DB.prepare("SELECT stories.user_id as story_user_id, stories.status as story_status FROM chapters JOIN stories ON chapters.story_id = stories.id WHERE chapters.id = ?").bind(chapterId).first();
+          if (chapterOwner2 && chapterOwner2.story_status === 'draft') {
+            const user = await validateToken(request, env);
+            if (!user || (String(user.id) !== String(chapterOwner2.story_user_id) && user.role !== 'admin')) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
           const chars = await env.DB.prepare("SELECT characters.* FROM characters JOIN chapter_characters ON characters.id = chapter_characters.character_id WHERE chapter_characters.chapter_id = ? ORDER BY characters.name ASC").bind(chapterId).all();
           return new Response(JSON.stringify({ characters: chars.results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
@@ -368,6 +389,13 @@ export default {
       const storyId = storyWorldMatch[1];
       if (request.method === 'GET') {
         try {
+          const worldStoryCheck = await env.DB.prepare("SELECT user_id, status FROM stories WHERE id = ?").bind(storyId).first();
+          if (worldStoryCheck && worldStoryCheck.status === 'draft') {
+            const user = await validateToken(request, env);
+            if (!user || (String(user.id) !== String(worldStoryCheck.user_id) && user.role !== 'admin')) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
           const world = await env.DB.prepare("SELECT fields FROM story_world WHERE story_id = ?").bind(storyId).first();
           let fields = [];
           if (world && world.fields) {
@@ -398,6 +426,13 @@ export default {
       const storyId = storyBooksMatch[1];
       if (request.method === 'GET') {
         try {
+          const booksStoryCheck = await env.DB.prepare("SELECT user_id, status FROM stories WHERE id = ?").bind(storyId).first();
+          if (booksStoryCheck && booksStoryCheck.status === 'draft') {
+            const user = await validateToken(request, env);
+            if (!user || (String(user.id) !== String(booksStoryCheck.user_id) && user.role !== 'admin')) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
           const books = await env.DB.prepare("SELECT * FROM books WHERE story_id = ? ORDER BY sort_order ASC").all();
           const results = [];
           for (const book of (books.results || [])) {
