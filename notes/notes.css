@@ -1,426 +1,893 @@
-* { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; user-select: none; -webkit-user-select: none; transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        body.dark { background: #1a1a1a; color: #e5e7eb; }
-        .outfit { font-family: 'Outfit', sans-serif; }
-        #loading-curtain { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.76,0,0.24,1); }
-        body.dark #loading-curtain { background: #1a1a1a; }
-        #loading-curtain.lift { transform: translateY(-100%); }
-        .loader-icon { animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both; }
-        @keyframes iconPop { from { opacity:0; transform:scale(0.4) rotate(-15deg); } to { opacity:1; transform:scale(1) rotate(0); } }
-        .loader-text { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.5rem; letter-spacing:-0.04em; color:#1f1e24; animation: textRise 0.4s ease 0.3s both; }
-        body.dark .loader-text { color: #e5e7eb; }
-        @keyframes textRise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
-        body.dark nav { background: #2d2d2d; border-color: #404040; }
-        .nav-inner { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-        #gate { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 56px); }
-        .gate-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 2.5rem; max-width: 380px; width: 90%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
-        body.dark .gate-card { background: #2d2d2d; border-color: #404040; }
-        #app { display: none; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
-        .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
-        .search-bar { width: 100%; position: relative; margin-bottom: 1rem; }
-        #notes-search { width: 100%; padding: 10px 36px 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; }
-        body.dark #notes-search { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
-        .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.2rem; padding: 4px; }
-        .search-clear:hover { color: #1f1e24; }
-        body.dark .search-clear:hover { color: #e5e7eb; }
-        .search-result-count { font-size: 0.75rem; color: #9ca3af; margin-top: 4px; display: none; }
-        .filter-tags-section { margin-bottom: 1rem; }
-        .filter-tags-label { font-size: 0.75rem; color: #9ca3af; margin-bottom: 8px; display: block; }
-        .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-        .tag-pill { display: inline-block; position: relative; color: #fff; font-size: 0.78rem; font-weight: 600; background-color: #f97316; border: none; padding: 7px 16px 7px 24px; border-radius: 8px; cursor: pointer; text-transform: lowercase; transition: transform 0.2s ease, background-color 0.35s ease; }
-        .tag-pill::before { content: ""; position: absolute; top: 50%; left: 9px; transform: translateY(-50%); width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0.85; }
-        .tag-pill:hover { transform: scale(1.08); background-color: #ea580c; }
-        .tag-pill.active { background-color: #1f1e24; }
-        .tag-pill.active:hover { background-color: #374151; transform: scale(1.08); }
-        body.dark .tag-pill { background-color: #ea580c; }
-        body.dark .tag-pill:hover { background-color: #f97316; }
-        body.dark .tag-pill.active { background-color: #f3f4f6; color: #1f1e24; }
-        body.dark .tag-pill.active::before { background: #1f1e24; }
-        body.dark .tag-pill.active:hover { background-color: #e5e7eb; }
-        .controls-row { display: flex; gap: 12px; align-items: center; margin-bottom: 1.75rem; }
-        #notes-sort { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; background: white; color: #1f1e24; cursor: pointer; }
-        body.dark #notes-sort { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
-        .view-toggle { display: flex; gap: 4px; }
-        .view-btn { background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #6b7280; transition: all 0.15s; }
-        body.dark .view-btn { background: #1a1a1a; border-color: #404040; color: #9ca3af; }
-        .view-btn.active { background: #1f1e24; color: white; border-color: #1f1e24; }
-        body.dark .view-btn.active { background: #f97316; border-color: #f97316; }
-        #notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-        #notes-list { display: flex; flex-direction: column; gap: 8px; }
-        .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; z-index: 0; overflow: hidden; animation: fadeInUp 0.32s ease both; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .note-card:before {
-            content: '';
-            position: absolute;
-            z-index: -1;
-            top: -16px;
-            right: -16px;
-            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-            opacity: 0.32;
-            height: 32px;
-            width: 32px;
-            border-radius: 32px;
-            transform: scale(1);
-            transform-origin: 50% 50%;
-            transition: transform 0.35s ease-out;
+import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.js';
+
+    // Inline onclick="" attributes run in global scope, not module scope —
+    // every function referenced by an onclick/onchange in the HTML above
+    // must be explicitly exposed on window.
+    window.openLoginModal = openLoginModal;
+    window.toggleDarkMode = toggleDarkMode;
+    window.closeEditor = closeEditor;
+    window.toggleFullscreen = toggleFullscreen;
+    window.switchTab = switchTab;
+    window.insertMarkdown = insertMarkdown;
+    window.insertLink = insertLink;
+    window.openNewNote = openNewNote;
+    window.handleSort = handleSort;
+    window.switchView = switchView;
+    window.openEditNote = openEditNote;
+    window.togglePin = togglePin;
+    window.deleteNote = deleteNote;
+    window.exportNote = exportNote;
+    window.finishEditing = finishEditing;
+    window.toggleTagFilter = toggleTagFilter;
+    window.clearSearch = clearSearch;
+    window.selectSort = selectSort;
+    window.openNavDrawer = openNavDrawer;
+    window.signOut = signOut;
+
+    const WORKER_URL = 'https://api.pocketoregon.site';
+    const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
+
+    let currentUser = null;
+    let googleReady = false;
+    let notes = [];
+    let filteredNotes = [];
+    let editingNoteId = null;
+    let cryptoKey = null;
+    let currentTab = 'write';
+    let currentView = 'grid';
+    let currentSort = 'newest';
+    let selectedTag = null;
+    let isFullscreen = false;
+    let autosaveTimer = null;
+    let autosaveFirstChangeAt = null;
+    let isSavingNow = false;
+    let lastSavedSnapshot = null;
+
+    // ── LOADING CURTAIN ──────────────────────────────────────────────
+    function liftCurtain() {
+        const c = document.getElementById('loading-curtain');
+        if (!c) return;
+        c.classList.add('lift');
+        setTimeout(() => c.remove(), 650);
+    }
+    setTimeout(liftCurtain, 3500);
+
+    // ── SESSION HELPER ───────────────────────────────────────────────
+    function authHeader() {
+        // Auth now flows via the po_token HttpOnly cookie, sent automatically
+        // by the browser when credentials:'include' is set on each fetch.
+        return {};
+    }
+
+    // ── DARK MODE ────────────────────────────────────────────────────
+    function initDarkMode() {
+        const isDark = localStorage.getItem('po_notes_dark') === 'true';
+        if (isDark) document.body.classList.add('dark');
+        updateDarkModeButton();
+    }
+
+    function toggleDarkMode() {
+        const checkbox = document.getElementById('dark-mode-checkbox');
+        document.body.classList.toggle('dark', checkbox.checked);
+        localStorage.setItem('po_notes_dark', checkbox.checked);
+    }
+
+    function updateDarkModeButton() {
+        const checkbox = document.getElementById('dark-mode-checkbox');
+        if (checkbox) checkbox.checked = document.body.classList.contains('dark');
+    }
+
+    // ── UNIVERSAL NAV DRAWER ─────────────────────────────────────────
+    function updateNavAvatar(user) {
+        const area = document.getElementById('nav-user-area');
+        const avatar = document.getElementById('nav-user-avatar');
+        if (user) {
+            const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+            avatar.textContent = initials;
+            area.style.display = 'flex';
+        } else {
+            area.style.display = 'none';
         }
-        .note-card:hover:before { transform: scale(28); }
-        .note-card:hover .note-card-title { transition: color 0.35s ease-out; color: #ffffff; }
-        .note-card:hover .note-card-preview { transition: color 0.35s ease-out; color: rgba(255,255,255,0.85); }
-        .note-card:hover .note-card-date { transition: color 0.35s ease-out; color: rgba(255,255,255,0.7); }
-        .note-card:hover .note-tag svg path { transition: fill 0.35s ease-out; fill: rgba(255,255,255,0.25); }
-        .note-card:hover .note-tag-label { transition: color 0.35s ease-out; color: #fff; }
-        .note-card:hover .pinned-badge { transition: color 0.35s ease-out; color: #fff; }
-        .note-card:hover .note-card-pin, .note-card:hover .note-card-delete { color: rgba(255,255,255,0.85); }
-        .note-card:hover .note-card-delete:hover { color: #fff; background: rgba(255,255,255,0.2); }
-        .note-card.pinned:hover { border-left-color: #fff; }
-        body.dark .note-card { background: #2d2d2d; border-color: #404040; }
-        body.dark .note-card:before { background: linear-gradient(135deg, #38bdf8, #0284c7); }
-        .note-card.pinned { border-left: 3px solid #f97316; }
-        .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
-        body.dark .note-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-        .note-card-title { font-weight: 700; font-size: 0.95rem; color: #1f1e24; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        body.dark .note-card-title { color: #f3f4f6; }
-        .note-card-preview { font-size: 0.82rem; color: #6b7280; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.6em; }
-        body.dark .note-card-preview { color: #9ca3af; }
-        .note-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-        .note-tag { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 50px; height: 20px; padding: 0 10px; font-size: 0.65rem; font-weight: 600; color: #fff; }
-        .note-tag svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
-        .note-tag svg path { fill: #1f1e24; transition: fill 0.35s ease; }
-        .note-tag-label { position: relative; z-index: 1; }
-        .note-card-date { font-size: 0.72rem; color: #9ca3af; margin-top: 10px; }
-        .note-card-pin { position: absolute; top: 10px; right: 36px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; font-size: 1rem; }
-        .note-card:hover .note-card-pin { opacity: 1; }
-        .note-card-pin:hover { color: #f97316; }
-        .note-card-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; }
-        .note-card:hover .note-card-delete { opacity: 1; }
-        .note-card-delete:hover { color: #dc2626; background: #fee2e2; }
-        .pinned-badge { position: absolute; top: 8px; left: 8px; font-size: 0.65rem; color: #f97316; font-weight: 700; }
-        .note-list-item { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 1rem; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; position: relative; animation: fadeInUp 0.32s ease both; }
-        body.dark .note-list-item { background: #2d2d2d; border-color: #404040; }
-        .note-list-item.pinned { border-left: 3px solid #f97316; }
-        .note-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #d1d5db; }
-        body.dark .note-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-        .note-list-title { font-weight: 600; font-size: 0.9rem; color: #1f1e24; min-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        body.dark .note-list-title { color: #f3f4f6; }
-        .note-list-body { font-size: 0.8rem; color: #6b7280; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        body.dark .note-list-body { color: #9ca3af; }
-        .note-list-tags { font-size: 0.75rem; color: #9ca3af; min-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .note-list-date { font-size: 0.72rem; color: #9ca3af; min-width: 80px; text-align: right; }
-        .note-list-actions { display: flex; gap: 4px; align-items: center; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; margin-left: 8px; }
-        .note-list-item:hover .note-list-actions { opacity: 1; }
-        .note-list-pin-btn { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; font-size: 0.85rem; line-height: 1; transition: color 0.15s; }
-        .note-list-pin-btn:hover { color: #f97316; }
-        .note-list-del-btn { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; line-height: 1; transition: color 0.15s, background 0.15s; }
-        .note-list-del-btn:hover { color: #dc2626; background: #fee2e2; }
-        #empty-state { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
-        #empty-state svg { margin: 0 auto 1rem; display: block; }
-        #editor-modal { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; }
-        #editor-modal.open { display: flex; }
-        @media (min-width: 640px) { #editor-modal { align-items: center; } }
-        .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); overflow: visible; }
-        body.dark .editor-box { background: #2d2d2d; color: #e5e7eb; }
-        .editor-box.fullscreen { position: fixed; inset: 0; border-radius: 0; max-height: 100vh; z-index: 9999; }
-        @media (min-width: 640px) { .editor-box { border-radius: 16px; animation: fadeIn 0.2s ease; } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        .editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-        #editor-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.1rem; border: none; outline: none; width: 100%; color: #1f1e24; background: transparent; user-select: text; -webkit-user-select: text; }
-        body.dark #editor-title { color: #e5e7eb; }
-        #editor-title::placeholder { color: #d1d5db; }
-        .editor-controls { display: flex; gap: 8px; }
-        .editor-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; padding: 4px; transition: color 0.15s; }
-        .editor-btn:hover { color: #1f1e24; }
-        body.dark .editor-btn:hover { color: #e5e7eb; }
-        .editor-tabs { display: flex; gap: 8px; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
-        body.dark .editor-tabs { border-color: #404040; }
-        .editor-tab { background: none; border: none; padding: 8px 12px; cursor: pointer; font-size: 0.875rem; color: #9ca3af; border-bottom: 2px solid transparent; transition: all 0.15s; }
-        .editor-tab.active { color: #1f1e24; border-bottom-color: #1f1e24; }
-        body.dark .editor-tab.active { color: #e5e7eb; border-bottom-color: #e5e7eb; }
-        .editor-toolbar { display: flex; gap: 4px; margin-bottom: 12px; padding: 8px; background: #f3f4f6; border-radius: 6px; flex-wrap: wrap; }
-        body.dark .editor-toolbar { background: #404040; }
-        .toolbar-btn { background: none; border: 1px solid #e5e7eb; border-radius: 4px; padding: 6px 8px; cursor: pointer; font-size: 0.8rem; color: #6b7280; transition: all 0.15s; }
-        body.dark .toolbar-btn { border-color: #505050; color: #9ca3af; }
-        .toolbar-btn:hover { background: white; color: #1f1e24; border-color: #d1d5db; }
-        body.dark .toolbar-btn:hover { background: #505050; color: #e5e7eb; }
-        #editor-tags { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; margin-bottom: 12px; }
-        body.dark #editor-tags { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
-        #editor-tags::placeholder { color: #d1d5db; }
-        .editor-preview { flex: 1; overflow-y: auto; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; font-size: 0.9rem; line-height: 1.6; }
-        body.dark .editor-preview { background: #1a1a1a; border-color: #404040; }
-        .editor-preview h1, .editor-preview h2, .editor-preview h3 { font-weight: 700; margin: 1rem 0 0.5rem; }
-        .editor-preview p { margin-bottom: 0.75rem; }
-        .editor-preview code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
-        body.dark .editor-preview code { background: #404040; }
-        .editor-preview pre { background: #1f1e24; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; }
-        #editor-body { flex: 0 1 auto; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; height: 240px; min-height: 120px; max-height: 36vh; user-select: text; -webkit-user-select: text; overflow-y: auto; background: transparent; }
-        body.dark #editor-body { color: #e5e7eb; }
-        #editor-body::placeholder { color: #d1d5db; }
-        .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
-        body.dark .editor-divider { border-color: #404040; }
-        .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; overflow: visible; position: relative; z-index: 1; }
-        .editor-meta { font-size: 0.75rem; color: #9ca3af; }
-        .save-status { font-size: 0.72rem; color: #9ca3af; margin-left: 8px; }
-        .save-status.saving { color: #f97316; }
-        .save-status.saved { color: #16a34a; }
-        .save-status.unsaved { color: #9ca3af; }
-        .editor-shortcuts { font-size: 0.7rem; color: #9ca3af; }
-        .btn-save { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-        body.dark .btn-save { background: #f97316; }
-        .btn-save:hover { background: #374151; }
-        body.dark .btn-save:hover { background: #ea580c; }
-        .btn-save:disabled { background: #9ca3af; cursor: not-allowed; }
-        .btn-export { background: none; border: none; color: #6b7280; font-size: 0.8rem; cursor: pointer; transition: color 0.15s; }
-        .btn-export:hover { color: #1f1e24; }
-        body.dark .btn-export:hover { color: #e5e7eb; }
-        .btn-close { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.2rem; line-height: 1; padding: 4px; transition: color 0.15s; }
-        .btn-close:hover { color: #1f1e24; }
-        body.dark .btn-close:hover { color: #e5e7eb; }
-        .btn-new { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 6px; }
-        body.dark .btn-new { background: #f97316; }
-        .btn-new:hover { background: #374151; }
-        body.dark .btn-new:hover { background: #ea580c; }
-        .e2e-badge { display: inline-flex; align-items: center; gap: 4px; background: #f3f4f6; border: 1px solid #e5e7eb; color: #6b7280; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; padding: 4px 8px; border-radius: 6px; cursor: default; }
-        .e2e-badge svg { color: #f97316; }
-        body.dark .e2e-badge { background: #404040; border-color: #505050; color: #9ca3af; }
-        #custom-alert { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f1e24; color: #fff; padding: 10px 22px; border-radius: 8px; z-index: 700; font-size: 0.875rem; }
-        body.dark #custom-alert { background: #f97316; }
-        #login-modal { display: none; position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
-        #login-modal.open { display: flex; }
-        .login-box { background: white; border-radius: 12px; padding: 2rem; max-width: 340px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-        body.dark .login-box { background: #2d2d2d; }
-        .login-box h2 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
-        body.dark .login-box h2 { color: #e5e7eb; }
-        .login-box p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
-        body.dark .login-box p { color: #9ca3af; }
-        .dark-mode-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; padding: 4px; transition: color 0.15s; }
-        .dark-mode-btn:hover { color: #1f1e24; }
-        body.dark .dark-mode-btn:hover { color: #e5e7eb; }
-        .nav-logo { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-logo-wrapper { display: flex; align-items: center; gap: 8px; text-decoration: none; position: relative; }
-        body.dark .nav-logo-wrapper { background: white; padding: 6px 12px; border-radius: 4px; transform: skewX(-15deg); }
-        body.dark .nav-logo-wrapper svg { color: #f97316; }
-        body.dark .nav-logo-wrapper span { color: #1f1e24; transform: skewX(15deg); display: inline-block; }
-        .nav-logo-wrapper svg { transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-logo-wrapper span { transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-back-link { font-size: 0.8rem; color: #9ca3af; text-decoration: none; padding-left: 16px; border-left: 1px solid #e5e7eb; transition: color 0.15s; }
-        .nav-back-link:hover { color: #1f1e24; }
-        body.dark .nav-back-link { color: #6b7280; border-color: #404040; }
-        body.dark .nav-back-link:hover { color: #e5e7eb; }
-        nav * { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .note-card, .note-list-item, .editor-box, #editor-tags, #editor-body, #notes-search, #notes-sort, .view-btn, .tag-pill, .btn-new, .btn-save { transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; cursor: pointer; border: 2px solid #e5e7eb; transition: border-color 0.2s, background 0.2s; }
-        .nav-user-avatar:hover { border-color: #f97316; }
-        body.dark .nav-user-avatar { background: #f97316; border-color: #404040; }
-    .theme-switch {
-        --toggle-size: 10px;
-        --container-width: 5.625em;
-        --container-height: 2.5em;
-        --container-radius: 6.25em;
-        --container-light-bg: #3D7EAE;
-        --container-night-bg: #1D1F2C;
-        --circle-container-diameter: 3.375em;
-        --sun-moon-diameter: 2.125em;
-        --sun-bg: #ECCA2F;
-        --moon-bg: #C4C9D1;
-        --spot-color: #959DB1;
-        --circle-container-offset: calc((var(--circle-container-diameter) - var(--container-height)) / 2 * -1);
-        --stars-color: #fff;
-        --clouds-color: #F3FDFF;
-        --back-clouds-color: #AACADF;
-        --transition: .5s cubic-bezier(0, -0.02, 0.4, 1.25);
-        --circle-transition: .3s cubic-bezier(0, -0.02, 0.35, 1.17);
     }
-    .theme-switch, .theme-switch *, .theme-switch *::before, .theme-switch *::after { box-sizing: border-box; margin: 0; padding: 0; font-size: var(--toggle-size); }
-    .theme-switch__container { width: var(--container-width); height: var(--container-height); background-color: var(--container-light-bg); border-radius: var(--container-radius); overflow: hidden; cursor: pointer; box-shadow: 0em -0.062em 0.062em rgba(0,0,0,0.25), 0em 0.062em 0.125em rgba(255,255,255,0.94); transition: var(--transition); position: relative; }
-    .theme-switch__container::before { content: ""; position: absolute; z-index: 1; inset: 0; box-shadow: 0em 0.05em 0.187em rgba(0,0,0,0.25) inset, 0em 0.05em 0.187em rgba(0,0,0,0.25) inset; border-radius: var(--container-radius); }
-    .theme-switch__checkbox { display: none; }
-    .theme-switch__circle-container { width: var(--circle-container-diameter); height: var(--circle-container-diameter); background-color: rgba(255,255,255,0.1); position: absolute; left: var(--circle-container-offset); top: var(--circle-container-offset); border-radius: var(--container-radius); box-shadow: inset 0 0 0 3.375em rgba(255,255,255,0.1), inset 0 0 0 3.375em rgba(255,255,255,0.1), 0 0 0 0.625em rgba(255,255,255,0.1), 0 0 0 1.25em rgba(255,255,255,0.1); display: flex; transition: var(--circle-transition); pointer-events: none; }
-    .theme-switch__sun-moon-container { pointer-events: auto; position: relative; z-index: 2; width: var(--sun-moon-diameter); height: var(--sun-moon-diameter); margin: auto; border-radius: var(--container-radius); background-color: var(--sun-bg); box-shadow: 0.062em 0.062em 0.062em 0em rgba(254,255,239,0.61) inset, 0em -0.062em 0.062em 0em #a1872a inset; filter: drop-shadow(0.062em 0.125em 0.125em rgba(0,0,0,0.25)) drop-shadow(0em 0.062em 0.125em rgba(0,0,0,0.25)); overflow: hidden; transition: var(--transition); }
-    .theme-switch__moon { transform: translateX(100%); width: 100%; height: 100%; background-color: var(--moon-bg); border-radius: inherit; box-shadow: 0.062em 0.062em 0.062em 0em rgba(254,255,239,0.61) inset, 0em -0.062em 0.062em 0em #969696 inset; transition: var(--transition); position: relative; }
-    .theme-switch__spot { position: absolute; top: 0.75em; left: 0.312em; width: 0.75em; height: 0.75em; border-radius: var(--container-radius); background-color: var(--spot-color); box-shadow: 0em 0.0312em 0.062em rgba(0,0,0,0.25) inset; }
-    .theme-switch__spot:nth-of-type(2) { width: 0.375em; height: 0.375em; top: 0.937em; left: 1.375em; }
-    .theme-switch__spot:nth-last-of-type(3) { width: 0.25em; height: 0.25em; top: 0.312em; left: 0.812em; }
-    .theme-switch__clouds { width: 1.25em; height: 1.25em; background-color: var(--clouds-color); border-radius: var(--container-radius); position: absolute; bottom: -0.625em; left: 0.312em; box-shadow: 0.937em 0.312em var(--clouds-color), -0.312em -0.312em var(--back-clouds-color), 1.437em 0.375em var(--clouds-color), 0.5em -0.125em var(--back-clouds-color), 2.187em 0 var(--clouds-color), 1.25em -0.062em var(--back-clouds-color), 2.937em 0.312em var(--clouds-color), 2em -0.312em var(--back-clouds-color), 3.625em -0.062em var(--clouds-color), 2.625em 0em var(--back-clouds-color), 4.5em -0.312em var(--clouds-color), 3.375em -0.437em var(--back-clouds-color), 4.625em -1.75em 0 0.437em var(--clouds-color), 4em -0.625em var(--back-clouds-color), 4.125em -2.125em 0 0.437em var(--back-clouds-color); transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25); }
-    .theme-switch__stars-container { position: absolute; color: var(--stars-color); top: -100%; left: 0.312em; width: 2.75em; height: auto; transition: var(--transition); }
-    .theme-switch__checkbox:checked + .theme-switch__container { background-color: var(--container-night-bg); }
-    .theme-switch__checkbox:checked + .theme-switch__container .theme-switch__circle-container { left: calc(100% - var(--circle-container-offset) - var(--circle-container-diameter)); }
-    .theme-switch__checkbox:checked + .theme-switch__container .theme-switch__circle-container:hover { left: calc(100% - var(--circle-container-offset) - var(--circle-container-diameter) - 0.187em); }
-    .theme-switch__circle-container:hover { left: calc(var(--circle-container-offset) + 0.187em); }
-    .theme-switch__checkbox:checked + .theme-switch__container .theme-switch__moon { transform: translate(0); }
-    .theme-switch__checkbox:checked + .theme-switch__container .theme-switch__clouds { bottom: -4.062em; }
-    .theme-switch__checkbox:checked + .theme-switch__container .theme-switch__stars-container { top: 50%; transform: translateY(-50%); }
-    .dropdown {
-        border: 1px solid #c1c2c5;
-        border-radius: 12px;
-        transition: all 300ms;
-        display: flex;
-        flex-direction: column;
-        min-height: 42px;
-        background-color: white;
-        overflow: visible;
-        position: relative;
-        inset-inline: auto;
-        max-width: 298px;
-        min-width: 180px;
+
+    function signOut() {
+        fetch(WORKER_URL + '/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+        currentUser = null;
+        cryptoKey = null;
+        notes = [];
+        filteredNotes = [];
+        localStorage.removeItem('po_user');
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('gate').style.display = 'flex';
+        updateNavAvatar(null);
+        showAlert('Signed out successfully.');
     }
-    body.dark .dropdown { background-color: #1a1a1a; border-color: #404040; }
-    .dropdown input:where(:checked) ~ .list {
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-        transition: opacity 220ms ease, transform 220ms ease;
+
+    // Bridge universal drawer sign-out event to this page's own sign-out logic
+    window.addEventListener('nav-drawer-signout', () => {
+        signOut();
+    });
+
+    // ── GOOGLE AUTH ──────────────────────────────────────────────────
+    function waitForGoogle() {
+        if (typeof google !== 'undefined' && google.accounts) {
+            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleLogin, use_fedcm_for_prompt: false });
+            googleReady = true;
+        } else { setTimeout(waitForGoogle, 100); }
     }
-    .dropdown input:where(:not(:checked)) ~ .list {
-        opacity: 0;
-        transform: translateY(-6px);
-        user-select: none;
-        pointer-events: none;
-        transition: opacity 180ms ease-out, transform 180ms ease-out;
+    waitForGoogle();
+
+    function openLoginModal() {
+        document.getElementById('login-modal').classList.add('open');
+        const container = document.getElementById('google-btn-container');
+        container.innerHTML = '';
+        const tryRender = () => {
+            if (googleReady) { google.accounts.id.renderButton(container, { type:'standard', theme:'outline', size:'large', width:280 }); }
+            else { setTimeout(tryRender, 150); }
+        };
+        tryRender();
     }
-    .trigger {
-        cursor: pointer;
-        list-style: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        user-select: none;
-        font-weight: 600;
-        color: inherit;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        flex-flow: row;
-        gap: 0.5rem;
-        padding: 0.55rem 0.85rem;
-        height: max-content;
-        position: relative;
-        z-index: 99;
-        border-radius: inherit;
-        background-color: white;
-        font-size: 0.875rem;
-        font-family: 'Inter', sans-serif;
+
+    function handleGoogleLogin(response) {
+        document.getElementById('login-modal').classList.remove('open');
+        fetch(WORKER_URL + '/auth', { method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:response.credential}) })
+        .then(r => r.json())
+        .then(async data => {
+            if (data.user) {
+                currentUser = data.user;
+                localStorage.setItem('po_user', JSON.stringify(data.user));
+                await initCryptoKey(data.user);
+                initNavDrawer(data.user);
+                updateNavAvatar(data.user);
+                showApp();
+            } else { showAlert('Login failed. Try again.'); }
+        })
+        .catch(() => showAlert('Login failed. Try again.'));
     }
-    body.dark .trigger { background-color: #1a1a1a; color: #e5e7eb; }
-    .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border-width: 0;
+
+    // ── E2E ENCRYPTION (AES-GCM via Web Crypto API) ──────────────────
+    async function initCryptoKey(user) {
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(String(user.id).padEnd(32, '0').slice(0, 32)),
+            { name: 'AES-GCM' },
+            false,
+            ['encrypt', 'decrypt']
+        );
+        cryptoKey = keyMaterial;
     }
-    .dropdown input:where(:checked) + .trigger {
-        margin-bottom: 0;
+
+    async function encrypt(text) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(text);
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, encoded);
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(encrypted), iv.length);
+        return btoa(String.fromCharCode(...combined));
     }
-    .dropdown input:where(:checked) + .trigger:before {
-        rotate: 90deg;
-        transition-delay: 0ms;
+
+    async function decrypt(b64) {
+        try {
+            const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const iv = combined.slice(0, 12);
+            const data = combined.slice(12);
+            const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, data);
+            return new TextDecoder().decode(decrypted);
+        } catch(e) { return '[Could not decrypt]'; }
     }
-    .trigger:before {
-        content: "\203a";
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        rotate: -90deg;
-        width: 17px;
-        height: 17px;
-        color: #262626;
-        border-radius: 2px;
-        font-size: 26px;
-        transition: all 350ms ease;
-        transition-delay: 85ms;
+
+    // ── APP ──────────────────────────────────────────────────────────
+    async function showApp() {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        initDarkMode();
+        liftCurtain();
+        await loadNotes();
     }
-    body.dark .trigger:before { color: #e5e7eb; }
-    .list {
-        position: absolute;
-        top: calc(100% + 6px);
-        left: 0;
-        right: 0;
-        max-height: 16rem;
-        display: grid;
-        grid-auto-flow: row;
-        overflow: hidden auto;
-        gap: 0.3rem;
-        padding: 0.4rem;
-        margin: 0;
-        background-color: white;
-        border: 1px solid #c1c2c5;
-        border-radius: 12px;
-        box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-        z-index: 1000;
-        --w-scrollbar: 8px;
-    }
-    body.dark .list { background-color: #1a1a1a; border-color: #404040; box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
-    .listitem {
-        width: 100%;
-        list-style: none;
-    }
-    .article {
-        padding: 0.38rem 0.7rem;
-        border-radius: 6px;
-        font-size: 12.5px;
-        font-weight: 500;
-        text-align: left;
-        width: 100%;
-        border: 1px solid #c1c2c5;
-        display: inline-block;
-        background-color: white;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-        color: inherit;
-        box-sizing: border-box;
-    }
-    .article:hover { border-color: #f97316; color: #f97316; }
-    body.dark .article { background-color: #2d2d2d; border-color: #404040; color: #e5e7eb; }
-    .article.selected { background-color: #1f1e24; border-color: #1f1e24; color: white; }
-    .article.selected:hover { color: white; border-color: #1f1e24; }
-    body.dark .article.selected { background-color: #f97316; border-color: #f97316; color: #1f1e24; }
-    body.dark .article.selected:hover { color: #1f1e24; }
-    html { scrollbar-gutter: stable; }
-    html { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s ease; }
-    html.is-scrolling { scrollbar-color: #F90 transparent; }
-    html::-webkit-scrollbar { width: 10px; background-color: transparent; }
-    html::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    html::-webkit-scrollbar-track { background-color: transparent; box-shadow: none; }
-    html::-webkit-scrollbar-thumb {
-        background-color: transparent;
-        transition: background-color 0.3s ease;
-        background-image: -webkit-linear-gradient(45deg,
-            rgba(255, 255, 255, .2) 25%,
-            transparent 25%,
-            transparent 50%,
-            rgba(255, 255, 255, .2) 50%,
-            rgba(255, 255, 255, .2) 75%,
-            transparent 75%,
-            transparent);
-        background-size: 10px 10px;
-        border-radius: 6px;
-    }
-    html.is-scrolling::-webkit-scrollbar-thumb { background-color: #F90; }
-        .notes-title { position: relative; cursor: default; }
-        .notes-title::after {
-            content: attr(data-text);
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            opacity: 0;
-            transition: opacity 3s ease;
-            background-image: linear-gradient(#fff2, #0001), linear-gradient(90deg, #d8ff7c, #fbff13);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: notes-title-hue 3s infinite linear;
-            -webkit-animation: notes-title-hue 3s infinite linear;
-            pointer-events: none;
+
+    async function loadNotes() {
+        try {
+            const res = await fetch(WORKER_URL + '/notes', {
+                credentials: 'include',
+                headers: authHeader()
+            });
+            if (res.status === 401) {
+                currentUser = null;
+                cryptoKey = null;
+                localStorage.removeItem('po_user');
+                document.getElementById('app').style.display = 'none';
+                document.getElementById('gate').style.display = 'flex';
+                liftCurtain();
+                return;
+            }
+            const data = await res.json();
+            const raw = data.notes || [];
+            notes = await Promise.all(raw.map(async n => ({
+                ...n,
+                title: await decrypt(n.title),
+                body: await decrypt(n.body),
+                tags: await decrypt(n.tags)
+            })));
+            filteredNotes = [...notes];
+            renderFilterTags();
+            applySort();
+            renderNotes();
+        } catch(e) {
+            showAlert('Could not load notes.');
+            liftCurtain();
         }
-        .notes-title:hover::after { opacity: 1; }
-        @keyframes notes-title-hue {
-            0%, 100% { filter: hue-rotate(0deg); -webkit-filter: hue-rotate(0deg); }
-            50% { filter: hue-rotate(-70deg); -webkit-filter: hue-rotate(-70deg); }
+    }
+
+    function renderFilterTags() {
+        const allTags = new Set();
+        notes.forEach(n => {
+            if (n.tags) {
+                n.tags.split(',').forEach(t => {
+                    const tag = t.trim();
+                    if (tag) allTags.add(tag);
+                });
+            }
+        });
+        const container = document.getElementById('filter-tags');
+        container.innerHTML = Array.from(allTags).sort().map(tag => `
+            <button class="tag-pill ${selectedTag === tag ? 'active' : ''}" onclick="toggleTagFilter('${escHtml(tag)}')">${escHtml(tag)}</button>
+        `).join('');
+    }
+
+    function toggleTagFilter(tag) {
+        selectedTag = selectedTag === tag ? null : tag;
+        applyFilters();
+        renderFilterTags();
+        renderNotes();
+    }
+
+    function applyFilters() {
+        let result = [...notes];
+        
+        // Search filter
+        const searchTerm = document.getElementById('notes-search').value.toLowerCase();
+        if (searchTerm) {
+            result = result.filter(n => 
+                (n.title || '').toLowerCase().includes(searchTerm) ||
+                (n.body || '').toLowerCase().includes(searchTerm)
+            );
         }
+        
+        // Tag filter
+        if (selectedTag) {
+            result = result.filter(n => {
+                if (!n.tags) return false;
+                return n.tags.split(',').map(t => t.trim()).includes(selectedTag);
+            });
+        }
+        
+        filteredNotes = result;
+        updateSearchResultCount();
+    }
+
+    function updateSearchResultCount() {
+        const searchTerm = document.getElementById('notes-search').value.trim();
+        const count = document.getElementById('search-result-count');
+        if (searchTerm) {
+            count.textContent = `Showing ${filteredNotes.length} of ${notes.length} notes`;
+            count.style.display = 'block';
+        } else {
+            count.style.display = 'none';
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('notes-search').value = '';
+        document.getElementById('search-clear').style.display = 'none';
+        applyFilters();
+        renderNotes();
+    }
+
+    function applySort() {
+        const sortType = currentSort;
+        let sorted = [...filteredNotes];
+        
+        // Pinned notes always first
+        const pinned = sorted.filter(n => n.pinned);
+        const unpinned = sorted.filter(n => !n.pinned);
+        
+        if (sortType === 'newest') {
+            unpinned.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        } else if (sortType === 'oldest') {
+            unpinned.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at));
+        } else if (sortType === 'a-z') {
+            unpinned.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        } else if (sortType === 'z-a') {
+            unpinned.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+        } else if (sortType === 'longest') {
+            unpinned.sort((a, b) => (b.body || '').split(/\s+/).length - (a.body || '').split(/\s+/).length);
+        }
+        
+        filteredNotes = [...pinned, ...unpinned];
+    }
+
+    function handleSort() {
+        currentSort = document.getElementById('notes-sort').value;
+        applySort();
+        renderNotes();
+    }
+
+    function selectSort(value, label) {
+        currentSort = value;
+        document.getElementById('sort-trigger-label').textContent = label;
+        document.getElementById('sort-toggle').checked = false;
+        document.querySelectorAll('#sort-dropdown .article').forEach(btn => {
+            btn.classList.toggle('selected', btn.getAttribute('data-value') === value);
+        });
+        applySort();
+        renderNotes();
+    }
+
+    function switchView(view) {
+        currentView = view;
+        localStorage.setItem('po_notes_view', view);
+        document.getElementById('grid-view-btn').classList.toggle('active', view === 'grid');
+        document.getElementById('list-view-btn').classList.toggle('active', view === 'list');
+        renderNotes();
+    }
+
+    function renderNotes() {
+        const grid = document.getElementById('notes-grid');
+        const list = document.getElementById('notes-list');
+        const empty = document.getElementById('empty-state');
+        const count = document.getElementById('notes-count');
+        
+        count.textContent = filteredNotes.length === 0 ? 'No notes yet' : `${filteredNotes.length} note${filteredNotes.length !== 1 ? 's' : ''}`;
+        
+        if (filteredNotes.length === 0) { 
+            grid.innerHTML = ''; 
+            list.innerHTML = '';
+            empty.style.display = 'block'; 
+            return; 
+        }
+        empty.style.display = 'none';
+        
+        if (currentView === 'grid') {
+            list.style.display = 'none';
+            grid.style.display = 'grid';
+            grid.innerHTML = filteredNotes.map(n => renderNoteCard(n)).join('');
+        } else {
+            grid.style.display = 'none';
+            list.style.display = 'flex';
+            list.innerHTML = filteredNotes.map(n => renderNoteListItem(n)).join('');
+        }
+    }
+
+    function renderNoteCard(n) {
+        const preview = stripHtml(n.body || '').substring(0, 150);
+        const tagsHtml = n.tags ? n.tags.split(',').map(t => {
+            const tag = t.trim();
+            return tag ? `<div class="note-tag"><svg viewBox="0 0 400 130" preserveAspectRatio="none"><path d="M20,15 L380,15 L360,32 L385,48 L358,64 L383,80 L360,98 L380,115 L20,115 L40,98 L15,80 L42,64 L17,48 L40,32 L20,15 Z"/></svg><span class="note-tag-label">${escHtml(tag)}</span></div>` : '';
+        }).join('') : '';
+        
+        return `
+            <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="openEditNote(${n.id})">
+                ${n.pinned ? '<div class="pinned-badge">PINNED</div>' : ''}
+                <div class="note-card-title">${escHtml(n.title || 'Untitled')}</div>
+                <div class="note-card-preview">${escHtml(preview)}</div>
+                ${tagsHtml ? `<div class="note-card-tags">${tagsHtml}</div>` : ''}
+                <div class="note-card-date">${formatDate(n.updated_at)}</div>
+                <button class="note-card-pin" onclick="togglePin(event, ${n.id})" title="Pin note">📌</button>
+                <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+    }
+
+    function renderNoteListItem(n) {
+        const preview = stripHtml(n.body || '').substring(0, 60);
+        const tagsText = n.tags ? n.tags.split(',').map(t => t.trim()).filter(Boolean).join(', ') : '';
+        
+        return `
+            <div class="note-list-item ${n.pinned ? 'pinned' : ''}" onclick="openEditNote(${n.id})">
+                <div class="note-list-title">${escHtml(n.title || 'Untitled')}</div>
+                <div class="note-list-body">${escHtml(preview)}</div>
+                <div class="note-list-tags">${escHtml(tagsText)}</div>
+                <div class="note-list-date">${formatDate(n.updated_at)}</div>
+                <div class="note-list-actions">
+                    <button class="note-list-pin-btn" onclick="togglePin(event, ${n.id})" title="${n.pinned ? 'Unpin' : 'Pin'} note">📌</button>
+                    <button class="note-list-del-btn" onclick="deleteNote(event, ${n.id})" title="Delete note">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('DIV');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    function openNewNote() {
+        editingNoteId = null;
+        document.getElementById('editor-title').value = '';
+        document.getElementById('editor-body').value = '';
+        document.getElementById('editor-tags').value = '';
+        document.getElementById('editor-meta').textContent = 'New note';
+        document.getElementById('save-btn').textContent = 'Done';
+        currentTab = 'write';
+        switchTab('write');
+        document.getElementById('editor-modal').classList.add('open');
+        updateWordCount();
+        lastSavedSnapshot = null;
+        autosaveFirstChangeAt = null;
+        setSaveStatus('', '');
+        checkForDraft();
+        setTimeout(() => document.getElementById('editor-title').focus(), 100);
+    }
+
+    function openEditNote(noteId) {
+        const note = filteredNotes.find(n => n.id === noteId);
+        if (!note) return;
+        editingNoteId = noteId;
+        document.getElementById('editor-title').value = note.title || '';
+        document.getElementById('editor-body').value = note.body || '';
+        document.getElementById('editor-tags').value = note.tags || '';
+        document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
+        document.getElementById('save-btn').textContent = 'Done';
+        currentTab = 'write';
+        switchTab('write');
+        document.getElementById('editor-modal').classList.add('open');
+        updateWordCount();
+        lastSavedSnapshot = { title: note.title || '', body: note.body || '', tags: note.tags || '' };
+        autosaveFirstChangeAt = null;
+        setSaveStatus('', '');
+        checkForDraft();
+        setTimeout(() => document.getElementById('editor-body').focus(), 100);
+    }
+
+    function closeEditor() {
+        if (isFullscreen) {
+            toggleFullscreen();
+            return;
+        }
+        if (autosaveTimer) { clearTimeout(autosaveTimer); performAutosave(); }
+        document.getElementById('editor-modal').classList.remove('open');
+        editingNoteId = null;
+        isFullscreen = false;
+        autosaveFirstChangeAt = null;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.editor-tab').forEach((t, i) => {
+            if ((i === 0 && tab === 'write') || (i === 1 && tab === 'preview')) {
+                t.classList.add('active');
+            }
+        });
+        
+        document.getElementById('write-tab').style.display = tab === 'write' ? 'flex' : 'none';
+        document.getElementById('preview-tab').style.display = tab === 'preview' ? 'flex' : 'none';
+        
+        if (tab === 'preview') {
+            updatePreview();
+        }
+    }
+
+    function updatePreview() {
+        const body = document.getElementById('editor-body').value;
+        const preview = document.getElementById('editor-preview');
+        preview.innerHTML = marked.parse(body);
+    }
+
+    function insertMarkdown(before, after) {
+        const textarea = document.getElementById('editor-body');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end);
+        const newText = textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end);
+        textarea.value = newText;
+        textarea.selectionStart = start + before.length;
+        textarea.selectionEnd = start + before.length + selected.length;
+        textarea.focus();
+        updateWordCount();
+    }
+
+    function insertLink() {
+        const textarea = document.getElementById('editor-body');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selected = textarea.value.substring(start, end);
+        const url = prompt('Enter URL:');
+        if (!url) return;
+        const newText = textarea.value.substring(0, start) + `[${selected}](${url})` + textarea.value.substring(end);
+        textarea.value = newText;
+        textarea.focus();
+        updateWordCount();
+    }
+
+    function updateWordCount() {
+        const body = document.getElementById('editor-body').value;
+        const words = body.trim().split(/\s+/).filter(Boolean).length;
+        const chars = body.length;
+        document.getElementById('editor-meta').textContent = `${words} words · ${chars} chars`;
+    }
+
+    function toggleFullscreen() {
+        isFullscreen = !isFullscreen;
+        const box = document.querySelector('.editor-box');
+        const btn = document.getElementById('fullscreen-btn');
+        
+        if (isFullscreen) {
+            box.classList.add('fullscreen');
+            btn.textContent = '⊡';
+        } else {
+            box.classList.remove('fullscreen');
+            btn.textContent = '⛶';
+        }
+    }
+
+    function exportNote() {
+        const title = document.getElementById('editor-title').value || 'note';
+        const body = document.getElementById('editor-body').value;
+        const content = `# ${title}\n\n${body}`;
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = title.toLowerCase().replace(/\s+/g, '-') + '.md';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function togglePin(e, noteId) {
+        e.stopPropagation();
+        const note = notes.find(n => n.id === noteId);
+        if (!note) return;
+        
+        try {
+            const res = await fetch(`${WORKER_URL}/notes/${noteId}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify({ 
+                    title: await encrypt(note.title || 'Untitled'),
+                    body: await encrypt(note.body || ''),
+                    tags: await encrypt(note.tags || ''),
+                    pinned: note.pinned ? 0 : 1
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                note.pinned = note.pinned ? 0 : 1;
+                applySort();
+                renderNotes();
+                showAlert(note.pinned ? 'Note pinned.' : 'Note unpinned.');
+            }
+        } catch(e) { showAlert('Error updating note.'); }
+    }
+
+    async function saveNote() {
+        const titleRaw = document.getElementById('editor-title').value.trim();
+        const bodyRaw = document.getElementById('editor-body').value.trim();
+        const tagsRaw = document.getElementById('editor-tags').value.trim();
+        if (!titleRaw && !bodyRaw) { showAlert('Note is empty.'); return; }
+
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true; btn.textContent = 'Saving...';
+
+        try {
+            const encTitle = await encrypt(titleRaw || 'Untitled');
+            const encBody = await encrypt(bodyRaw);
+            const encTags = await encrypt(tagsRaw);
+
+            if (editingNoteId) {
+                const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...authHeader() },
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: notes.find(n => n.id === editingNoteId)?.pinned || 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const idx = notes.findIndex(n => n.id === editingNoteId);
+                    if (idx !== -1) { 
+                        notes[idx].title = titleRaw || 'Untitled'; 
+                        notes[idx].body = bodyRaw; 
+                        notes[idx].tags = tagsRaw;
+                        notes[idx].updated_at = new Date().toISOString(); 
+                    }
+                    closeEditor(); 
+                    applyFilters();
+                    applySort();
+                    renderFilterTags();
+                    renderNotes(); 
+                    showAlert('Note saved.');
+                } else { showAlert(data.error || 'Save failed.'); }
+            } else {
+                const res = await fetch(`${WORKER_URL}/notes`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...authHeader() },
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const newNote = {
+                        id: data.id,
+                        user_id: currentUser.id,
+                        title: titleRaw || 'Untitled',
+                        body: bodyRaw,
+                        tags: tagsRaw,
+                        pinned: 0,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+                    notes.unshift(newNote);
+                    closeEditor();
+                    applyFilters();
+                    applySort();
+                    renderFilterTags();
+                    renderNotes();
+                    showAlert('Note created.');
+                } else { showAlert(data.error || 'Create failed.'); }
+            }
+        } catch(e) { showAlert('Error saving note.'); }
+        btn.disabled = false; btn.textContent = 'Save';
+    }
+
+    // ── AUTOSAVE + LOCAL DRAFT BACKUP ─────────────────────────────────
+    function draftKey() {
+        return 'po_draft_' + (editingNoteId || 'new');
+    }
+
+    function currentFormSnapshot() {
+        return {
+            title: document.getElementById('editor-title').value,
+            body: document.getElementById('editor-body').value,
+            tags: document.getElementById('editor-tags').value
+        };
+    }
+
+    function saveDraftLocal() {
+        try {
+            const snap = currentFormSnapshot();
+            localStorage.setItem(draftKey(), JSON.stringify({ ...snap, ts: Date.now() }));
+        } catch(e) {}
+    }
+
+    function clearDraftLocal() {
+        try { localStorage.removeItem(draftKey()); } catch(e) {}
+    }
+
+    function setSaveStatus(text, cls) {
+        const el = document.getElementById('save-status');
+        if (!el) return;
+        el.textContent = text;
+        el.className = 'save-status' + (cls ? ' ' + cls : '');
+    }
+
+    function handleEditorInput() {
+        saveDraftLocal();
+        setSaveStatus('Unsaved changes…', 'unsaved');
+        if (!autosaveFirstChangeAt) autosaveFirstChangeAt = Date.now();
+        clearTimeout(autosaveTimer);
+        const elapsed = Date.now() - autosaveFirstChangeAt;
+        const delay = elapsed > 10000 ? 0 : 1800;
+        autosaveTimer = setTimeout(performAutosave, delay);
+    }
+
+    async function performAutosave() {
+        if (isSavingNow) { autosaveTimer = setTimeout(performAutosave, 500); return; }
+        const snap = currentFormSnapshot();
+        if (!snap.title.trim() && !snap.body.trim()) return;
+        if (lastSavedSnapshot && lastSavedSnapshot.title === snap.title && lastSavedSnapshot.body === snap.body && lastSavedSnapshot.tags === snap.tags) return;
+
+        isSavingNow = true;
+        setSaveStatus('Saving…', 'saving');
+        const ok = await persistNote();
+        isSavingNow = false;
+        autosaveFirstChangeAt = null;
+
+        if (ok) {
+            lastSavedSnapshot = snap;
+            clearDraftLocal();
+            setSaveStatus('Saved', 'saved');
+        } else {
+            setSaveStatus('Save failed — will retry', 'unsaved');
+            autosaveTimer = setTimeout(performAutosave, 4000);
+        }
+    }
+
+    async function persistNote() {
+        const titleRaw = document.getElementById('editor-title').value.trim();
+        const bodyRaw = document.getElementById('editor-body').value.trim();
+        const tagsRaw = document.getElementById('editor-tags').value.trim();
+        if (!titleRaw && !bodyRaw) return false;
+
+        try {
+            const encTitle = await encrypt(titleRaw || 'Untitled');
+            const encBody = await encrypt(bodyRaw);
+            const encTags = await encrypt(tagsRaw);
+
+            if (editingNoteId) {
+                const res = await fetch(`${WORKER_URL}/notes/${editingNoteId}`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...authHeader() },
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: notes.find(n => n.id === editingNoteId)?.pinned || 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const idx = notes.findIndex(n => n.id === editingNoteId);
+                    if (idx !== -1) {
+                        notes[idx].title = titleRaw || 'Untitled';
+                        notes[idx].body = bodyRaw;
+                        notes[idx].tags = tagsRaw;
+                        notes[idx].updated_at = new Date().toISOString();
+                    }
+                    applyFilters(); applySort(); renderFilterTags(); renderNotes();
+                    return true;
+                }
+                return false;
+            } else {
+                const res = await fetch(`${WORKER_URL}/notes`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...authHeader() },
+                    body: JSON.stringify({ title: encTitle, body: encBody, tags: encTags, pinned: 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    clearDraftLocal();
+                    editingNoteId = data.id;
+                    const newNote = {
+                        id: data.id, user_id: currentUser.id, title: titleRaw || 'Untitled',
+                        body: bodyRaw, tags: tagsRaw, pinned: 0,
+                        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+                    };
+                    notes.unshift(newNote);
+                    applyFilters(); applySort(); renderFilterTags(); renderNotes();
+                    return true;
+                }
+                return false;
+            }
+        } catch(e) { return false; }
+    }
+
+    function checkForDraft() {
+        const raw = localStorage.getItem(draftKey());
+        if (!raw) return;
+        try {
+            const d = JSON.parse(raw);
+            const hasDraftContent = (d.title || '').trim() || (d.body || '').trim();
+            if (!hasDraftContent) { clearDraftLocal(); return; }
+            const note = editingNoteId ? notes.find(n => n.id === editingNoteId) : null;
+            const savedTs = note ? new Date(note.updated_at || 0).getTime() : 0;
+            const draftDiffers = d.title !== (note?.title || '') || d.body !== (note?.body || '') || d.tags !== (note?.tags || '');
+            if (draftDiffers && d.ts > savedTs) {
+                if (confirm('Restore unsaved draft from last session?')) {
+                    document.getElementById('editor-title').value = d.title || '';
+                    document.getElementById('editor-body').value = d.body || '';
+                    document.getElementById('editor-tags').value = d.tags || '';
+                    updateWordCount();
+                    setSaveStatus('Unsaved changes…', 'unsaved');
+                    return;
+                }
+            }
+            clearDraftLocal();
+        } catch(e) {}
+    }
+
+    async function finishEditing() {
+        clearTimeout(autosaveTimer);
+        setSaveStatus('Saving…', 'saving');
+        const ok = await persistNote();
+        if (ok) {
+            lastSavedSnapshot = currentFormSnapshot();
+            clearDraftLocal();
+            showAlert('Note saved.');
+        } else {
+            showAlert('Could not save note.');
+        }
+        closeEditor();
+    }
+
+    async function deleteNote(e, noteId) {
+        e.stopPropagation();
+        if (!confirm('Delete this note? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/notes/${noteId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: authHeader()
+            });
+            const data = await res.json();
+            if (data.success) { 
+                notes = notes.filter(n => n.id !== noteId); 
+                applyFilters();
+                applySort();
+                renderFilterTags();
+                renderNotes(); 
+                showAlert('Note deleted.'); 
+            }
+            else { showAlert(data.error || 'Delete failed.'); }
+        } catch(e) { showAlert('Network error.'); }
+    }
+
+    document.getElementById('editor-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditor();
+    });
+
+    document.getElementById('editor-body').addEventListener('keyup', updateWordCount);
+    document.getElementById('editor-body').addEventListener('input', handleEditorInput);
+    document.getElementById('editor-title').addEventListener('input', handleEditorInput);
+    document.getElementById('editor-tags').addEventListener('input', handleEditorInput);
+    document.addEventListener('visibilitychange', () => { if (document.hidden && document.getElementById('editor-modal').classList.contains('open')) saveDraftLocal(); });
+    window.addEventListener('beforeunload', () => { if (document.getElementById('editor-modal').classList.contains('open')) saveDraftLocal(); });
+
+    document.getElementById('notes-search').addEventListener('input', (e) => {
+        document.getElementById('search-clear').style.display = e.target.value ? 'block' : 'none';
+        applyFilters();
+        renderNotes();
+    });
+
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            if (document.getElementById('editor-modal').classList.contains('open')) { clearTimeout(autosaveTimer); performAutosave(); }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            if (!document.getElementById('editor-modal').classList.contains('open')) openNewNote();
+        }
+        if (e.key === 'Escape') closeEditor();
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            if (document.getElementById('editor-modal').classList.contains('open') && editingNoteId) {
+                togglePin({stopPropagation: () => {}}, editingNoteId);
+            }
+        }
+    });
+
+    let scrollFadeTimer;
+    window.addEventListener('scroll', () => {
+        document.documentElement.classList.add('is-scrolling');
+        clearTimeout(scrollFadeTimer);
+        scrollFadeTimer = setTimeout(() => {
+            document.documentElement.classList.remove('is-scrolling');
+        }, 1200);
+    }, { passive: true });
+
+    function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function formatDate(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}); }
+    function showAlert(msg) { const b=document.getElementById('custom-alert'); b.textContent=msg; b.style.display='block'; setTimeout(()=>b.style.display='none',3000); }
+
+    // ── INIT ─────────────────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+        const saved = localStorage.getItem('po_user');
+        const savedView = localStorage.getItem('po_notes_view');
+        if (savedView) currentView = savedView;
+        
+        if (saved) {
+            try {
+                const user = JSON.parse(saved);
+                currentUser = user;
+                await initCryptoKey(user);
+                initNavDrawer(user);
+                updateNavAvatar(user);
+                showApp();
+                return;
+            } catch(e) {}
+        }
+        initDarkMode();
+        liftCurtain();
+    });
