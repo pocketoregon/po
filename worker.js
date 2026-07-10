@@ -1,4 +1,4 @@
-import { corsHeaders, checkRateLimit, validateToken } from './lib/shared.js';
+import { corsHeaders, getCorsHeaders, checkRateLimit, validateToken } from './lib/shared.js';
 import { renderCardPage } from './lib/cards.js';
 import { handleAuth } from './routes/auth.js';
 import { handleNotes } from './routes/notes.js';
@@ -42,6 +42,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const corsHeaders = getCorsHeaders(request);
 
     // Subdomain reverse proxy: notes.pocketoregon.site -> pocketoregon.site/notes
     // Root domain A records are DNS-only/unproxied -> GitHub Pages, so this fetch
