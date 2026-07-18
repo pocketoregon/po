@@ -377,7 +377,9 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
                 <div class="note-card-preview">${escHtml(preview)}</div>
                 ${tagsHtml ? `<div class="note-card-tags">${tagsHtml}</div>` : ''}
                 <div class="note-card-date">${formatDate(n.updated_at)}</div>
-                <button class="note-card-pin" onclick="togglePin(event, ${n.id})" title="Pin note">📌</button>
+                <button class="note-card-pin ${n.pinned ? 'is-pinned' : ''}" onclick="togglePin(event, ${n.id})" title="${n.pinned ? 'Unpin' : 'Pin'} note">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 22s7-7.58 7-13a7 7 0 1 0-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.6" fill="var(--pin-hole-color,#fff)"/></svg>
+                </button>
                 <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="3 6 5 6 21 6"/>
@@ -400,7 +402,9 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
                 <div class="note-list-tags">${escHtml(tagsText)}</div>
                 <div class="note-list-date">${formatDate(n.updated_at)}</div>
                 <div class="note-list-actions">
-                    <button class="note-list-pin-btn" onclick="togglePin(event, ${n.id})" title="${n.pinned ? 'Unpin' : 'Pin'} note">📌</button>
+                    <button class="note-list-pin-btn ${n.pinned ? 'is-pinned' : ''}" onclick="togglePin(event, ${n.id})" title="${n.pinned ? 'Unpin' : 'Pin'} note">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 22s7-7.58 7-13a7 7 0 1 0-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.6" fill="var(--pin-hole-color,#fff)"/></svg>
+                    </button>
                     <button class="note-list-del-btn" onclick="deleteNote(event, ${n.id})" title="Delete note">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="3 6 5 6 21 6"/>
