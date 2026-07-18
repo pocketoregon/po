@@ -150,14 +150,15 @@
             draw();
         })();
 
-        const WORKER_URL       = 'https://po.pocketoregon.workers.dev';
+        const WORKER_URL       = 'https://api.pocketoregon.site';
         const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
 
         function handleCredentialResponse(response) {
             fetch(WORKER_URL + '/auth', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ token: response.credential })
+                method:      'POST',
+                credentials: 'include',
+                headers:     { 'Content-Type': 'application/json' },
+                body:        JSON.stringify({ token: response.credential })
             })
             .then(r => r.json())
             .then(data => {
