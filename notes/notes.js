@@ -332,11 +332,13 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         renderNotes();
     }
 
-    function renderNotes() {
+    function renderNotes(skipAnimation) {
         const grid = document.getElementById('notes-grid');
         const list = document.getElementById('notes-list');
         const empty = document.getElementById('empty-state');
         const count = document.getElementById('notes-count');
+        grid.classList.toggle('no-anim', !!skipAnimation);
+        list.classList.toggle('no-anim', !!skipAnimation);
         
         count.textContent = filteredNotes.length === 0 ? 'No notes yet' : `${filteredNotes.length} note${filteredNotes.length !== 1 ? 's' : ''}`;
         
@@ -734,7 +736,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
                         notes[idx].tags = tagsRaw;
                         notes[idx].updated_at = new Date().toISOString();
                     }
-                    applyFilters(); applySort(); renderFilterTags(); renderNotes();
+                    applyFilters(); applySort(); renderFilterTags(); renderNotes(true);
                     return true;
                 }
                 return false;
@@ -755,7 +757,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
                         created_at: new Date().toISOString(), updated_at: new Date().toISOString()
                     };
                     notes.unshift(newNote);
-                    applyFilters(); applySort(); renderFilterTags(); renderNotes();
+                    applyFilters(); applySort(); renderFilterTags(); renderNotes(true);
                     return true;
                 }
                 return false;
