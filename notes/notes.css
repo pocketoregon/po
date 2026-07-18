@@ -53,81 +53,77 @@
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .note-card-face {
             position: relative;
-            border: 2px solid #ffffff;
-            border-radius: 10px;
-            overflow: hidden;
+            border-radius: 4px;
+            overflow: visible;
             transform-style: preserve-3d;
-            background: linear-gradient(135deg,#0000 18.75%,#eef0f3 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#eef0f3 -6.25% 6.25%,#ffffff 0 18.75%);
-            background-size: 40px 40px;
-            background-position: 0 0, 0 0;
-            background-color: #f7f8fa;
-            box-shadow: 0 20px 24px -14px rgba(31,30,36,0.18);
-            transition: background-position 0.5s ease, transform 0.5s ease, border-color 0.2s;
+            box-shadow: 0 20px 24px -12px rgba(31,30,36,0.2);
+            transition: transform 0.5s ease;
         }
-        body.dark .note-card-face {
-            border-color: #404040;
-            background-color: #232323;
-            background-image: linear-gradient(135deg,#0000 18.75%,#2d2d2d 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#2d2d2d -6.25% 6.25%,#1a1a1a 0 18.75%);
-        }
-        .note-card-face.is-pinned { border-color: #f97316; }
-        .note-card-3d:hover .note-card-face { background-position: -70px 70px, -70px 70px; transform: rotate3d(0.4, 1, 0, 12deg); }
+        .note-card-face.is-pinned .note-content-box { outline: 2px solid #ef4444; outline-offset: -2px; }
+        .note-card-3d:hover .note-card-face { transform: rotate3d(0.4, 1, 0, 14deg); }
         .note-date-badge {
-            position: absolute; top: 12px; right: 12px; z-index: 2;
-            background: #ffffff; border-radius: 8px; padding: 6px 9px; text-align: center;
-            box-shadow: 0 10px 14px -8px rgba(0,0,0,0.25);
-            transform: translate3d(0,0,60px); transition: transform 0.5s ease;
-            min-width: 40px;
+            position: absolute; top: -14px; right: -10px; z-index: 3;
+            background: #ffffff; border-radius: 3px; padding: 7px 10px; text-align: center;
+            border: 1px solid rgb(4,193,250);
+            box-shadow: 0 10px 14px -8px rgba(0,0,0,0.3);
+            transform: translate3d(0,0,80px) rotate(6deg); transition: transform 0.5s ease;
+            min-width: 44px;
         }
         body.dark .note-date-badge { background: #1a1a1a; }
-        .note-card-3d:hover .note-date-badge { transform: translate3d(0,0,80px); }
-        .note-date-badge .month { display: block; font-size: 0.6rem; font-weight: 700; color: #f97316; text-transform: uppercase; letter-spacing: 0.03em; }
-        .note-date-badge .day { display: block; font-size: 1.05rem; font-weight: 800; color: #1f1e24; line-height: 1.1; }
-        body.dark .note-date-badge .day { color: #e5e7eb; }
+        .note-card-3d:hover .note-date-badge { transform: translate3d(0,0,100px) rotate(0deg); }
+        .note-date-badge .month { display: block; font-size: 0.6rem; font-weight: 700; color: rgb(4,193,250); text-transform: uppercase; letter-spacing: 0.03em; }
+        .note-date-badge .day { display: block; font-size: 1.1rem; font-weight: 900; color: rgb(4,193,250); line-height: 1.1; }
         .note-content-box {
             position: relative;
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            padding: 3rem 1.1rem 0.9rem;
-            min-height: 150px;
+            background: linear-gradient(135deg,#0000 18.75%,#04c1fa38 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#04c1fa38 -6.25% 6.25%,#04c1fabf 0 18.75%);
+            background-size: 60px 60px;
+            background-position: 0 0, 0 0;
+            background-color: rgba(4,193,250,0.88);
+            border-radius: 4px;
+            padding: 3.2rem 1.25rem 1.1rem;
+            min-height: 160px;
             display: flex; flex-direction: column;
             transform-style: preserve-3d;
+            transition: background-position 0.5s ease;
         }
+        .note-card-3d:hover .note-content-box { background-position: -80px 80px, -80px 80px; }
         .note-card-title-3d {
-            color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 5px;
+            color: #fff; font-weight: 900; font-size: 1.05rem; margin-bottom: 6px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            transform: translate3d(0,0,35px); transition: transform 0.5s ease;
+            transform: translate3d(0,0,50px); transition: transform 0.5s ease;
         }
-        .note-card-3d:hover .note-card-title-3d { transform: translate3d(0,0,55px); }
+        .note-card-3d:hover .note-card-title-3d { transform: translate3d(0,0,70px); }
         .note-card-preview-3d {
-            color: rgba(255,255,255,0.85); font-size: 0.78rem; line-height: 1.5;
+            color: rgba(255,255,255,0.9); font-size: 0.78rem; line-height: 1.5;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-            transform: translate3d(0,0,22px); transition: transform 0.5s ease;
+            transform: translate3d(0,0,30px); transition: transform 0.5s ease;
         }
-        .note-card-3d:hover .note-card-preview-3d { transform: translate3d(0,0,45px); }
-        .note-tags-3d { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; transform: translate3d(0,0,18px); transition: transform 0.5s ease; }
-        .note-card-3d:hover .note-tags-3d { transform: translate3d(0,0,40px); }
-        .note-tag-chip-3d { background: rgba(255,255,255,0.18); color: #fff; font-size: 0.62rem; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+        .note-card-3d:hover .note-card-preview-3d { transform: translate3d(0,0,55px); }
+        .note-tags-3d { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; transform: translate3d(0,0,25px); transition: transform 0.5s ease; }
+        .note-card-3d:hover .note-tags-3d { transform: translate3d(0,0,50px); }
+        .note-tag-chip-3d { background: rgba(255,255,255,0.22); color: #fff; font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
         .note-card-actions-3d {
-            display: flex; align-items: center; justify-content: flex-end; gap: 6px;
-            margin-top: auto; padding-top: 12px;
-            opacity: 0; transform: translate3d(0,6px,15px);
-            transition: opacity 0.35s ease, transform 0.35s ease;
+            display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+            margin-top: auto; padding-top: 14px;
+            transform: translate3d(0,0,20px); transition: transform 0.5s ease;
         }
-        .note-card-3d:hover .note-card-actions-3d { opacity: 1; transform: translate3d(0,0,45px); }
+        .note-card-3d:hover .note-card-actions-3d { transform: translate3d(0,0,55px); }
         .nc-action-btn {
-            background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3); color: #fff;
-            width: 28px; height: 28px; border-radius: 7px;
+            background: #ffffff; border: none; color: rgb(4,193,250);
+            width: 30px; height: 30px; border-radius: 4px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: background 0.15s, color 0.15s, transform 0.15s;
+            cursor: pointer; transition: transform 0.15s, background 0.15s, color 0.15s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        .nc-action-btn:hover { background: #fff; color: #1f1e24; transform: scale(1.08); }
-        .nc-action-btn.nc-delete:hover { background: #fee2e2; color: #dc2626; }
+        .nc-action-btn:hover { transform: scale(1.1); background: #1f1e24; color: #fff; }
+        .nc-action-btn.nc-delete:hover { background: #dc2626; color: #fff; }
         .pin-toggle-3d { position: static; opacity: 1; }
         .pin-toggle-3d .pin-toggle-box {
-            width: 28px; height: 28px; border-radius: 7px;
-            border: 1px solid rgba(255,255,255,0.3); box-shadow: none;
-            background-color: rgba(255,255,255,0.14); color: #fff;
+            width: 30px; height: 30px; border-radius: 4px;
+            border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            background-color: #ffffff; color: rgb(4,193,250);
         }
-        .pin-toggle-3d input:checked ~ .pin-toggle-box { background-color: #ef4444; border-color: #ef4444; }
+        .pin-toggle-3d input:checked ~ .pin-toggle-box { background-color: #ef4444; color: #fff; }
         .pin-toggle { --input-focus: #ef4444; --input-out-of-focus: #d1d5db; --box-color: #fff; --main-color: #1f1e24; position: absolute; top: 10px; right: 36px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
         .note-card:hover .pin-toggle { opacity: 1; }
         .pin-toggle input:checked ~ .pin-toggle-box, .pin-toggle input:checked + .pin-toggle-box { opacity: 1; }
