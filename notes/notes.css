@@ -431,3 +431,28 @@
             0%, 100% { filter: hue-rotate(0deg); -webkit-filter: hue-rotate(0deg); }
             50% { filter: hue-rotate(-70deg); -webkit-filter: hue-rotate(-70deg); }
         }
+
+/* Cycling caret color (red → green → blue → black), Google-search style */
+@keyframes caretCycle {
+    0%   { caret-color: #ef4444; }
+    25%  { caret-color: #22c55e; }
+    50%  { caret-color: #3b82f6; }
+    75%  { caret-color: #1f1e24; }
+    100% { caret-color: #ef4444; }
+}
+body.dark #editor-title, body.dark #editor-tags, body.dark #editor-body, body.dark #notes-search,
+#editor-title, #editor-tags, #editor-body, #notes-search {
+    animation: caretCycle 2.4s linear infinite;
+}
+
+/* Selection highlight — true gradients aren't supported by ::selection in
+   any browser, so this uses the closest solid approximation of a blue
+   gradient tone instead. */
+#editor-title::selection, #editor-tags::selection, #editor-body::selection, #notes-search::selection {
+    background-color: #60a5fa;
+    color: #ffffff;
+}
+#editor-title::-moz-selection, #editor-tags::-moz-selection, #editor-body::-moz-selection, #notes-search::-moz-selection {
+    background-color: #60a5fa;
+    color: #ffffff;
+}
