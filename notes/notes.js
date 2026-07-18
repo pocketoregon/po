@@ -364,32 +364,39 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     }
 
     function renderNoteCard(n) {
-        const preview = stripHtml(n.body || '').substring(0, 150);
+        const preview = stripHtml(n.body || '').substring(0, 130);
         const tagsHtml = n.tags ? n.tags.split(',').map(t => {
             const tag = t.trim();
-            return tag ? `<div class="note-tag"><svg viewBox="0 0 400 130" preserveAspectRatio="none"><path d="M20,15 L380,15 L360,32 L385,48 L358,64 L383,80 L360,98 L380,115 L20,115 L40,98 L15,80 L42,64 L17,48 L40,32 L20,15 Z"/></svg><span class="note-tag-label">${escHtml(tag)}</span></div>` : '';
+            return tag ? `<span class="note-tag-chip-3d">${escHtml(tag)}</span>` : '';
         }).join('') : '';
-        
+        const d = n.updated_at ? new Date(n.updated_at) : null;
+        const month = d ? d.toLocaleDateString([], { month: 'short' }).toUpperCase() : '';
+        const day = d ? d.getDate() : '';
+
         return `
-            <div class="note-card ${n.pinned ? 'pinned' : ''}" onclick="openEditNote(${n.id})">
-                ${n.pinned ? '<div class="pinned-badge">PINNED</div>' : ''}
-                <div class="note-card-title">${escHtml(n.title || 'Untitled')}</div>
-                <div class="note-card-preview">${escHtml(preview)}</div>
-                ${tagsHtml ? `<div class="note-card-tags">${tagsHtml}</div>` : ''}
-                <div class="note-card-date">${formatDate(n.updated_at)}</div>
-                <label class="pin-toggle" onclick="event.stopPropagation()" title="${n.pinned ? 'Unpin' : 'Pin'} note">
-                    <input type="checkbox" ${n.pinned ? 'checked' : ''} onclick="togglePin(event, ${n.id})">
-                    <span class="pin-toggle-box">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 22s7-7.58 7-13a7 7 0 1 0-14 0c0 5.42 7 13 7 13z"/></svg>
-                    </span>
-                </label>
-                <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Delete note">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                        <path d="M10 11v6M14 11v6"/>
-                    </svg>
-                </button>
+            <div class="note-card-3d" onclick="openEditNote(${n.id})">
+                <div class="note-card-face ${n.pinned ? 'is-pinned' : ''}">
+                    <div class="note-date-badge"><span class="month">${month}</span><span class="day">${day}</span></div>
+                    <div class="note-content-box">
+                        <div class="note-card-title-3d">${escHtml(n.title || 'Untitled')}</div>
+                        <div class="note-card-preview-3d">${escHtml(preview)}</div>
+                        ${tagsHtml ? `<div class="note-tags-3d">${tagsHtml}</div>` : ''}
+                        <div class="note-card-actions-3d">
+                            <button class="nc-action-btn nc-open" onclick="event.stopPropagation(); openEditNote(${n.id})" title="Open note">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                            </button>
+                            <label class="pin-toggle pin-toggle-3d" onclick="event.stopPropagation()" title="${n.pinned ? 'Unpin' : 'Pin'} note">
+                                <input type="checkbox" ${n.pinned ? 'checked' : ''} onclick="togglePin(event, ${n.id})">
+                                <span class="pin-toggle-box">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 22s7-7.58 7-13a7 7 0 1 0-14 0c0 5.42 7 13 7 13z"/></svg>
+                                </span>
+                            </label>
+                            <button class="nc-action-btn nc-delete" onclick="deleteNote(event, ${n.id})" title="Delete note">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }
