@@ -42,6 +42,8 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     let autosaveFirstChangeAt = null;
     let isSavingNow = false;
     let lastSavedSnapshot = null;
+    const AUTOSAVE_DEBOUNCE_MS = 1800;  // wait this long after the last keystroke
+    const AUTOSAVE_MAX_WAIT_MS = 8000;  // ...but never wait longer than this since the first unsaved change
 
     // ── LOADING CURTAIN ──────────────────────────────────────────────
     function liftCurtain() {
@@ -680,10 +682,14 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     function handleEditorInput() {
         saveDraftLocal();
         setSaveStatus('Unsaved changes…', 'unsaved');
-        if (!autosaveFirstChangeAt) autosaveFirstChangeAt = Date.now();
+        const now = Date.now();
+        if (!autosaveFirstChangeAt) autosaveFirstChangeAt = now;
         clearTimeout(autosaveTimer);
-        const elapsed = Date.now() - autosaveFirstChangeAt;
-        const delay = elapsed > 10000 ? 0 : 1800;
+        const elapsedSinceFirstChange = now - autosaveFirstChangeAt;
+        const remainingMaxWait = AUTOSAVE_MAX_WAIT_MS - elapsedSinceFirstChange;
+        // Debounce on pauses, but throttle to a guaranteed save at least
+        // every AUTOSAVE_MAX_WAIT_MS even during continuous typing.
+        const delay = Math.max(0, Math.min(AUTOSAVE_DEBOUNCE_MS, remainingMaxWait));
         autosaveTimer = setTimeout(performAutosave, delay);
     }
 
