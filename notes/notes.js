@@ -376,11 +376,10 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         return `
             <div class="note-card-3d" onclick="openEditNote(${n.id})">
                 <div class="note-card-face ${n.pinned ? 'is-pinned' : ''}">
-                    <div class="note-card-topband">
-                        <div class="note-card-title-3d">${escHtml(n.title || 'Untitled')}</div>
-                    </div>
+                    <div class="note-card-topband"></div>
                     <div class="note-date-badge"><span class="month">${month}</span><span class="day">${day}</span></div>
                     <div class="note-content-box">
+                        <div class="note-card-title-3d">${escHtml(n.title || 'Untitled')}</div>
                         <div class="note-card-preview-3d">${escHtml(preview)}</div>
                         ${tagsHtml ? `<div class="note-tags-3d">${tagsHtml}</div>` : ''}
                         <div class="note-card-actions-3d">
