@@ -48,49 +48,86 @@
         body.dark .view-btn.active { background: #f97316; border-color: #f97316; }
         #notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         #notes-list { display: flex; flex-direction: column; gap: 8px; }
-        .note-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s; position: relative; z-index: 0; overflow: hidden; animation: fadeInUp 0.32s ease both; }
-        #notes-grid.no-anim .note-card, #notes-list.no-anim .note-list-item { animation: none; }
+        .note-card-3d { perspective: 900px; cursor: pointer; animation: fadeInUp 0.32s ease both; }
+        #notes-grid.no-anim .note-card-3d, #notes-list.no-anim .note-list-item { animation: none; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .note-card:before {
-            content: '';
-            position: absolute;
-            z-index: -1;
-            top: -16px;
-            right: -16px;
-            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-            opacity: 0.32;
-            height: 32px;
-            width: 32px;
-            border-radius: 32px;
-            transform: scale(1);
-            transform-origin: 50% 50%;
-            transition: transform 0.35s ease-out;
+        .note-card-face {
+            position: relative;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            background: linear-gradient(135deg,#0000 18.75%,#eef0f3 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#eef0f3 -6.25% 6.25%,#ffffff 0 18.75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 0;
+            background-color: #f7f8fa;
+            box-shadow: 0 20px 24px -14px rgba(31,30,36,0.18);
+            transition: background-position 0.5s ease, transform 0.5s ease, border-color 0.2s;
         }
-        .note-card:hover:before { transform: scale(28); }
-        .note-card:hover .note-card-title { transition: color 0.35s ease-out; color: #ffffff; }
-        .note-card:hover .note-card-preview { transition: color 0.35s ease-out; color: rgba(255,255,255,0.85); }
-        .note-card:hover .note-card-date { transition: color 0.35s ease-out; color: rgba(255,255,255,0.7); }
-        .note-card:hover .note-tag svg path { transition: fill 0.35s ease-out; fill: rgba(255,255,255,0.25); }
-        .note-card:hover .note-tag-label { transition: color 0.35s ease-out; color: #fff; }
-        .note-card:hover .pinned-badge { transition: color 0.35s ease-out; color: #fff; }
-        .note-card:hover .note-card-pin, .note-card:hover .note-card-delete { color: rgba(255,255,255,0.85); }
-        .note-card:hover .note-card-delete:hover { color: #fff; background: rgba(255,255,255,0.2); }
-        .note-card.pinned:hover { border-left-color: #fff; }
-        body.dark .note-card { background: #2d2d2d; border-color: #404040; }
-        body.dark .note-card:before { background: linear-gradient(135deg, #38bdf8, #0284c7); }
-        .note-card.pinned { border-left: 3px solid #f97316; }
-        .note-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08); border-color: #d1d5db; }
-        body.dark .note-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-        .note-card-title { font-weight: 700; font-size: 0.95rem; color: #1f1e24; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        body.dark .note-card-title { color: #f3f4f6; }
-        .note-card-preview { font-size: 0.82rem; color: #6b7280; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.6em; }
-        body.dark .note-card-preview { color: #9ca3af; }
-        .note-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-        .note-tag { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 50px; height: 20px; padding: 0 10px; font-size: 0.65rem; font-weight: 600; color: #fff; }
-        .note-tag svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
-        .note-tag svg path { fill: #1f1e24; transition: fill 0.35s ease; }
-        .note-tag-label { position: relative; z-index: 1; }
-        .note-card-date { font-size: 0.72rem; color: #9ca3af; margin-top: 10px; }
+        body.dark .note-card-face {
+            border-color: #404040;
+            background-color: #232323;
+            background-image: linear-gradient(135deg,#0000 18.75%,#2d2d2d 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#2d2d2d -6.25% 6.25%,#1a1a1a 0 18.75%);
+        }
+        .note-card-face.is-pinned { border-color: #f97316; }
+        .note-card-3d:hover .note-card-face { background-position: -70px 70px, -70px 70px; transform: rotate3d(0.4, 1, 0, 12deg); }
+        .note-date-badge {
+            position: absolute; top: 12px; right: 12px; z-index: 2;
+            background: #ffffff; border-radius: 8px; padding: 6px 9px; text-align: center;
+            box-shadow: 0 10px 14px -8px rgba(0,0,0,0.25);
+            transform: translate3d(0,0,60px); transition: transform 0.5s ease;
+            min-width: 40px;
+        }
+        body.dark .note-date-badge { background: #1a1a1a; }
+        .note-card-3d:hover .note-date-badge { transform: translate3d(0,0,80px); }
+        .note-date-badge .month { display: block; font-size: 0.6rem; font-weight: 700; color: #f97316; text-transform: uppercase; letter-spacing: 0.03em; }
+        .note-date-badge .day { display: block; font-size: 1.05rem; font-weight: 800; color: #1f1e24; line-height: 1.1; }
+        body.dark .note-date-badge .day { color: #e5e7eb; }
+        .note-content-box {
+            position: relative;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            padding: 3rem 1.1rem 0.9rem;
+            min-height: 150px;
+            display: flex; flex-direction: column;
+            transform-style: preserve-3d;
+        }
+        .note-card-title-3d {
+            color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 5px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transform: translate3d(0,0,35px); transition: transform 0.5s ease;
+        }
+        .note-card-3d:hover .note-card-title-3d { transform: translate3d(0,0,55px); }
+        .note-card-preview-3d {
+            color: rgba(255,255,255,0.85); font-size: 0.78rem; line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            transform: translate3d(0,0,22px); transition: transform 0.5s ease;
+        }
+        .note-card-3d:hover .note-card-preview-3d { transform: translate3d(0,0,45px); }
+        .note-tags-3d { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; transform: translate3d(0,0,18px); transition: transform 0.5s ease; }
+        .note-card-3d:hover .note-tags-3d { transform: translate3d(0,0,40px); }
+        .note-tag-chip-3d { background: rgba(255,255,255,0.18); color: #fff; font-size: 0.62rem; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+        .note-card-actions-3d {
+            display: flex; align-items: center; justify-content: flex-end; gap: 6px;
+            margin-top: auto; padding-top: 12px;
+            opacity: 0; transform: translate3d(0,6px,15px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .note-card-3d:hover .note-card-actions-3d { opacity: 1; transform: translate3d(0,0,45px); }
+        .nc-action-btn {
+            background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+            width: 28px; height: 28px; border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.15s, color 0.15s, transform 0.15s;
+        }
+        .nc-action-btn:hover { background: #fff; color: #1f1e24; transform: scale(1.08); }
+        .nc-action-btn.nc-delete:hover { background: #fee2e2; color: #dc2626; }
+        .pin-toggle-3d { position: static; opacity: 1; }
+        .pin-toggle-3d .pin-toggle-box {
+            width: 28px; height: 28px; border-radius: 7px;
+            border: 1px solid rgba(255,255,255,0.3); box-shadow: none;
+            background-color: rgba(255,255,255,0.14); color: #fff;
+        }
+        .pin-toggle-3d input:checked ~ .pin-toggle-box { background-color: #ef4444; border-color: #ef4444; }
         .pin-toggle { --input-focus: #ef4444; --input-out-of-focus: #d1d5db; --box-color: #fff; --main-color: #1f1e24; position: absolute; top: 10px; right: 36px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
         .note-card:hover .pin-toggle { opacity: 1; }
         .pin-toggle input:checked ~ .pin-toggle-box, .pin-toggle input:checked + .pin-toggle-box { opacity: 1; }
