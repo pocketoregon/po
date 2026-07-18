@@ -63,20 +63,21 @@
         }
         .note-card-face.is-pinned .note-content-box { outline: 2px solid #ef4444; outline-offset: -2px; }
         .note-card-3d:hover .note-card-face { transform: rotate3d(0.4, 1, 0, 14deg); }
-        .note-card-topband {
+        .note-card-bottomband {
             flex-shrink: 0;
-            min-height: 44px;
-            border-radius: 4px 4px 0 0;
+            min-height: 46px;
+            border-radius: 0 0 4px 4px;
             background: linear-gradient(135deg,#0000 18.75%,#e5e7eb 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#e5e7eb -6.25% 6.25%,#ffffff 0 18.75%);
             background-size: 40px 40px;
             background-position: 0 0, 0 0;
             background-color: #ffffff;
             display: flex;
             align-items: center;
-            padding: 0 3.6rem 0 1rem;
+            gap: 8px;
+            padding: 0 1rem;
             transition: background-position 0.5s ease;
         }
-        .note-card-3d:hover .note-card-topband { background-position: -70px 70px, -70px 70px; }
+        .note-card-3d:hover .note-card-bottomband { background-position: -70px 70px, -70px 70px; }
         .note-date-badge {
             position: absolute; top: 8px; right: 8px; z-index: 3;
             background: #ffffff; border-radius: 3px; padding: 6px 9px; text-align: center;
@@ -104,7 +105,7 @@
         }
         .note-card-3d:hover .note-content-box { background-position: -80px 80px, -80px 80px; }
         .note-card-title-3d {
-            color: #1f1e24; font-weight: 900; font-size: 1rem;
+            color: #fff; font-weight: 900; font-size: 1.05rem; margin-bottom: 6px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             transform: translate3d(0,0,50px); transition: transform 0.5s ease;
         }
@@ -118,12 +119,7 @@
         .note-tags-3d { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; transform: translate3d(0,0,25px); transition: transform 0.5s ease; }
         .note-card-3d:hover .note-tags-3d { transform: translate3d(0,0,50px); }
         .note-tag-chip-3d { background: rgba(255,255,255,0.22); color: #fff; font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
-        .note-card-actions-3d {
-            display: flex; align-items: center; justify-content: flex-start; gap: 8px;
-            margin-top: auto; padding-top: 14px;
-            transform: translate3d(0,0,20px); transition: transform 0.5s ease;
-        }
-        .note-card-3d:hover .note-card-actions-3d { transform: translate3d(0,0,55px); }
+
         .nc-action-btn {
             background: #ffffff; border: none; color: rgb(4,193,250);
             width: 30px; height: 30px; border-radius: 4px;
