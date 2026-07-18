@@ -76,10 +76,7 @@
             padding: 0 4.4rem 0 1rem;
             transition: background-position 0.5s ease;
         }
-        .note-card-title-3d {
-            color: #1f1e24; font-weight: 900; font-size: 1rem;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+
         .note-card-3d:hover .note-card-topband { background-position: -70px 70px, -70px 70px; }
         .note-date-badge {
             position: absolute; top: 8px; right: 8px; z-index: 3;
@@ -93,6 +90,12 @@
         .note-card-3d:hover .note-date-badge { transform: translate3d(0,0,50px) rotate(0deg); }
         .note-date-badge .month { display: block; font-size: 0.6rem; font-weight: 700; color: rgb(4,193,250); text-transform: uppercase; letter-spacing: 0.03em; }
         .note-date-badge .day { display: block; font-size: 1.1rem; font-weight: 900; color: rgb(4,193,250); line-height: 1.1; }
+        .note-card-title-3d {
+            color: #fff; font-weight: 900; font-size: 1.05rem; margin-bottom: 6px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transform: translate3d(0,0,50px); transition: transform 0.5s ease;
+        }
+        .note-card-3d:hover .note-card-title-3d { transform: translate3d(0,0,70px); }
         .note-content-box {
             position: relative;
             background: linear-gradient(135deg,#0000 18.75%,#04c1fa38 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#04c1fa38 -6.25% 6.25%,#04c1fabf 0 18.75%);
