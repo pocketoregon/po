@@ -352,7 +352,7 @@
         window.deleteComment = deleteComment;
         window.signOut = signOut;
 
-        const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+        const WORKER_URL = 'https://api.pocketoregon.site';
         const GOOGLE_CLIENT_ID = '930005975840-u809k2ldaa6cug4jm82tafb5vahoou4h.apps.googleusercontent.com';
         let currentUser = null;
         let googleReady = false;
@@ -445,7 +445,7 @@
         function signOut() {
             const token = getToken();
             if (token) {
-                fetch(WORKER_URL + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+                fetch(WORKER_URL + '/auth/logout', { method: 'POST', credentials: 'include', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
             }
             currentUser = null; conversationHistory = []; historyLoaded = false;
             localStorage.removeItem('po_user');
@@ -717,14 +717,32 @@
         if (chatSend) chatSend.addEventListener('click', sendMessage);
         if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             const saved = localStorage.getItem('po_user');
             const savedToken = localStorage.getItem('po_token');
+            let restored = false;
             if (saved && savedToken) {
                 try { 
                     const user = JSON.parse(saved); 
                     currentUser = user; 
                     updateAuthUI(user); 
+                    restored = true;
+                } catch(e) {}
+            }
+            if (!restored) {
+                // No local record on this origin — check whether a valid
+                // po_token session cookie already exists (e.g. user logged
+                // in via signin.html or another PocketOregon subdomain).
+                try {
+                    const res = await fetch(WORKER_URL + '/auth/me', { credentials: 'include' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.user) {
+                            currentUser = data.user;
+                            localStorage.setItem('po_user', JSON.stringify(data.user));
+                            updateAuthUI(data.user);
+                        }
+                    }
                 } catch(e) {}
             }
             loadPageContent(); loadCards(); loadComments(); updateClock(); positionLogo();
