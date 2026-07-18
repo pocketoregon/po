@@ -91,9 +91,12 @@
         .note-tag svg path { fill: #1f1e24; transition: fill 0.35s ease; }
         .note-tag-label { position: relative; z-index: 1; }
         .note-card-date { font-size: 0.72rem; color: #9ca3af; margin-top: 10px; }
-        .note-card-pin { position: absolute; top: 10px; right: 36px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; font-size: 1rem; }
+        .note-card-pin { position: absolute; top: 10px; right: 36px; background: none; border: none; cursor: pointer; color: #9ca3af; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; display: flex; align-items: center; justify-content: center; }
         .note-card:hover .note-card-pin { opacity: 1; }
-        .note-card-pin:hover { color: #f97316; }
+        .note-card-pin.is-pinned { opacity: 1; color: #ef4444; }
+        .note-card-pin:hover { color: #ef4444; }
+        body.dark .note-card-pin { color: #6b7280; }
+        body.dark .note-card-pin.is-pinned { color: #f87171; }
         .note-card-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; opacity: 0; }
         .note-card:hover .note-card-delete { opacity: 1; }
         .note-card-delete:hover { color: #dc2626; background: #fee2e2; }
@@ -111,8 +114,11 @@
         .note-list-date { font-size: 0.72rem; color: #9ca3af; min-width: 80px; text-align: right; }
         .note-list-actions { display: flex; gap: 4px; align-items: center; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; margin-left: 8px; }
         .note-list-item:hover .note-list-actions { opacity: 1; }
-        .note-list-pin-btn { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; font-size: 0.85rem; line-height: 1; transition: color 0.15s; }
-        .note-list-pin-btn:hover { color: #f97316; }
+        .note-list-pin-btn { background: none; border: none; cursor: pointer; color: #9ca3af; padding: 4px; border-radius: 4px; line-height: 1; transition: color 0.15s; display: flex; align-items: center; justify-content: center; }
+        .note-list-pin-btn.is-pinned { color: #ef4444; }
+        .note-list-pin-btn:hover { color: #ef4444; }
+        body.dark .note-list-pin-btn { color: #6b7280; }
+        body.dark .note-list-pin-btn.is-pinned { color: #f87171; }
         .note-list-del-btn { background: none; border: none; cursor: pointer; color: #d1d5db; padding: 4px; border-radius: 4px; line-height: 1; transition: color 0.15s, background 0.15s; }
         .note-list-del-btn:hover { color: #dc2626; background: #fee2e2; }
         #empty-state { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
