@@ -214,12 +214,12 @@ function renderDrawerHTML(user) {
       </div>
       
       <ul class="nd-menu-list">
-        <li class="nd-item"><a href="/profile.html?id=${user.id}">${ICONS.profile} My Profile</a></li>
-        <li class="nd-item"><a href="/notes/">${ICONS.notes} My Notes</a></li>
-        ${isCreator ? `<li class="nd-item"><a href="/stories/create.html">${ICONS.studio} Creator Studio</a></li>` : ''}
-        ${isCreator ? `<li class="nd-item"><a href="/stories/index.html?author=${user.id}">${ICONS.stories} My Stories</a></li>` : ''}
-        ${hasHorizon ? `<li class="nd-item"><a href="/horizon/">${ICONS.horizon} Project Horizon</a></li>` : ''}
-        ${isAdmin ? `<li class="nd-item"><a href="/admin.html">${ICONS.admin} Admin Panel</a></li>` : ''}
+        <li class="nd-item"><a href="https://pocketoregon.site/profile.html?id=${user.id}">${ICONS.profile} My Profile</a></li>
+        <li class="nd-item"><a href="https://notes.pocketoregon.site/">${ICONS.notes} My Notes</a></li>
+        ${isCreator ? `<li class="nd-item"><a href="https://pocketoregon.site/stories/create.html">${ICONS.studio} Creator Studio</a></li>` : ''}
+        ${isCreator ? `<li class="nd-item"><a href="https://pocketoregon.site/stories/index.html?author=${user.id}">${ICONS.stories} My Stories</a></li>` : ''}
+        ${hasHorizon ? `<li class="nd-item"><a href="https://pocketoregon.site/horizon/">${ICONS.horizon} Project Horizon</a></li>` : ''}
+        ${isAdmin ? `<li class="nd-item"><a href="https://pocketoregon.site/admin.html">${ICONS.admin} Admin Panel</a></li>` : ''}
       </ul>
 
       <ul class="nd-footer-list">
