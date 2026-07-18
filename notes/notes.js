@@ -888,6 +888,28 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
                 return;
             } catch(e) {}
         }
+
+        // No local record of a user on this subdomain — check whether a
+        // valid po_token session cookie already exists (e.g. user logged
+        // in on the main site). The cookie is shared across
+        // *.pocketoregon.site but localStorage is not, so we must ask
+        // the backend who we are before giving up.
+        try {
+            const res = await fetch(WORKER_URL + '/auth/me', { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.user) {
+                    currentUser = data.user;
+                    localStorage.setItem('po_user', JSON.stringify(data.user));
+                    await initCryptoKey(data.user);
+                    initNavDrawer(data.user);
+                    updateNavAvatar(data.user);
+                    showApp();
+                    return;
+                }
+            }
+        } catch(e) {}
+
         initDarkMode();
         liftCurtain();
     });
