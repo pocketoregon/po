@@ -55,22 +55,39 @@
             position: relative;
             border-radius: 4px;
             overflow: visible;
+            display: flex;
+            flex-direction: column;
             transform-style: preserve-3d;
             box-shadow: 0 20px 24px -12px rgba(31,30,36,0.2);
             transition: transform 0.5s ease;
         }
         .note-card-face.is-pinned .note-content-box { outline: 2px solid #ef4444; outline-offset: -2px; }
         .note-card-3d:hover .note-card-face { transform: rotate3d(0.4, 1, 0, 14deg); }
+        .note-card-topband {
+            flex-shrink: 0;
+            height: 44px;
+            border-radius: 4px 4px 0 0;
+            background: linear-gradient(135deg,#0000 18.75%,#e5e7eb 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#e5e7eb -6.25% 6.25%,#ffffff 0 18.75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 0;
+            background-color: #ffffff;
+            transition: background-position 0.5s ease;
+        }
+        body.dark .note-card-topband {
+            background-color: #2d2d2d;
+            background-image: linear-gradient(135deg,#0000 18.75%,#404040 0 31.25%,#0000 0), repeating-linear-gradient(45deg,#404040 -6.25% 6.25%,#2d2d2d 0 18.75%);
+        }
+        .note-card-3d:hover .note-card-topband { background-position: -70px 70px, -70px 70px; }
         .note-date-badge {
-            position: absolute; top: -14px; right: -10px; z-index: 3;
-            background: #ffffff; border-radius: 3px; padding: 7px 10px; text-align: center;
+            position: absolute; top: 22px; right: -8px; z-index: 3;
+            background: #ffffff; border-radius: 3px; padding: 6px 9px; text-align: center;
             border: 1px solid rgb(4,193,250);
-            box-shadow: 0 10px 14px -8px rgba(0,0,0,0.3);
-            transform: translate3d(0,0,80px) rotate(6deg); transition: transform 0.5s ease;
-            min-width: 44px;
+            box-shadow: 0 8px 12px -6px rgba(0,0,0,0.3);
+            transform: translate3d(0,0,30px) rotate(4deg); transition: transform 0.5s ease;
+            min-width: 40px;
         }
         body.dark .note-date-badge { background: #1a1a1a; }
-        .note-card-3d:hover .note-date-badge { transform: translate3d(0,0,100px) rotate(0deg); }
+        .note-card-3d:hover .note-date-badge { transform: translate3d(0,0,50px) rotate(0deg); }
         .note-date-badge .month { display: block; font-size: 0.6rem; font-weight: 700; color: rgb(4,193,250); text-transform: uppercase; letter-spacing: 0.03em; }
         .note-date-badge .day { display: block; font-size: 1.1rem; font-weight: 900; color: rgb(4,193,250); line-height: 1.1; }
         .note-content-box {
@@ -80,8 +97,8 @@
             background-position: 0 0, 0 0;
             background-color: rgba(4,193,250,0.88);
             border-radius: 4px;
-            padding: 3.2rem 1.25rem 1.1rem;
-            min-height: 160px;
+            padding: 1.2rem 1.25rem 1.1rem;
+            min-height: 140px;
             display: flex; flex-direction: column;
             transform-style: preserve-3d;
             transition: background-position 0.5s ease;
@@ -117,13 +134,13 @@
         }
         .nc-action-btn:hover { transform: scale(1.1); background: #1f1e24; color: #fff; }
         .nc-action-btn.nc-delete:hover { background: #dc2626; color: #fff; }
-        .pin-toggle-3d { position: static; opacity: 1; }
-        .pin-toggle-3d .pin-toggle-box {
-            width: 30px; height: 30px; border-radius: 4px;
-            border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            background-color: #ffffff; color: rgb(4,193,250);
+        .pin-toggle.pin-toggle-3d { position: static !important; opacity: 1 !important; }
+        .pin-toggle.pin-toggle-3d .pin-toggle-box {
+            width: 30px !important; height: 30px !important; border-radius: 4px !important;
+            border: none !important; box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+            background-color: #ffffff !important; color: rgb(4,193,250) !important;
         }
-        .pin-toggle-3d input:checked ~ .pin-toggle-box { background-color: #ef4444; color: #fff; }
+        .pin-toggle.pin-toggle-3d input:checked ~ .pin-toggle-box { background-color: #ef4444 !important; color: #fff !important; }
         .pin-toggle { --input-focus: #ef4444; --input-out-of-focus: #d1d5db; --box-color: #fff; --main-color: #1f1e24; position: absolute; top: 10px; right: 36px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
         .note-card:hover .pin-toggle { opacity: 1; }
         .pin-toggle input:checked ~ .pin-toggle-box, .pin-toggle input:checked + .pin-toggle-box { opacity: 1; }
