@@ -7,7 +7,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     window.toggleDarkMode = toggleDarkMode;
     window.closeEditor = closeEditor;
     window.toggleFullscreen = toggleFullscreen;
-    window.switchTab = switchTab;
     window.insertMarkdown = insertMarkdown;
     window.insertLink = insertLink;
     window.openNewNote = openNewNote;
@@ -444,8 +443,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         document.getElementById('editor-tags').value = '';
         document.getElementById('editor-meta').textContent = 'New note';
         document.getElementById('save-btn').textContent = 'Done';
-        currentTab = 'write';
-        switchTab('write');
         document.getElementById('editor-modal').classList.add('open');
         updateWordCount();
         lastSavedSnapshot = null;
@@ -464,8 +461,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         document.getElementById('editor-tags').value = note.tags || '';
         document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
         document.getElementById('save-btn').textContent = 'Done';
-        currentTab = 'write';
-        switchTab('write');
         document.getElementById('editor-modal').classList.add('open');
         updateWordCount();
         lastSavedSnapshot = { title: note.title || '', body: note.body || '', tags: note.tags || '' };
@@ -487,28 +482,6 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         autosaveFirstChangeAt = null;
     }
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.editor-tab').forEach((t, i) => {
-            if ((i === 0 && tab === 'write') || (i === 1 && tab === 'preview')) {
-                t.classList.add('active');
-            }
-        });
-        
-        document.getElementById('write-tab').style.display = tab === 'write' ? 'flex' : 'none';
-        document.getElementById('preview-tab').style.display = tab === 'preview' ? 'flex' : 'none';
-        
-        if (tab === 'preview') {
-            updatePreview();
-        }
-    }
-
-    function updatePreview() {
-        const body = document.getElementById('editor-body').value;
-        const preview = document.getElementById('editor-preview');
-        preview.innerHTML = marked.parse(body);
-    }
 
     function insertMarkdown(before, after) {
         const textarea = document.getElementById('editor-body');
