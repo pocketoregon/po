@@ -50,10 +50,10 @@
         </div>
         <div id="write-tab" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;">
             <div class="editor-toolbar" id="editor-toolbar">
-                <button class="toolbar-btn" onclick="formatText('bold')" title="Bold"><b>B</b></button>
-                <button class="toolbar-btn" onclick="formatText('italic')" title="Italic"><i>I</i></button>
-                <button class="toolbar-btn" onclick="formatText('formatBlock','H1')" title="Heading 1">H1</button>
-                <button class="toolbar-btn" onclick="formatText('formatBlock','H2')" title="Heading 2">H2</button>
+                <button class="toolbar-btn" id="btn-bold" onclick="formatText('bold')" title="Bold"><b>B</b></button>
+                <button class="toolbar-btn" id="btn-italic" onclick="formatText('italic')" title="Italic"><i>I</i></button>
+                <button class="toolbar-btn" id="btn-h1" onclick="formatText('formatBlock','H1')" title="Heading 1">H1</button>
+                <button class="toolbar-btn" id="btn-h2" onclick="formatText('formatBlock','H2')" title="Heading 2">H2</button>
                 <button class="toolbar-btn" onclick="formatInlineCode()" title="Inline code">`</button>
                 <button class="toolbar-btn" onclick="formatCodeBlock()" title="Code block">```</button>
                 <button class="toolbar-btn" onclick="formatText('insertUnorderedList')" title="List">—</button>
