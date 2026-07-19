@@ -50,18 +50,18 @@
         </div>
         <div id="write-tab" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;">
             <div class="editor-toolbar" id="editor-toolbar">
-                <button class="toolbar-btn" onclick="insertMarkdown('**', '**')" title="Bold">B</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('*', '*')" title="Italic">I</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('## ', '')" title="Heading 1">H1</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('### ', '')" title="Heading 2">H2</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('`', '`')" title="Inline code">`</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('```\n', '\n```')" title="Code block">```</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('- ', '')" title="List">—</button>
-                <button class="toolbar-btn" onclick="insertMarkdown('- [ ] ', '')" title="Checkbox">☑</button>
+                <button class="toolbar-btn" onclick="formatText('bold')" title="Bold"><b>B</b></button>
+                <button class="toolbar-btn" onclick="formatText('italic')" title="Italic"><i>I</i></button>
+                <button class="toolbar-btn" onclick="formatText('formatBlock','H1')" title="Heading 1">H1</button>
+                <button class="toolbar-btn" onclick="formatText('formatBlock','H2')" title="Heading 2">H2</button>
+                <button class="toolbar-btn" onclick="formatInlineCode()" title="Inline code">`</button>
+                <button class="toolbar-btn" onclick="formatCodeBlock()" title="Code block">```</button>
+                <button class="toolbar-btn" onclick="formatText('insertUnorderedList')" title="List">—</button>
+                <button class="toolbar-btn" onclick="insertChecklist()" title="Checkbox">☑</button>
                 <button class="toolbar-btn" onclick="insertLink()" title="Link">🔗</button>
             </div>
             <input id="editor-tags" type="text" placeholder="Add tags (comma separated, e.g. work, ideas)" />
-            <textarea id="editor-body" placeholder="Write your note here..." maxlength="10000"></textarea>
+            <div id="editor-body" contenteditable="true" data-placeholder="Write your note here..."></div>
         </div>
         <hr class="editor-divider">
         <div class="editor-footer">
