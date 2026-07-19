@@ -48,10 +48,6 @@
                 <button class="btn-close" onclick="closeEditor()">✕</button>
             </div>
         </div>
-        <div class="editor-tabs">
-            <button class="editor-tab active" onclick="switchTab('write')">Write</button>
-            <button class="editor-tab" onclick="switchTab('preview')">Preview</button>
-        </div>
         <div id="write-tab" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;">
             <div class="editor-toolbar" id="editor-toolbar">
                 <button class="toolbar-btn" onclick="insertMarkdown('**', '**')" title="Bold">B</button>
@@ -66,9 +62,6 @@
             </div>
             <input id="editor-tags" type="text" placeholder="Add tags (comma separated, e.g. work, ideas)" />
             <textarea id="editor-body" placeholder="Write your note here..." maxlength="10000"></textarea>
-        </div>
-        <div id="preview-tab" style="display: none; flex: 1; overflow: hidden;">
-            <div class="editor-preview" id="editor-preview"></div>
         </div>
         <hr class="editor-divider">
         <div class="editor-footer">
