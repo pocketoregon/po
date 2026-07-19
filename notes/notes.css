@@ -212,9 +212,18 @@
         .editor-preview code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
         body.dark .editor-preview code { background: #404040; }
         .editor-preview pre { background: #1f1e24; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; }
-        #editor-body { flex: 0 1 auto; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; height: 240px; min-height: 120px; max-height: 36vh; user-select: text; -webkit-user-select: text; overflow-y: auto; background: transparent; }
+        #editor-body { flex: 0 1 auto; border: none; outline: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: #374151; height: 240px; min-height: 120px; max-height: 36vh; user-select: text; -webkit-user-select: text; overflow-y: auto; background: transparent; white-space: pre-wrap; word-wrap: break-word; }
         body.dark #editor-body { color: #e5e7eb; }
-        #editor-body::placeholder { color: #d1d5db; }
+        #editor-body:empty:before { content: attr(data-placeholder); color: #d1d5db; pointer-events: none; }
+        #editor-body b, #editor-body strong { font-weight: 700; }
+        #editor-body i, #editor-body em { font-style: italic; }
+        #editor-body code { background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        body.dark #editor-body code { background: #404040; }
+        #editor-body pre { background: #1f1e24; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; }
+        #editor-body pre code { background: transparent; padding: 0; color: inherit; }
+        #editor-body h1, #editor-body h2, #editor-body h3 { font-weight: 700; margin: 0.6rem 0 0.3rem; }
+        #editor-body a { color: #2563eb; text-decoration: underline; }
+        #editor-body ul { padding-left: 1.4rem; margin: 0.4rem 0; }
         .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
         body.dark .editor-divider { border-color: #404040; }
         .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; overflow: visible; position: relative; z-index: 1; }
