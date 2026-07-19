@@ -176,6 +176,7 @@
         #empty-state svg { margin: 0 auto 1rem; display: block; }
         #editor-modal { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; }
         #editor-modal.open { display: flex; }
+        body.modal-open { overflow: hidden; height: 100vh; }
         @media (min-width: 640px) { #editor-modal { align-items: center; } }
         .editor-box { background: white; width: 100%; max-width: 640px; border-radius: 16px 16px 0 0; padding: 1.5rem; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.15); animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); overflow: visible; }
         body.dark .editor-box { background: #2d2d2d; color: #e5e7eb; }
@@ -202,6 +203,8 @@
         body.dark .toolbar-btn { border-color: #505050; color: #9ca3af; }
         .toolbar-btn:hover { background: white; color: #1f1e24; border-color: #d1d5db; }
         body.dark .toolbar-btn:hover { background: #505050; color: #e5e7eb; }
+        .toolbar-btn.active { background: #1f1e24; color: #fff; border-color: #1f1e24; }
+        body.dark .toolbar-btn.active { background: #f97316; color: #1f1e24; border-color: #f97316; }
         #editor-tags { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; font-family: 'Inter', sans-serif; margin-bottom: 12px; }
         body.dark #editor-tags { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
         #editor-tags::placeholder { color: #d1d5db; }
