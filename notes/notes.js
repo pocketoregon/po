@@ -7,7 +7,10 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     window.toggleDarkMode = toggleDarkMode;
     window.closeEditor = closeEditor;
     window.toggleFullscreen = toggleFullscreen;
-    window.insertMarkdown = insertMarkdown;
+    window.formatText = formatText;
+    window.formatInlineCode = formatInlineCode;
+    window.formatCodeBlock = formatCodeBlock;
+    window.insertChecklist = insertChecklist;
     window.insertLink = insertLink;
     window.openNewNote = openNewNote;
     window.handleSort = handleSort;
@@ -439,7 +442,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     function openNewNote() {
         editingNoteId = null;
         document.getElementById('editor-title').value = '';
-        document.getElementById('editor-body').value = '';
+        document.getElementById('editor-body').innerHTML = '';
         document.getElementById('editor-tags').value = '';
         document.getElementById('editor-meta').textContent = 'New note';
         document.getElementById('save-btn').textContent = 'Done';
@@ -457,7 +460,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         if (!note) return;
         editingNoteId = noteId;
         document.getElementById('editor-title').value = note.title || '';
-        document.getElementById('editor-body').value = note.body || '';
+        document.getElementById('editor-body').innerHTML = note.body || '';
         document.getElementById('editor-tags').value = note.tags || '';
         document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
         document.getElementById('save-btn').textContent = 'Done';
@@ -483,34 +486,56 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     }
 
 
-    function insertMarkdown(before, after) {
-        const textarea = document.getElementById('editor-body');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selected = textarea.value.substring(start, end);
-        const newText = textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end);
-        textarea.value = newText;
-        textarea.selectionStart = start + before.length;
-        textarea.selectionEnd = start + before.length + selected.length;
-        textarea.focus();
+    function ensureEditorFocused() {
+        const editor = document.getElementById('editor-body');
+        if (document.activeElement !== editor) editor.focus();
+    }
+
+    function formatText(command, value) {
+        ensureEditorFocused();
+        document.execCommand(command, false, value || null);
+        updateWordCount();
+    }
+
+    function formatInlineCode() {
+        ensureEditorFocused();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) { updateWordCount(); return; }
+        const text = sel.toString();
+        document.execCommand('insertHTML', false, '<code>' + escHtml(text) + '</code>');
+        updateWordCount();
+    }
+
+    function formatCodeBlock() {
+        ensureEditorFocused();
+        const sel = window.getSelection();
+        const text = (sel && sel.rangeCount && !sel.isCollapsed) ? sel.toString() : '';
+        document.execCommand('insertHTML', false, '<pre><code>' + escHtml(text) + '</code></pre><br>');
+        updateWordCount();
+    }
+
+    function insertChecklist() {
+        ensureEditorFocused();
+        document.execCommand('insertHTML', false, '☐ ');
         updateWordCount();
     }
 
     function insertLink() {
-        const textarea = document.getElementById('editor-body');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selected = textarea.value.substring(start, end);
+        ensureEditorFocused();
+        const sel = window.getSelection();
+        const selectedText = sel ? sel.toString() : '';
         const url = prompt('Enter URL:');
         if (!url) return;
-        const newText = textarea.value.substring(0, start) + `[${selected}](${url})` + textarea.value.substring(end);
-        textarea.value = newText;
-        textarea.focus();
+        if (selectedText) {
+            document.execCommand('createLink', false, url);
+        } else {
+            document.execCommand('insertHTML', false, '<a href="' + escHtml(url) + '" target="_blank">' + escHtml(url) + '</a>');
+        }
         updateWordCount();
     }
 
     function updateWordCount() {
-        const body = document.getElementById('editor-body').value;
+        const body = document.getElementById('editor-body').innerText;
         const words = body.trim().split(/\s+/).filter(Boolean).length;
         const chars = body.length;
         document.getElementById('editor-meta').textContent = `${words} words · ${chars} chars`;
@@ -532,7 +557,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
 
     function exportNote() {
         const title = document.getElementById('editor-title').value || 'note';
-        const body = document.getElementById('editor-body').value;
+        const body = document.getElementById('editor-body').innerText;
         const content = `# ${title}\n\n${body}`;
         const blob = new Blob([content], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
@@ -572,7 +597,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
 
     async function saveNote() {
         const titleRaw = document.getElementById('editor-title').value.trim();
-        const bodyRaw = document.getElementById('editor-body').value.trim();
+        const bodyRaw = document.getElementById('editor-body').innerHTML.trim();
         const tagsRaw = document.getElementById('editor-tags').value.trim();
         if (!titleRaw && !bodyRaw) { showAlert('Note is empty.'); return; }
 
@@ -647,7 +672,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     function currentFormSnapshot() {
         return {
             title: document.getElementById('editor-title').value,
-            body: document.getElementById('editor-body').value,
+            body: document.getElementById('editor-body').innerHTML,
             tags: document.getElementById('editor-tags').value
         };
     }
@@ -708,7 +733,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
 
     async function persistNote() {
         const titleRaw = document.getElementById('editor-title').value.trim();
-        const bodyRaw = document.getElementById('editor-body').value.trim();
+        const bodyRaw = document.getElementById('editor-body').innerHTML.trim();
         const tagsRaw = document.getElementById('editor-tags').value.trim();
         if (!titleRaw && !bodyRaw) return false;
 
@@ -775,7 +800,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
             if (draftDiffers && d.ts > savedTs) {
                 if (confirm('Restore unsaved draft from last session?')) {
                     document.getElementById('editor-title').value = d.title || '';
-                    document.getElementById('editor-body').value = d.body || '';
+                    document.getElementById('editor-body').innerHTML = d.body || '';
                     document.getElementById('editor-tags').value = d.tags || '';
                     updateWordCount();
                     setSaveStatus('Unsaved changes…', 'unsaved');
