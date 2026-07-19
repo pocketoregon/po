@@ -447,6 +447,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         document.getElementById('editor-meta').textContent = 'New note';
         document.getElementById('save-btn').textContent = 'Done';
         document.getElementById('editor-modal').classList.add('open');
+        document.body.classList.add('modal-open');
         updateWordCount();
         lastSavedSnapshot = null;
         autosaveFirstChangeAt = null;
@@ -465,6 +466,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         document.getElementById('editor-meta').textContent = 'Last edited ' + formatDate(note.updated_at);
         document.getElementById('save-btn').textContent = 'Done';
         document.getElementById('editor-modal').classList.add('open');
+        document.body.classList.add('modal-open');
         updateWordCount();
         lastSavedSnapshot = { title: note.title || '', body: note.body || '', tags: note.tags || '' };
         autosaveFirstChangeAt = null;
@@ -480,6 +482,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         }
         if (autosaveTimer) { clearTimeout(autosaveTimer); performAutosave(); }
         document.getElementById('editor-modal').classList.remove('open');
+        document.body.classList.remove('modal-open');
         editingNoteId = null;
         isFullscreen = false;
         autosaveFirstChangeAt = null;
@@ -489,12 +492,28 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     function ensureEditorFocused() {
         const editor = document.getElementById('editor-body');
         if (document.activeElement !== editor) editor.focus();
+        try { document.execCommand('AutoUrlDetect', false, false); } catch(e) {}
+    }
+
+    function updateToolbarState() {
+        try {
+            const boldBtn = document.getElementById('btn-bold');
+            const italicBtn = document.getElementById('btn-italic');
+            const h1Btn = document.getElementById('btn-h1');
+            const h2Btn = document.getElementById('btn-h2');
+            if (boldBtn) boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+            if (italicBtn) italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+            const block = (document.queryCommandValue('formatBlock') || '').toLowerCase();
+            if (h1Btn) h1Btn.classList.toggle('active', block === 'h1');
+            if (h2Btn) h2Btn.classList.toggle('active', block === 'h2');
+        } catch(e) {}
     }
 
     function formatText(command, value) {
         ensureEditorFocused();
         document.execCommand(command, false, value || null);
         updateWordCount();
+        updateToolbarState();
     }
 
     function formatInlineCode() {
@@ -852,6 +871,9 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     });
 
     document.getElementById('editor-body').addEventListener('keyup', updateWordCount);
+    document.getElementById('editor-body').addEventListener('keyup', updateToolbarState);
+    document.getElementById('editor-body').addEventListener('mouseup', updateToolbarState);
+    document.getElementById('editor-body').addEventListener('focus', () => { try { document.execCommand('AutoUrlDetect', false, false); } catch(e) {} });
     document.getElementById('editor-body').addEventListener('input', handleEditorInput);
     document.getElementById('editor-title').addEventListener('input', handleEditorInput);
     document.getElementById('editor-tags').addEventListener('input', handleEditorInput);
