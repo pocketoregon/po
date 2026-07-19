@@ -12,6 +12,8 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     window.formatCodeBlock = formatCodeBlock;
     window.insertChecklist = insertChecklist;
     window.insertLink = insertLink;
+    window.closeLinkDialog = closeLinkDialog;
+    window.confirmLinkDialog = confirmLinkDialog;
     window.openNewNote = openNewNote;
     window.handleSort = handleSort;
     window.switchView = switchView;
@@ -40,6 +42,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
     let currentSort = 'newest';
     let selectedTag = null;
     let isFullscreen = false;
+    let linkDialogSelectionRange = null;
     let autosaveTimer = null;
     let autosaveFirstChangeAt = null;
     let isSavingNow = false;
@@ -518,36 +521,75 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         updateToolbarState();
     }
 
+    function placeCaretAtEndOf(selector) {
+        const editor = document.getElementById('editor-body');
+        const nodes = editor.querySelectorAll(selector);
+        const last = nodes[nodes.length - 1];
+        if (!last) return;
+        const range = document.createRange();
+        range.selectNodeContents(last);
+        range.collapse(false);
+        const s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(range);
+    }
+
     function formatInlineCode() {
         ensureEditorFocused();
         const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) { updateWordCount(); return; }
-        const text = sel.toString();
-        document.execCommand('insertHTML', false, '<code>' + escHtml(text) + '</code>');
+        if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+            const text = sel.toString();
+            document.execCommand('insertHTML', false, '<code>' + escHtml(text) + '</code>');
+        } else {
+            document.execCommand('insertHTML', false, '<code>\u200b</code>');
+            placeCaretAtEndOf('code');
+        }
         updateWordCount();
     }
 
     function formatCodeBlock() {
         ensureEditorFocused();
         const sel = window.getSelection();
-        const text = (sel && sel.rangeCount && !sel.isCollapsed) ? sel.toString() : '';
-        document.execCommand('insertHTML', false, '<pre><code>' + escHtml(text) + '</code></pre><br>');
+        const hasSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed;
+        const text = hasSelection ? sel.toString() : '';
+        document.execCommand('insertHTML', false, '<pre><code>' + (text ? escHtml(text) : '\u200b') + '</code></pre><br>');
+        if (!hasSelection) placeCaretAtEndOf('pre code');
         updateWordCount();
     }
 
     function insertChecklist() {
         ensureEditorFocused();
-        document.execCommand('insertHTML', false, '☐ ');
+        document.execCommand('insertHTML', false, '<input type="checkbox" contenteditable="false"> ');
         updateWordCount();
     }
 
     function insertLink() {
         ensureEditorFocused();
         const sel = window.getSelection();
-        const selectedText = sel ? sel.toString() : '';
-        const url = prompt('Enter URL:');
+        linkDialogSelectionRange = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
+        document.getElementById('link-dialog-input').value = '';
+        document.getElementById('link-dialog').classList.add('open');
+        setTimeout(() => document.getElementById('link-dialog-input').focus(), 50);
+    }
+
+    function closeLinkDialog() {
+        document.getElementById('link-dialog').classList.remove('open');
+        linkDialogSelectionRange = null;
+    }
+
+    function confirmLinkDialog() {
+        const url = document.getElementById('link-dialog-input').value.trim();
+        closeLinkDialog();
         if (!url) return;
-        if (selectedText) {
+        const editor = document.getElementById('editor-body');
+        editor.focus();
+        const sel = window.getSelection();
+        if (linkDialogSelectionRange) {
+            sel.removeAllRanges();
+            sel.addRange(linkDialogSelectionRange);
+        }
+        const hasSelection = sel && sel.toString().length > 0;
+        if (hasSelection) {
             document.execCommand('createLink', false, url);
         } else {
             document.execCommand('insertHTML', false, '<a href="' + escHtml(url) + '" target="_blank">' + escHtml(url) + '</a>');
@@ -870,6 +912,15 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
 
     document.getElementById('editor-modal').addEventListener('click', function(e) {
         if (e.target === this) closeEditor();
+    });
+
+    document.getElementById('link-dialog').addEventListener('click', function(e) {
+        if (e.target === this) closeLinkDialog();
+    });
+
+    document.getElementById('link-dialog-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); confirmLinkDialog(); }
+        if (e.key === 'Escape') { e.preventDefault(); closeLinkDialog(); }
     });
 
     document.getElementById('editor-body').addEventListener('keyup', updateWordCount);
