@@ -449,6 +449,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         document.getElementById('editor-modal').classList.add('open');
         document.body.classList.add('modal-open');
         updateWordCount();
+        updateToolbarState();
         lastSavedSnapshot = null;
         autosaveFirstChangeAt = null;
         setSaveStatus('', '');
@@ -468,6 +469,7 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
         document.getElementById('editor-modal').classList.add('open');
         document.body.classList.add('modal-open');
         updateWordCount();
+        updateToolbarState();
         lastSavedSnapshot = { title: note.title || '', body: note.body || '', tags: note.tags || '' };
         autosaveFirstChangeAt = null;
         setSaveStatus('', '');
