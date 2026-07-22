@@ -229,6 +229,8 @@
         #editor-body h3 { font-size: 1.05rem; font-weight: 700; margin: 0.6rem 0 0.3rem; }
         #editor-body a { color: #2563eb; text-decoration: underline; }
         #editor-body ul { padding-left: 1.4rem; margin: 0.4rem 0; }
+        #editor-body input[type="checkbox"] { width: 14px; height: 14px; margin-right: 6px; vertical-align: middle; cursor: pointer; }
+        #editor-body { caret-shape: block; }
         .editor-divider { border: none; border-top: 1px solid #f3f4f6; margin: 12px 0; }
         body.dark .editor-divider { border-color: #404040; }
         .editor-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; flex-shrink: 0; flex-wrap: nowrap; min-height: 40px; overflow: visible; position: relative; z-index: 1; }
@@ -266,6 +268,19 @@
         body.dark .login-box h2 { color: #e5e7eb; }
         .login-box p { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
         body.dark .login-box p { color: #9ca3af; }
+        #link-dialog { display: none; position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
+        #link-dialog.open { display: flex; }
+        .link-dialog-box { background: white; border-radius: 12px; padding: 1.5rem; max-width: 340px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        body.dark .link-dialog-box { background: #2d2d2d; color: #e5e7eb; }
+        .link-dialog-box h3 { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.05rem; margin-bottom: 12px; }
+        #link-dialog-input { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.875rem; margin-bottom: 14px; }
+        body.dark #link-dialog-input { background: #1a1a1a; color: #e5e7eb; border-color: #404040; }
+        .link-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .link-dialog-cancel { background: none; border: none; color: #6b7280; font-size: 0.85rem; cursor: pointer; padding: 6px 10px; }
+        .link-dialog-cancel:hover { color: #1f1e24; }
+        body.dark .link-dialog-cancel:hover { color: #e5e7eb; }
+        .link-dialog-confirm { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        body.dark .link-dialog-confirm { background: #f97316; }
         .dark-mode-btn { background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 1.1rem; padding: 4px; transition: color 0.15s; }
         .dark-mode-btn:hover { color: #1f1e24; }
         body.dark .dark-mode-btn:hover { color: #e5e7eb; }
