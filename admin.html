@@ -300,6 +300,19 @@
         <!-- MAILBOXES TAB -->
         <div id="tab-mailboxes" class="tab-panel">
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="outfit font-bold text-lg">✉️ All Mailboxes</h2>
+                    <button class="btn btn-dark btn-sm" onclick="loadMailboxList()">↻ Refresh</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead><tr><th>Address</th><th>Owner</th><th>User ID</th><th>Status</th><th>Created</th></tr></thead>
+                        <tbody id="mailboxes-table-body"><tr><td colspan="5" class="text-center text-gray-400 py-6">Click Refresh to load.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
                 <div class="px-6 py-4 border-b border-gray-100">
                     <h2 class="outfit font-bold text-lg">✉️ Create Mailbox</h2>
                     <p class="text-xs text-gray-400 mt-1">Creates name@pocketoregon.site for a user. Find the user's ID in the Data tab (click View, the ID is in the URL).</p>
@@ -382,7 +395,7 @@
         if (name === 'content') loadContentEditor();
         if (name === 'stories') loadDashboard();
         if (name === 'horizon') loadHorizonTab();
-        if (name === 'mailboxes') document.getElementById('mb-result').textContent = '';
+        if (name === 'mailboxes') { document.getElementById('mb-result').textContent = ''; loadMailboxList(); }
     }
 
     function handleAdminLogin(response) {
@@ -744,6 +757,31 @@
                 loadCardsAdmin();
             } else { showCustomAlert(data.error || 'Add failed.'); }
         } catch(e) { showCustomAlert('Network error.'); }
+    }
+
+    async function loadMailboxList() {
+        const body = document.getElementById('mailboxes-table-body');
+        body.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-6">Loading...</td></tr>';
+        try {
+            const res = await fetch(WORKER_URL + '/mail/admin/mailboxes', { headers: authHeader() });
+            const data = await res.json();
+            const rows = data.mailboxes || [];
+            if (rows.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-6">No mailboxes yet.</td></tr>';
+                return;
+            }
+            body.innerHTML = rows.map(m => `
+                <tr>
+                    <td class="font-semibold">${esc(m.address)}</td>
+                    <td>${esc(m.owner_name || '—')}<div class="text-xs text-gray-400">${esc(m.owner_email || '')}</div></td>
+                    <td>#${m.user_id}</td>
+                    <td><span class="badge ${m.status === 'active' ? 'badge-admin' : 'badge-reader'}">${esc(m.status)}</span></td>
+                    <td class="text-gray-400 text-xs">${fmt(m.created_at)}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            body.innerHTML = '<tr><td colspan="5" class="text-center text-red-400 py-6">Could not load mailboxes.</td></tr>';
+        }
     }
 
     async function createMailbox() {
