@@ -149,6 +149,7 @@
             <button class="tab-btn" onclick="switchTab('stories')">📚 Stories</button>
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
             <button class="tab-btn" onclick="switchTab('horizon')">🚀 Horizon</button>
+            <button class="tab-btn" onclick="switchTab('mailboxes')">✉️ Mailboxes</button>
         </div>
 
         <!-- DATA TAB -->
@@ -296,6 +297,30 @@
             </div>
         </div>
 
+        <!-- MAILBOXES TAB -->
+        <div id="tab-mailboxes" class="tab-panel">
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h2 class="outfit font-bold text-lg">✉️ Create Mailbox</h2>
+                    <p class="text-xs text-gray-400 mt-1">Creates name@pocketoregon.site for a user. Find the user's ID in the Data tab (click View, the ID is in the URL).</p>
+                </div>
+                <div class="px-6 py-5 space-y-4">
+                    <div>
+                        <label class="content-field-label">Name (before the @)</label>
+                        <input id="mb-name" type="text" class="content-field-input" placeholder="ali" maxlength="32" />
+                    </div>
+                    <div>
+                        <label class="content-field-label">User ID</label>
+                        <input id="mb-user" type="number" class="content-field-input" placeholder="e.g. 2" min="1" />
+                    </div>
+                    <div>
+                        <button class="btn btn-dark btn-sm" onclick="createMailbox()">Create Mailbox</button>
+                        <span id="mb-result" class="text-sm ml-3"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- HORIZON TAB -->
         <div id="tab-horizon" class="tab-panel">
             <div class="bg-white border border-gray-200 rounded-lg mb-8">
@@ -357,6 +382,7 @@
         if (name === 'content') loadContentEditor();
         if (name === 'stories') loadDashboard();
         if (name === 'horizon') loadHorizonTab();
+        if (name === 'mailboxes') document.getElementById('mb-result').textContent = '';
     }
 
     function handleAdminLogin(response) {
@@ -718,6 +744,30 @@
                 loadCardsAdmin();
             } else { showCustomAlert(data.error || 'Add failed.'); }
         } catch(e) { showCustomAlert('Network error.'); }
+    }
+
+    async function createMailbox() {
+        const name = document.getElementById('mb-name').value.trim();
+        const user_id = parseInt(document.getElementById('mb-user').value);
+        const out = document.getElementById('mb-result');
+        out.textContent = 'Creating...';
+        try {
+            const res = await fetch(WORKER_URL + '/mail/admin/mailboxes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify({ name, user_id })
+            });
+            const data = await res.json();
+            if (data.success) {
+                out.textContent = '✓ Created ' + data.address;
+                document.getElementById('mb-name').value = '';
+                document.getElementById('mb-user').value = '';
+            } else {
+                out.textContent = data.error || 'Failed.';
+            }
+        } catch (e) {
+            out.textContent = 'Network error.';
+        }
     }
 
     window.addEventListener('load', () => {
