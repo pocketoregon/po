@@ -85,6 +85,11 @@
       <button class="tab active" data-folder="inbox" onclick="switchTab('inbox')">Inbox</button>
       <button class="tab" data-folder="sent" onclick="switchTab('sent')">Outbox</button>
     </div>
+    <div id="reader" class="card" style="display:none;padding:1.25rem;">
+      <button class="cancel-btn" onclick="closeMessage()">← Back</button>
+      <div id="r-head" style="margin:1rem 0;"></div>
+      <div id="r-body" style="white-space:pre-wrap;font-size:0.95rem;line-height:1.6;"></div>
+    </div>
     <div class="card" id="list"><div class="empty">Loading...</div></div>
   </div>
 </main>
@@ -126,7 +131,7 @@
       list.innerHTML = messages.map(m => {
         const who = folder === 'inbox' ? m.from_addr : 'To: ' + m.to_addr;
         const unread = folder === 'inbox' && !m.is_read ? ' unread' : '';
-        return `<div class="row${unread}">
+        return `<div class="row${unread}" style="cursor:pointer;" onclick="openMessage(${m.id})">
           <div class="addr">${esc(who)}</div>
           <div class="subj">${esc(m.subject || '(no subject)')}</div>
           <div class="date">${fmt(m.created_at)}</div>
@@ -171,10 +176,40 @@
   }
 
   function switchTab(folder) {
+    closeMessage();
     currentFolder = folder;
     document.querySelectorAll('.tab').forEach(t =>
       t.classList.toggle('active', t.dataset.folder === folder));
     loadFolder(folder);
+  }
+
+  function stripHtml(h) {
+    const doc = new DOMParser().parseFromString(
+      String(h || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n'), 'text/html');
+    return doc.body.textContent.trim();
+  }
+
+  async function openMessage(id) {
+    const token = localStorage.getItem('po_token');
+    const res = await fetch(`${WORKER_URL}/mail/message/${id}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const { message: m } = await res.json();
+    const who = m.direction === 'in' ? 'From: ' + m.from_addr : 'To: ' + m.to_addr;
+    document.getElementById('r-head').innerHTML =
+      `<div style="font-size:1.1rem;font-weight:700;">${esc(m.subject || '(no subject)')}</div>` +
+      `<div style="color:#6b7280;font-size:0.85rem;margin-top:4px;">${esc(who)} · ${fmt(m.created_at)}</div>`;
+    document.getElementById('r-body').textContent = stripHtml(m.body);
+    document.getElementById('list').style.display = 'none';
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('reader').style.display = 'block';
+  }
+
+  function closeMessage() {
+    document.getElementById('reader').style.display = 'none';
+    document.getElementById('list').style.display = 'block';
+    document.querySelector('.tabs').style.display = 'flex';
   }
 
   function toggleCompose() {
