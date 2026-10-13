@@ -41,7 +41,7 @@ async function deleteGithubFile(env, filePath, sha) {
 
 export default {
   async email(message, env, ctx) {
-    ctx.waitUntil(handleInboundEmail(message, env));
+    await handleInboundEmail(message, env);
   },
 
   async fetch(request, env) {
