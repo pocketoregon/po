@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mail — PocketOregon</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; }
+    .outfit { font-family: 'Outfit', sans-serif; }
+    nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+    .nav-inner { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1f1e24; font-family: 'Outfit', sans-serif; font-weight: 800; }
+    .nav-back { font-size: 0.875rem; color: #6b7280; text-decoration: none; }
+    main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; margin-bottom: 1.25rem; }
+    .tabs { display: flex; gap: 6px; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem; }
+    .tab { background: none; border: none; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab.active { color: #1f1e24; border-bottom-color: #f97316; }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+    .row:last-child { border-bottom: none; }
+    .row.unread { font-weight: 600; }
+    .addr { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #374151; }
+    .subj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .date { font-size: 0.78rem; color: #9ca3af; white-space: nowrap; }
+    .empty { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: 0.9rem; }
+    .msg { padding: 2rem; text-align: center; color: #6b7280; }
+    .msg a { color: #f97316; font-weight: 600; }
+    @media (max-width: 640px) { .row { grid-template-columns: 1fr auto; } .subj { grid-column: 1 / -1; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"/></svg>
+      <span>PocketOregon</span>
+    </a>
+    <a href="/" class="nav-back">← Back to site</a>
+  </div>
+</nav>
+
+<main>
+  <h1>Mail</h1>
+
+  <div id="signed-out" class="card msg" style="display:none;">
+    <p>Sign in to see your mail.</p>
+    <p style="margin-top:0.75rem;"><a href="/signin.html?redirect=/mail/">Sign in with Google</a></p>
+  </div>
+
+  <div id="mail-view" style="display:none;">
+    <div class="tabs">
+      <button class="tab active" data-folder="inbox" onclick="switchTab('inbox')">Inbox</button>
+      <button class="tab" data-folder="sent" onclick="switchTab('sent')">Outbox</button>
+    </div>
+    <div class="card" id="list"><div class="empty">Loading...</div></div>
+  </div>
+</main>
+
+<script>
+  const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+  let currentFolder = 'inbox';
+
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function fmt(ts) {
+    if (!ts) return '';
+    const d = new Date(ts.replace(' ', 'T') + 'Z');
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+           d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function loadFolder(folder) {
+    const list = document.getElementById('list');
+    list.innerHTML = '<div class="empty">Loading...</div>';
+    const token = localStorage.getItem('po_token');
+    try {
+      const res = await fetch(`${WORKER_URL}/mail?folder=${folder}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.status === 401) {
+        document.getElementById('mail-view').style.display = 'none';
+        document.getElementById('signed-out').style.display = 'block';
+        return;
+      }
+      const data = await res.json();
+      const messages = data.messages || [];
+      if (messages.length === 0) {
+        list.innerHTML = `<div class="empty">No ${folder === 'inbox' ? 'received' : 'sent'} mail.</div>`;
+        return;
+      }
+      list.innerHTML = messages.map(m => {
+        const who = folder === 'inbox' ? m.from_addr : 'To: ' + m.to_addr;
+        const unread = folder === 'inbox' && !m.is_read ? ' unread' : '';
+        return `<div class="row${unread}">
+          <div class="addr">${esc(who)}</div>
+          <div class="subj">${esc(m.subject || '(no subject)')}</div>
+          <div class="date">${fmt(m.created_at)}</div>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="empty">Could not load mail. Try again.</div>';
+    }
+  }
+
+  function switchTab(folder) {
+    currentFolder = folder;
+    document.querySelectorAll('.tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.folder === folder));
+    loadFolder(folder);
+  }
+
+  window.addEventListener('load', () => {
+    const token = localStorage.getItem('po_token');
+    if (!token) {
+      document.getElementById('signed-out').style.display = 'block';
+      return;
+    }
+    document.getElementById('mail-view').style.display = 'block';
+    loadFolder(currentFolder);
+  });
+</script>
+</body>
+</html>
