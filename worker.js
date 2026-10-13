@@ -8,6 +8,7 @@ import { handleAdmin } from './routes/admin.js';
 import { handleHorizon } from './routes/horizon.js';
 import { handleStories } from './routes/stories.js';
 import { handleContent, handleCards } from './routes/content.js';
+import { handleMail, handleInboundEmail } from './lib/mail.js';
 
 async function githubFile(env, filePath, content, sha) {
   const encoded = btoa(unescape(encodeURIComponent(content || '')));
@@ -39,6 +40,10 @@ async function deleteGithubFile(env, filePath, sha) {
 }
 
 export default {
+  async email(message, env, ctx) {
+    ctx.waitUntil(handleInboundEmail(message, env));
+  },
+
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -883,6 +888,12 @@ export default {
         await env.DB.prepare('UPDATE users SET horizon_access=? WHERE id=?').bind(horizon_access ? 1 : 0, adminHorizonMatch[1]).run();
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
+    }
+
+    // Mail routes
+    if (path.startsWith('/mail')) {
+      const mailRes = await handleMail(path, request, env);
+      if (mailRes) return mailRes;
     }
 
     // Route fallback to sub-handlers
