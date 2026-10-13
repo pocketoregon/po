@@ -77,6 +77,10 @@
   </div>
 
   <div id="mail-view" style="display:none;">
+    <div id="mb-wrap" style="display:none;margin-bottom:1rem;">
+      <label style="font-size:0.85rem;color:#6b7280;margin-right:8px;">Mailbox:</label>
+      <select id="mb-select" onchange="changeMailbox(this.value)" style="padding:6px 10px;border:1px solid #e5e7eb;border-radius:6px;font-size:0.9rem;background:white;"></select>
+    </div>
     <div class="tabs">
       <button class="tab active" data-folder="inbox" onclick="switchTab('inbox')">Inbox</button>
       <button class="tab" data-folder="sent" onclick="switchTab('sent')">Outbox</button>
@@ -105,7 +109,7 @@
     list.innerHTML = '<div class="empty">Loading...</div>';
     const token = localStorage.getItem('po_token');
     try {
-      const res = await fetch(`${WORKER_URL}/mail?folder=${folder}`, {
+      const res = await fetch(`${WORKER_URL}/mail?folder=${folder}${currentMailbox ? '&mailbox_id=' + currentMailbox : ''}`, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (res.status === 401) {
@@ -131,6 +135,39 @@
     } catch (e) {
       list.innerHTML = '<div class="empty">Could not load mail. Try again.</div>';
     }
+  }
+
+  let currentMailbox = '';
+
+  async function loadMailboxes() {
+    const token = localStorage.getItem('po_token');
+    try {
+      const res = await fetch(`${WORKER_URL}/mail/mailboxes`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      const boxes = data.mailboxes || [];
+      const wrap = document.getElementById('mb-wrap');
+      const select = document.getElementById('mb-select');
+      if (boxes.length === 0) {
+        wrap.style.display = 'block';
+        wrap.innerHTML = '<span style="font-size:0.9rem;color:#6b7280;">You have no mailbox yet. Ask the admin to create one for you.</span>';
+        return;
+      }
+      select.innerHTML = boxes.map(b =>
+        `<option value="${b.id}">${esc(b.address)}${b.status !== 'active' ? ' (' + esc(b.status) + ')' : ''}</option>`
+      ).join('');
+      currentMailbox = String(boxes[0].id);
+      select.value = currentMailbox;
+      wrap.style.display = 'block';
+    } catch (e) {
+      console.error('Could not load mailboxes', e);
+    }
+  }
+
+  function changeMailbox(id) {
+    currentMailbox = id;
+    loadFolder(currentFolder);
   }
 
   function switchTab(folder) {
@@ -160,6 +197,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') },
         body: JSON.stringify({
+          mailbox_id: currentMailbox ? parseInt(currentMailbox) : null,
           to,
           subject,
           html: '<p>' + body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>'
@@ -187,6 +225,7 @@
       return;
     }
     document.getElementById('mail-view').style.display = 'block';
+    loadMailboxes();
     loadFolder(currentFolder);
   });
 </script>
