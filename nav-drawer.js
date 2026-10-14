@@ -6,6 +6,29 @@
 // Global drawer state
 let drawerContainer = null;
 let currentUser = null;
+let hasMail = false;
+
+const MAIL_ICON = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>`;
+
+// Checks whether this user owns at least one mailbox, then re-renders the drawer
+async function checkMailAccess() {
+  const token = localStorage.getItem('po_token');
+  if (!token) return;
+  try {
+    const res = await fetch('https://po.pocketoregon.workers.dev/mail/mailboxes', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const found = (data.mailboxes || []).length > 0;
+    if (found !== hasMail) {
+      hasMail = found;
+      if (currentUser) updateNavDrawerUser(currentUser);
+    }
+  } catch (e) {
+    // Network issue: leave the Mail link hidden
+  }
+}
 
 // Inline SVG Icons
 const ICONS = {
@@ -218,6 +241,7 @@ function renderDrawerHTML(user) {
         <li class="nd-item"><a href="https://notes.pocketoregon.site/">${ICONS.notes} My Notes</a></li>
         ${isCreator ? `<li class="nd-item"><a href="https://pocketoregon.site/stories/create.html">${ICONS.studio} Creator Studio</a></li>` : ''}
         ${isCreator ? `<li class="nd-item"><a href="https://pocketoregon.site/stories/index.html?author=${user.id}">${ICONS.stories} My Stories</a></li>` : ''}
+        ${hasMail ? `<li class="nd-item"><a href="https://pocketoregon.site/mail/">${MAIL_ICON} Mail</a></li>` : ''}
         ${hasHorizon ? `<li class="nd-item"><a href="https://pocketoregon.site/horizon/">${ICONS.horizon} Project Horizon</a></li>` : ''}
         ${isAdmin ? `<li class="nd-item"><a href="https://pocketoregon.site/admin.html">${ICONS.admin} Admin Panel</a></li>` : ''}
       </ul>
@@ -266,6 +290,7 @@ export function initNavDrawer(user) {
 
   drawerContainer.innerHTML = renderDrawerHTML(currentUser);
   setupEventListeners();
+  checkMailAccess();
 
   // Expose methods to global scope to safeguard multi-page link tags or legacy handlers
   window.openNavDrawer = openNavDrawer;
