@@ -231,7 +231,7 @@ function renderDrawerHTML(user) {
     <div class="nav-drawer-backdrop"></div>
     <div class="nav-drawer-content">
       <div class="nd-profile-block">
-        <div class="nd-avatar">${getInitials(user.name)}</div>
+        <div class="nd-avatar" style="padding:0;overflow:hidden;">${window.poAvatarHTML(user, 60)}</div>
         <h2 class="nd-name">${user.name || 'User'}</h2>
         <p class="nd-email">${user.email || ''}</p>
       </div>
