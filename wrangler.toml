@@ -11,6 +11,9 @@ binding = "DB"
 database_name = "pocketoregon-db"
 database_id = "5042c46f-e454-4af5-a203-391b8e1119d0"
 
+[triggers]
+crons = ["0 3 * * *"]
+
 [observability]
 enabled = true
 
