@@ -12,6 +12,7 @@
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#ffffff">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/avatar.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     <style>
@@ -454,7 +455,7 @@
         if (!users || users.error) { body.innerHTML = '<tr><td colspan="6" class="text-center text-red-400">Error loading users.</td></tr>'; return; }
         body.innerHTML = users.map(u => `
             <tr>
-                <td><div class="font-semibold">${esc(u.name)}</div></td>
+                <td><div class="font-semibold" style="display:flex;align-items:center;gap:8px;">${window.poAvatarHTML(u, 24)}<span>${esc(u.name)}</span></div></td>
                 <td class="text-gray-500">${esc(u.email)}</td>
                 <td><span class="badge badge-${u.role}">${u.role}</span></td>
                 <td>
