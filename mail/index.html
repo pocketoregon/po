@@ -101,6 +101,9 @@
       <button class="cancel-btn" onclick="closeMessage()">← Back</button>
       <div id="r-head" style="margin:1rem 0;"></div>
       <div id="r-body" style="white-space:pre-wrap;font-size:0.95rem;line-height:1.6;"></div>
+      <div style="margin-top:1.25rem;">
+        <button class="cancel-btn" id="keep-btn" onclick="toggleKeep()">Keep this message</button>
+      </div>
     </div>
 
     <div class="card" id="list"><div class="empty">Loading...</div></div>
@@ -115,6 +118,8 @@
   let currentFolder = 'inbox';
   let currentMailbox = '';
   let busy = false;
+  let currentMessageId = null;
+  let currentKeep = 0;
 
   function esc(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -248,6 +253,9 @@
       `<div style="font-size:1.1rem;font-weight:700;">${esc(m.subject || '(no subject)')}</div>` +
       `<div style="color:#6b7280;font-size:0.85rem;margin-top:4px;">${esc(who)} · ${fmt(m.created_at)}</div>`;
     document.getElementById('r-body').textContent = stripHtml(m.body);
+    currentMessageId = id;
+    currentKeep = m.keep ? 1 : 0;
+    updateKeepButton();
     document.getElementById('list').style.display = 'none';
     document.querySelector('.tabs').style.display = 'none';
     document.getElementById('reader').style.display = 'block';
@@ -257,6 +265,23 @@
       const item = cache.inbox.find(x => x.id === id);
       if (item) item.is_read = 1;
     }
+  }
+
+  function updateKeepButton() {
+    document.getElementById('keep-btn').textContent =
+      currentKeep ? '✓ Kept (click to remove)' : 'Keep this message';
+  }
+
+  async function toggleKeep() {
+    const next = currentKeep ? 0 : 1;
+    const res = await fetch(`${WORKER_URL}/mail/message/${currentMessageId}/keep`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') },
+      body: JSON.stringify({ keep: next })
+    });
+    if (!res.ok) return;
+    currentKeep = next;
+    updateKeepButton();
   }
 
   function closeMessage() {
