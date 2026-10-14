@@ -6,6 +6,7 @@
 <title>Mail — PocketOregon</title>
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script src="/avatar.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,8 +52,8 @@
   .back { display: none; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #374151; }
 
   .msgs { flex: 1; overflow-y: auto; padding: 16px; background: #f9fafb; display: flex; flex-direction: column; gap: 10px; }
-  .row-msg { display: flex; }
-  .row-msg.out { justify-content: flex-end; }
+  .row-msg { display: flex; gap: 8px; align-items: flex-end; }
+  .row-msg.out { justify-content: flex-end; flex-direction: row-reverse; }
   .bubble { max-width: 72%; background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; }
   .row-msg.out .bubble { background: #1f1e24; border-color: #1f1e24; color: white; }
   .bsubj { font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
@@ -220,17 +221,18 @@
   // One conversation per other address, combining inbound and outbound messages.
   function conversations() {
     const map = new Map();
-    const add = (m, dir, peerRaw) => {
+    const add = (m, dir, peerRaw, pStyle, pSeed) => {
       const peer = addrOf(peerRaw);
       if (!peer) return;
       if (!map.has(peer)) map.set(peer, { peer, name: nameOf(peerRaw), msgs: [], unread: 0 });
       const c = map.get(peer);
       c.msgs.push({ ...m, dir });
       if (dir === 'in' && !m.is_read) c.unread++;
+      if (pSeed) { c.style = pStyle; c.seed = pSeed; }
       if (nameOf(peerRaw) !== addrOf(peerRaw)) c.name = nameOf(peerRaw);
     };
-    rows.inbox.forEach(m => add(m, 'in', m.from_addr));
-    rows.sent.forEach(m => add(m, 'out', m.to_addr));
+    rows.inbox.forEach(m => add(m, 'in', m.from_addr, m.sender_style, m.sender_seed));
+    rows.sent.forEach(m => add(m, 'out', m.to_addr, m.recipient_style, m.recipient_seed));
     const list = [...map.values()];
     list.forEach(c => {
       c.msgs.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
@@ -251,7 +253,7 @@
     }
     $('convo-list').innerHTML = list.map(c => `
       <div class="convo ${c.peer === currentPeer && !composing ? 'active' : ''}" data-peer="${esc(c.peer)}" onclick="openThread(this.dataset.peer)">
-        <div class="av">${esc(((c.name || c.peer)[0] || '?').toUpperCase())}</div>
+        ${window.poAvatarHTML({ name: c.name, avatar_style: c.style, avatar_seed: c.seed }, 38)}
         <div class="cbody">
           <div class="crow">
             <span class="cname ${c.unread ? 'bold' : ''}">${esc(c.name)}</span>
@@ -294,7 +296,7 @@
       prev = subj;
       const body = bodies.has(m.id) ? bodies.get(m.id) : '…';
       return `
-        <div class="row-msg ${m.dir === 'out' ? 'out' : 'in'}">
+        <div class="row-msg ${m.dir === 'out' ? 'out' : 'in'}">${window.poAvatarHTML({ name: m.dir === 'in' ? nameOf(m.from_addr) : 'Me', avatar_style: m.sender_style, avatar_seed: m.sender_seed }, 28)}
           <div class="bubble">
             ${showSubj ? `<div class="bsubj">${esc(m.subject || '(no subject)')}</div>` : ''}
             <div class="btext">${esc(body)}</div>
