@@ -389,7 +389,13 @@
         const style = document.getElementById('avatar-style').value;
         const seed = document.getElementById('avatar-seed').value.trim();
         const img = document.getElementById('avatar-preview');
-        img.src = seed ? avatarUrl(style, seed) : '';
+        if (seed) {
+            img.style.display = 'block';
+            img.src = avatarUrl(style, seed);
+        } else {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+        }
     }
 
     async function saveAvatar() {
