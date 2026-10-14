@@ -8,7 +8,7 @@ import { handleAdmin } from './routes/admin.js';
 import { handleHorizon } from './routes/horizon.js';
 import { handleStories } from './routes/stories.js';
 import { handleContent, handleCards } from './routes/content.js';
-import { handleMail, handleInboundEmail } from './lib/mail.js';
+import { handleMail, handleInboundEmail, cleanupExpiredMail } from './lib/mail.js';
 
 async function githubFile(env, filePath, content, sha) {
   const encoded = btoa(unescape(encodeURIComponent(content || '')));
@@ -40,6 +40,10 @@ async function deleteGithubFile(env, filePath, sha) {
 }
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(cleanupExpiredMail(env));
+  },
+
   async email(message, env, ctx) {
     await handleInboundEmail(message, env);
   },
