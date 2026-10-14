@@ -30,6 +30,7 @@
     <meta name="twitter:description" content="A creative fiction website and home of the Pocketverse saga. Explore lore, characters, and upcoming chapter releases.">
     <meta name="twitter:image" content="https://pocketoregon.site/og-image.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/avatar.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -434,7 +435,7 @@
             document.getElementById('login-btn').style.display = 'none';
             document.getElementById('user-area').style.display = 'block';
             const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?';
-            document.getElementById('user-avatar').textContent = initials;
+            document.getElementById('user-avatar').innerHTML = window.poAvatarHTML(user, 28);
             document.getElementById('comment-form-area').style.display = 'block';
             document.getElementById('comment-login-prompt').style.display = 'none';
             
@@ -528,7 +529,7 @@
                         const isOwn = currentUser && String(currentUser.id) === String(c.user_id);
                         const isAdmin = currentUser && currentUser.role === 'admin';
                         const canDelete = isOwn || isAdmin;
-                        return `<div class="comment-card" id="site-comment-${c.id}"><div class="flex items-start justify-between gap-3"><div class="flex-1 min-w-0"><div><span class="comment-author" onclick="window.location.href='profile.html?id=${c.user_id}'">${escapeHtml(c.name || 'Anonymous')}</span><span class="comment-time">${formatTime(c.created_at)}</span></div><p class="comment-text">${escapeHtml(c.text)}</p></div>${canDelete ? `<button class="comment-delete-btn" onclick="deleteComment(${c.id})" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>` : ''}</div></div>`;
+                        return `<div class="comment-card" id="site-comment-${c.id}"><div class="flex items-start justify-between gap-3"><div class="flex-1 min-w-0"><div style="display:flex;align-items:center;gap:8px;">${window.poAvatarHTML(c, 24)}<span class="comment-author" onclick="window.location.href='profile.html?id=${c.user_id}'">${escapeHtml(c.name || 'Anonymous')}</span><span class="comment-time">${formatTime(c.created_at)}</span></div><p class="comment-text">${escapeHtml(c.text)}</p></div>${canDelete ? `<button class="comment-delete-btn" onclick="deleteComment(${c.id})" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Delete</button>` : ''}</div></div>`;
                     }).join('');
                 }
             } catch(e) {
