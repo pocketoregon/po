@@ -894,6 +894,19 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
+    // Avatar choice (stores only the DiceBear style and seed, never an image)
+    if (path === '/profile/avatar' && request.method === 'POST') {
+      const user = await validateToken(request, env);
+      if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders2, 'Content-Type': 'application/json' } });
+      const AVATAR_STYLES = ['initials', 'adventurer', 'avataaars', 'bottts', 'fun-emoji', 'lorelei', 'notionists', 'pixel-art', 'shapes', 'thumbs'];
+      const { style, seed } = await request.json();
+      const cleanSeed = String(seed || '').trim();
+      if (!AVATAR_STYLES.includes(style)) return new Response(JSON.stringify({ error: 'Unknown style' }), { status: 400, headers: { ...corsHeaders2, 'Content-Type': 'application/json' } });
+      if (!/^[A-Za-z0-9_-]{1,40}$/.test(cleanSeed)) return new Response(JSON.stringify({ error: 'Seed must be 1 to 40 letters, numbers, - or _' }), { status: 400, headers: { ...corsHeaders2, 'Content-Type': 'application/json' } });
+      await env.DB.prepare('UPDATE users SET avatar_style = ?, avatar_seed = ? WHERE id = ?').bind(style, cleanSeed, user.id).run();
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders2, 'Content-Type': 'application/json' } });
+    }
+
     // Mail routes
     if (path.startsWith('/mail')) {
       const mailRes = await handleMail(path, request, env);
