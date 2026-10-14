@@ -357,6 +357,7 @@
             } else {
                 // No avatar yet: show the editor straight away
                 initAvatarEditor(user);
+                document.getElementById('avatar-editor').style.display = 'block';
                 document.getElementById('avatar-edit-btn').style.display = 'none';
             }
         }
@@ -395,7 +396,6 @@
     }
 
     function initAvatarEditor(user) {
-        document.getElementById('avatar-editor').style.display = 'block';
         document.getElementById('avatar-style').value = user.avatar_style || 'initials';
         document.getElementById('avatar-seed').value = user.avatar_seed || '';
         previewAvatar();
