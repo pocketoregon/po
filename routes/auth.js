@@ -52,7 +52,7 @@ export async function handleAuth(path, request, env) {
     const userId = url.searchParams.get('userId');
     if (!userId) return new Response(JSON.stringify({error:'No userId'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
     try {
-      const user = await env.DB.prepare('SELECT id,name,email,role,created_at FROM users WHERE id=?').bind(userId).first();
+      const user = await env.DB.prepare('SELECT id,name,email,role,created_at,avatar_style,avatar_seed FROM users WHERE id=?').bind(userId).first();
       if (!user) return new Response(JSON.stringify({error:'Not found'}),{status:404,headers:{...corsHeaders,'Content-Type':'application/json'}});
       const requester = await validateToken(request, env);
       if (!requester || (requester.id !== user.id && requester.role !== 'admin')) { user.email = '[Hidden]'; }
