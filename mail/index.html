@@ -1,50 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mail — PocketOregon</title>
-  <meta name="robots" content="noindex">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; }
-    nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
-    .nav-inner { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1f1e24; font-family: 'Outfit', sans-serif; font-weight: 800; }
-    .nav-back { font-size: 0.875rem; color: #6b7280; text-decoration: none; }
-    main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
-    h1 { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; }
-    .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; gap: 12px; }
-    .head-actions { display: flex; align-items: center; gap: 8px; }
-    .tabs { display: flex; gap: 6px; border-bottom: 1px solid #e5e7eb; margin-bottom: 1rem; }
-    .tab { background: none; border: none; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-    .tab.active { color: #1f1e24; border-bottom-color: #f97316; }
-    .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; }
-    .row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; cursor: pointer; }
-    .row:last-child { border-bottom: none; }
-    .row:hover { background: #fafafa; }
-    .row.unread { font-weight: 600; }
-    .addr { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #374151; }
-    .subj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .date { font-size: 0.78rem; color: #9ca3af; white-space: nowrap; }
-    .empty { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: 0.9rem; }
-    .msg { padding: 2rem; text-align: center; color: #6b7280; }
-    .msg a { color: #f97316; font-weight: 600; }
-    .status { font-size: 0.8rem; color: #9ca3af; }
-    .mb-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
-    .mb-row label { font-size: 0.85rem; color: #6b7280; }
-    .mb-row select { padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.9rem; background: white; }
-    .compose-btn { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-    .compose-btn:hover { background: #374151; }
-    .compose-btn:disabled { background: #9ca3af; cursor: not-allowed; }
-    .cancel-btn { background: #f3f4f6; color: #374151; border: none; border-radius: 6px; padding: 8px 14px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-    .compose { padding: 1.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 10px; }
-    .compose input, .compose textarea { width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; padding: 9px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; }
-    .compose input:focus, .compose textarea:focus { border-color: #f97316; }
-    @media (max-width: 640px) { .row { grid-template-columns: 1fr auto; } .subj { grid-column: 1 / -1; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mail — PocketOregon</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; }
+  nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+  .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1f1e24; font-family: 'Outfit', sans-serif; font-weight: 800; }
+  .nav-back { font-size: 0.875rem; color: #6b7280; text-decoration: none; }
+  main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+  .msg { padding: 2rem; text-align: center; color: #6b7280; background: white; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .msg a { color: #f97316; font-weight: 600; }
+
+  .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .top h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; margin-right: auto; }
+  .top select { padding: 7px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 280px; }
+  .status { font-size: 0.8rem; color: #9ca3af; }
+  .btn { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+  .btn:hover { background: #374151; }
+  .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+  .btn-light { background: #f3f4f6; color: #374151; }
+  .btn-light:hover { background: #e5e7eb; }
+
+  .panes { display: grid; grid-template-columns: 320px 1fr; height: 72vh; min-height: 480px; background: white; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+  .list { border-right: 1px solid #e5e7eb; overflow-y: auto; }
+  .thread { display: flex; flex-direction: column; min-height: 0; }
+  .empty { text-align: center; padding: 2.5rem 1rem; color: #9ca3af; font-size: 0.9rem; }
+
+  .convo { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+  .convo:hover { background: #fafafa; }
+  .convo.active { background: #fff7ed; }
+  .av { width: 38px; height: 38px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .cbody { flex: 1; min-width: 0; }
+  .crow { display: flex; justify-content: space-between; gap: 8px; }
+  .cname { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cname.bold { font-weight: 700; }
+  .ctime { font-size: 0.72rem; color: #9ca3af; white-space: nowrap; }
+  .csub { font-size: 0.8rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .badge { background: #f97316; color: white; font-size: 0.7rem; font-weight: 700; border-radius: 999px; padding: 2px 7px; }
+
+  .thead { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+  .tname { font-weight: 700; font-size: 0.95rem; }
+  .taddr { font-size: 0.78rem; color: #6b7280; }
+  .back { display: none; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #374151; }
+
+  .msgs { flex: 1; overflow-y: auto; padding: 16px; background: #f9fafb; display: flex; flex-direction: column; gap: 10px; }
+  .row-msg { display: flex; }
+  .row-msg.out { justify-content: flex-end; }
+  .bubble { max-width: 72%; background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; }
+  .row-msg.out .bubble { background: #1f1e24; border-color: #1f1e24; color: white; }
+  .bsubj { font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
+  .row-msg.out .bsubj { color: #fdba74; }
+  .btext { font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+  .btime { font-size: 0.7rem; color: #9ca3af; margin-top: 6px; text-align: right; }
+  .row-msg.out .btime { color: #d1d5db; }
+
+  .reply { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e5e7eb; background: white; }
+  .reply textarea, .compose-form textarea, .compose-form input { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; padding: 9px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; resize: vertical; }
+  .reply textarea:focus, .compose-form textarea:focus, .compose-form input:focus { border-color: #f97316; }
+  .compose-form { display: flex; flex-direction: column; gap: 10px; padding: 16px; flex: 1; overflow-y: auto; }
+  .row-end { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+  @media (max-width: 760px) {
+    .panes { grid-template-columns: 1fr; }
+    .thread { display: none; }
+    .panes.show-thread .list { display: none; }
+    .panes.show-thread .thread { display: flex; }
+    .back { display: inline-block; }
+    .bubble { max-width: 88%; }
+  }
+</style>
 </head>
 <body>
 
@@ -59,297 +90,344 @@
 </nav>
 
 <main>
-  <div id="signed-out" class="card msg" style="display:none;">
+  <div id="signed-out" class="msg" style="display:none;">
     <p>Sign in to see your mail.</p>
     <p style="margin-top:0.75rem;"><a href="/signin.html?redirect=/mail/">Sign in with Google</a></p>
   </div>
 
   <div id="mail-view" style="display:none;">
-    <div class="head">
+    <div class="top">
       <h1>Mail</h1>
-      <div class="head-actions">
-        <span id="status" class="status"></span>
-        <button class="cancel-btn" id="refresh-btn" onclick="refreshMail()">Refresh</button>
-        <button class="compose-btn" onclick="toggleCompose()">Compose</button>
-      </div>
-    </div>
-
-    <div id="mb-wrap" class="mb-row" style="display:none;">
-      <label for="mb-select">Mailbox:</label>
       <select id="mb-select" onchange="changeMailbox(this.value)"></select>
+      <span id="status" class="status"></span>
+      <button class="btn btn-light" id="refresh-btn" onclick="refreshMail()">Refresh</button>
+      <button class="btn" id="new-btn" onclick="openNew()">New message</button>
     </div>
 
-    <div id="compose" class="card compose" style="display:none;">
-      <input id="c-to" type="email" placeholder="To" />
-      <input id="c-subject" type="text" placeholder="Subject" maxlength="200" />
-      <textarea id="c-body" rows="8" placeholder="Write your message..."></textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-        <span id="c-status" class="status"></span>
-        <div style="display:flex;gap:8px;">
-          <button class="cancel-btn" onclick="toggleCompose()">Cancel</button>
-          <button class="compose-btn" id="c-send" onclick="sendMail()">Send</button>
-        </div>
-      </div>
+    <div class="panes" id="panes">
+      <aside class="list" id="convo-list"></aside>
+      <section class="thread" id="thread">
+        <div class="empty">Select a conversation or start a new message.</div>
+      </section>
     </div>
-
-    <div class="tabs">
-      <button class="tab active" data-folder="inbox" onclick="switchTab('inbox')">Inbox</button>
-      <button class="tab" data-folder="sent" onclick="switchTab('sent')">Outbox</button>
-    </div>
-
-    <div id="reader" class="card" style="display:none;padding:1.25rem;">
-      <button class="cancel-btn" onclick="closeMessage()">← Back</button>
-      <div id="r-head" style="margin:1rem 0;"></div>
-      <div id="r-body" style="white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-width:100%;font-size:0.95rem;line-height:1.6;"></div>
-      <div style="margin-top:1.25rem;">
-        <button class="cancel-btn" id="keep-btn" onclick="toggleKeep()">Keep this message</button>
-      </div>
-    </div>
-
-    <div class="card" id="list"><div class="empty">Loading...</div></div>
   </div>
 </main>
 
 <script>
   const WORKER_URL = 'https://po.pocketoregon.workers.dev';
-
-  // Loaded from the database once, then kept in memory.
-  let cache = { inbox: null, sent: null };
-  let currentFolder = 'inbox';
+  let mailboxes = [];
   let currentMailbox = '';
+  let rows = { inbox: [], sent: [] };   // list rows, loaded on open / refresh only
+  const bodies = new Map();             // message id -> body text, loaded when a thread opens
+  let currentPeer = null;
+  let composing = false;
   let busy = false;
-  let currentMessageId = null;
-  let currentKeep = 0;
 
-  function esc(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // "Pocket Core" <a@b.com>  ->  a@b.com   (plain addresses pass through)
+  function addrOf(s) {
+    const m = String(s || '').match(/<([^>]+)>/);
+    return (m ? m[1] : String(s || '')).trim().toLowerCase();
   }
-
+  function nameOf(s) {
+    const m = String(s || '').match(/^\s*"?([^"<]+?)"?\s*</);
+    return m ? m[1].trim() : addrOf(s);
+  }
   function fmt(ts) {
     if (!ts) return '';
     const d = new Date(ts.replace(' ', 'T') + 'Z');
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
-           d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const sameDay = new Date().toDateString() === d.toDateString();
+    return sameDay
+      ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
-
-  function stripHtml(h) {
-    const doc = new DOMParser().parseFromString(
-      String(h || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n'), 'text/html');
-    return doc.body.textContent.trim();
+  function cleanSubject(s) {
+    return String(s || '').replace(/^(re:\s*)+/i, '').trim();
   }
+  function setStatus(t) { $('status').textContent = t; }
 
-  function setStatus(text) {
-    document.getElementById('status').textContent = text;
-  }
-
-  async function apiGet(path) {
+  async function api(path, opts = {}) {
     const res = await fetch(WORKER_URL + path, {
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('po_token') }
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('po_token'),
+        ...(opts.headers || {})
+      }
     });
     if (res.status === 401) throw new Error('signed-out');
-    return res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
   }
 
-  // Fetches the mailbox list once (on page load).
-  async function loadMailboxes() {
-    const data = await apiGet('/mail/mailboxes');
-    const boxes = data.mailboxes || [];
-    const wrap = document.getElementById('mb-wrap');
-    const select = document.getElementById('mb-select');
+  function handleErr(e, msg) {
+    if (e.message === 'signed-out') {
+      $('mail-view').style.display = 'none';
+      $('signed-out').style.display = 'block';
+    } else {
+      setStatus(msg || 'Could not load mail.');
+    }
+  }
 
-    if (boxes.length === 0) {
-      wrap.style.display = 'flex';
-      wrap.innerHTML = '<span style="font-size:0.9rem;color:#6b7280;">You have no mailbox yet. Ask the admin to create one for you.</span>';
-      document.getElementById('list').innerHTML = '<div class="empty">No mailbox, so no mail to show.</div>';
+  async function loadMailboxes() {
+    const data = await api('/mail/mailboxes');
+    mailboxes = data.mailboxes || [];
+    if (!mailboxes.length) {
+      $('mb-select').style.display = 'none';
+      $('new-btn').style.display = 'none';
+      $('panes').style.display = 'none';
+      setStatus('You have no mailbox yet. Ask the admin to create one for you.');
       return false;
     }
-
-    select.innerHTML = boxes.map(b =>
+    $('mb-select').innerHTML = mailboxes.map(b =>
       `<option value="${b.id}">${esc(b.address)}${b.status !== 'active' ? ' (' + esc(b.status) + ')' : ''}</option>`
     ).join('');
-    currentMailbox = String(boxes[0].id);
-    select.value = currentMailbox;
-    wrap.style.display = 'flex';
+    currentMailbox = String(mailboxes[0].id);
+    $('mb-select').value = currentMailbox;
     return true;
   }
 
-  // Fetches both folders from the database and stores them in memory.
-  // Only runs on page load, Refresh, mailbox change, and after sending.
+  // Fetches both folders once. Runs on load, Refresh, mailbox change, and after sending.
   async function refreshMail() {
     if (!currentMailbox || busy) return;
     busy = true;
-    document.getElementById('refresh-btn').disabled = true;
+    $('refresh-btn').disabled = true;
     setStatus('Loading...');
     try {
-      const [inbox, sent] = await Promise.all([
-        apiGet(`/mail?folder=inbox&mailbox_id=${currentMailbox}`),
-        apiGet(`/mail?folder=sent&mailbox_id=${currentMailbox}`)
+      const [i, s] = await Promise.all([
+        api(`/mail?folder=inbox&mailbox_id=${currentMailbox}`),
+        api(`/mail?folder=sent&mailbox_id=${currentMailbox}`)
       ]);
-      cache.inbox = inbox.messages || [];
-      cache.sent = sent.messages || [];
-      renderFolder(currentFolder);
+      rows.inbox = i.messages || [];
+      rows.sent = s.messages || [];
+      renderList();
+      if (currentPeer && !composing) {
+        await loadBodies(currentConv());
+        renderMessages();
+      }
       setStatus('Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch (e) {
-      if (e.message === 'signed-out') {
-        document.getElementById('mail-view').style.display = 'none';
-        document.getElementById('signed-out').style.display = 'block';
-      } else {
-        setStatus('Could not load mail.');
-      }
+      handleErr(e);
     } finally {
       busy = false;
-      document.getElementById('refresh-btn').disabled = false;
+      $('refresh-btn').disabled = false;
     }
   }
 
-  // Draws a folder from memory. No network request.
-  function renderFolder(folder) {
-    const list = document.getElementById('list');
-    const messages = cache[folder];
-    if (messages === null) {
-      list.innerHTML = '<div class="empty">Loading...</div>';
+  // One conversation per other address, combining inbound and outbound messages.
+  function conversations() {
+    const map = new Map();
+    const add = (m, dir, peerRaw) => {
+      const peer = addrOf(peerRaw);
+      if (!peer) return;
+      if (!map.has(peer)) map.set(peer, { peer, name: nameOf(peerRaw), msgs: [], unread: 0 });
+      const c = map.get(peer);
+      c.msgs.push({ ...m, dir });
+      if (dir === 'in' && !m.is_read) c.unread++;
+      if (nameOf(peerRaw) !== addrOf(peerRaw)) c.name = nameOf(peerRaw);
+    };
+    rows.inbox.forEach(m => add(m, 'in', m.from_addr));
+    rows.sent.forEach(m => add(m, 'out', m.to_addr));
+    const list = [...map.values()];
+    list.forEach(c => {
+      c.msgs.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+      c.last = c.msgs[c.msgs.length - 1];
+    });
+    return list.sort((a, b) => (a.last.created_at < b.last.created_at ? 1 : -1));
+  }
+
+  function currentConv() {
+    return conversations().find(c => c.peer === currentPeer) || null;
+  }
+
+  function renderList() {
+    const list = conversations();
+    if (!list.length) {
+      $('convo-list').innerHTML = '<div class="empty">No conversations yet. Use New message to start one.</div>';
       return;
     }
-    if (messages.length === 0) {
-      list.innerHTML = `<div class="empty">No ${folder === 'inbox' ? 'received' : 'sent'} mail.</div>`;
+    $('convo-list').innerHTML = list.map(c => `
+      <div class="convo ${c.peer === currentPeer && !composing ? 'active' : ''}" data-peer="${esc(c.peer)}" onclick="openThread(this.dataset.peer)">
+        <div class="av">${esc(((c.name || c.peer)[0] || '?').toUpperCase())}</div>
+        <div class="cbody">
+          <div class="crow">
+            <span class="cname ${c.unread ? 'bold' : ''}">${esc(c.name)}</span>
+            <span class="ctime">${fmt(c.last.created_at)}</span>
+          </div>
+          <div class="csub">${c.last.dir === 'out' ? 'You: ' : ''}${esc(cleanSubject(c.last.subject) || '(no subject)')}</div>
+        </div>
+        ${c.unread ? `<span class="badge">${c.unread}</span>` : ''}
+      </div>`).join('');
+  }
+
+  // Loads bodies only for messages not already fetched. Opening a message also marks it read on the server.
+  async function loadBodies(conv) {
+    if (!conv) return;
+    const missing = conv.msgs.filter(m => !bodies.has(m.id));
+    await Promise.all(missing.map(async m => {
+      try {
+        const d = await api(`/mail/message/${m.id}`);
+        bodies.set(m.id, d.message.body || '');
+        const r = rows.inbox.find(x => x.id === m.id);
+        if (r) r.is_read = 1;
+      } catch (e) {
+        bodies.set(m.id, '(could not load this message)');
+      }
+    }));
+  }
+
+  function renderMessages() {
+    const box = $('msgs');
+    if (!box) return;
+    const conv = currentConv();
+    if (!conv) {
+      box.innerHTML = '<div class="empty">No messages.</div>';
       return;
     }
-    list.innerHTML = messages.map(m => {
-      const who = folder === 'inbox' ? m.from_addr : 'To: ' + m.to_addr;
-      const unread = folder === 'inbox' && !m.is_read ? ' unread' : '';
-      return `<div class="row${unread}" onclick="openMessage(${m.id})">
-        <div class="addr">${esc(who)}</div>
-        <div class="subj">${esc(m.subject || '(no subject)')}</div>
-        <div class="date">${fmt(m.created_at)}</div>
-      </div>`;
+    let prev = null;
+    box.innerHTML = conv.msgs.map(m => {
+      const subj = cleanSubject(m.subject);
+      const showSubj = subj !== prev;
+      prev = subj;
+      const body = bodies.has(m.id) ? bodies.get(m.id) : '…';
+      return `
+        <div class="row-msg ${m.dir === 'out' ? 'out' : 'in'}">
+          <div class="bubble">
+            ${showSubj ? `<div class="bsubj">${esc(m.subject || '(no subject)')}</div>` : ''}
+            <div class="btext">${esc(body)}</div>
+            <div class="btime">${fmt(m.created_at)}</div>
+          </div>
+        </div>`;
     }).join('');
+    box.scrollTop = box.scrollHeight;
   }
 
-  // Tabs only switch the view. They never fetch.
-  function switchTab(folder) {
-    closeMessage();
-    currentFolder = folder;
-    document.querySelectorAll('.tab').forEach(t =>
-      t.classList.toggle('active', t.dataset.folder === folder));
-    renderFolder(folder);
+  async function openThread(peer) {
+    currentPeer = peer;
+    composing = false;
+    $('panes').classList.add('show-thread');
+    const conv = currentConv();
+    $('thread').innerHTML = `
+      <div class="thead">
+        <button class="back" onclick="closeThread()">←</button>
+        <div>
+          <div class="tname">${esc(conv ? conv.name : peer)}</div>
+          <div class="taddr">${esc(peer)}</div>
+        </div>
+      </div>
+      <div class="msgs" id="msgs"><div class="empty">Loading messages...</div></div>
+      <form class="reply" onsubmit="event.preventDefault(); sendReply();">
+        <textarea id="reply-body" rows="2" placeholder="Write a reply..."></textarea>
+        <button class="btn" type="submit" id="send-btn">Send</button>
+      </form>`;
+    renderList();
+    await loadBodies(conv);
+    renderMessages();
   }
 
-  function changeMailbox(id) {
-    currentMailbox = id;
-    cache = { inbox: null, sent: null };
-    renderFolder(currentFolder);
-    refreshMail();
+  function closeThread() {
+    $('panes').classList.remove('show-thread');
+    currentPeer = null;
+    composing = false;
+    renderList();
   }
 
-  // Opens one message. Reads the full body, so it's the only per-click request.
-  async function openMessage(id) {
-    const res = await fetch(`${WORKER_URL}/mail/message/${id}`, {
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('po_token') }
-    });
-    if (!res.ok) return;
-    const { message: m } = await res.json();
-    const who = m.direction === 'in' ? 'From: ' + m.from_addr : 'To: ' + m.to_addr;
-    document.getElementById('r-head').innerHTML =
-      `<div style="font-size:1.1rem;font-weight:700;">${esc(m.subject || '(no subject)')}</div>` +
-      `<div style="color:#6b7280;font-size:0.85rem;margin-top:4px;">${esc(who)} · ${fmt(m.created_at)}</div>`;
-    document.getElementById('r-body').textContent = stripHtml(m.body);
-    currentMessageId = id;
-    currentKeep = m.keep ? 1 : 0;
-    updateKeepButton();
-    document.getElementById('list').style.display = 'none';
-    document.querySelector('.tabs').style.display = 'none';
-    document.getElementById('reader').style.display = 'block';
-
-    // Mark as read in memory so the list doesn't need a refetch.
-    if (m.direction === 'in' && cache.inbox) {
-      const item = cache.inbox.find(x => x.id === id);
-      if (item) item.is_read = 1;
-    }
-  }
-
-  function updateKeepButton() {
-    document.getElementById('keep-btn').textContent =
-      currentKeep ? '✓ Kept (click to remove)' : 'Keep this message';
-  }
-
-  async function toggleKeep() {
-    const next = currentKeep ? 0 : 1;
-    const res = await fetch(`${WORKER_URL}/mail/message/${currentMessageId}/keep`, {
+  async function deliver(to, subject, text) {
+    return api('/mail/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') },
-      body: JSON.stringify({ keep: next })
+      body: JSON.stringify({
+        mailbox_id: Number(currentMailbox),
+        to,
+        subject,
+        html: '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'
+      })
     });
-    if (!res.ok) return;
-    currentKeep = next;
-    updateKeepButton();
   }
 
-  function closeMessage() {
-    document.getElementById('reader').style.display = 'none';
-    document.getElementById('list').style.display = 'block';
-    document.querySelector('.tabs').style.display = 'flex';
-  }
-
-  function toggleCompose() {
-    const box = document.getElementById('compose');
-    box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-  }
-
-  async function sendMail() {
-    const to = document.getElementById('c-to').value.trim();
-    const subject = document.getElementById('c-subject').value.trim();
-    const body = document.getElementById('c-body').value.trim();
-    const status = document.getElementById('c-status');
-    const btn = document.getElementById('c-send');
-    if (!to || !subject || !body) { status.textContent = 'Fill in all fields.'; return; }
-
+  async function sendReply() {
+    const text = $('reply-body').value.trim();
+    if (!text || !currentPeer) return;
+    const conv = currentConv();
+    const base = conv ? cleanSubject(conv.last.subject) : '';
+    const subject = base ? 'Re: ' + base : '(no subject)';
+    const btn = $('send-btn');
     btn.disabled = true;
-    status.textContent = 'Sending...';
     try {
-      const res = await fetch(`${WORKER_URL}/mail/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('po_token') },
-        body: JSON.stringify({
-          mailbox_id: currentMailbox ? parseInt(currentMailbox) : null,
-          to,
-          subject,
-          html: '<p>' + body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</p>'
-        })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Send failed');
-      document.getElementById('c-to').value = '';
-      document.getElementById('c-subject').value = '';
-      document.getElementById('c-body').value = '';
-      status.textContent = '';
-      toggleCompose();
-      // One refetch so the new message appears in the outbox.
+      await deliver(currentPeer, subject, text);
+      $('reply-body').value = '';
       await refreshMail();
-      switchTab('sent');
     } catch (e) {
-      status.textContent = e.message;
+      handleErr(e, 'Send failed: ' + e.message);
     } finally {
       btn.disabled = false;
     }
   }
 
+  function openNew() {
+    composing = true;
+    currentPeer = null;
+    $('panes').classList.add('show-thread');
+    $('thread').innerHTML = `
+      <div class="thead">
+        <button class="back" onclick="closeThread()">←</button>
+        <div class="tname">New message</div>
+      </div>
+      <form class="compose-form" onsubmit="event.preventDefault(); sendNew();">
+        <input id="n-to" type="email" placeholder="To" required>
+        <input id="n-subject" type="text" placeholder="Subject" maxlength="200" required>
+        <textarea id="n-body" rows="10" placeholder="Write your message..." required></textarea>
+        <div class="row-end">
+          <span id="n-status" class="status"></span>
+          <button class="btn" type="submit" id="n-send">Send</button>
+        </div>
+      </form>`;
+    renderList();
+  }
+
+  async function sendNew() {
+    const to = $('n-to').value.trim();
+    const subject = $('n-subject').value.trim();
+    const text = $('n-body').value.trim();
+    const st = $('n-status');
+    const btn = $('n-send');
+    btn.disabled = true;
+    st.textContent = 'Sending...';
+    try {
+      await deliver(to, subject, text);
+      const peer = addrOf(to);
+      composing = false;
+      currentPeer = peer;
+      await refreshMail();
+      await openThread(peer);
+    } catch (e) {
+      st.textContent = e.message;
+      btn.disabled = false;
+    }
+  }
+
+  function changeMailbox(id) {
+    currentMailbox = id;
+    rows = { inbox: [], sent: [] };
+    currentPeer = null;
+    composing = false;
+    $('thread').innerHTML = '<div class="empty">Select a conversation or start a new message.</div>';
+    $('panes').classList.remove('show-thread');
+    refreshMail();
+  }
+
   window.addEventListener('load', async () => {
-    const token = localStorage.getItem('po_token');
-    if (!token) {
-      document.getElementById('signed-out').style.display = 'block';
+    if (!localStorage.getItem('po_token')) {
+      $('signed-out').style.display = 'block';
       return;
     }
-    document.getElementById('mail-view').style.display = 'block';
+    $('mail-view').style.display = 'block';
     try {
-      const hasMailbox = await loadMailboxes();
-      if (hasMailbox) await refreshMail();
+      if (await loadMailboxes()) await refreshMail();
     } catch (e) {
-      if (e.message === 'signed-out') {
-        document.getElementById('mail-view').style.display = 'none';
-        document.getElementById('signed-out').style.display = 'block';
-      } else {
-        setStatus('Could not load mail.');
-      }
+      handleErr(e);
     }
   });
 </script>
