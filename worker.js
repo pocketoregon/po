@@ -894,6 +894,8 @@ export default {
       } catch(e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }); }
     }
 
+    const corsHeaders2 = corsHeaders;
+
     // Avatar choice (stores only the DiceBear style and seed, never an image)
     if (path === '/profile/avatar' && request.method === 'POST') {
       const user = await validateToken(request, env);
