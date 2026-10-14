@@ -119,6 +119,11 @@
         </div>
     </div>
 
+    <!-- Edit button (own profile only, shown once an avatar exists) -->
+    <div class="mb-6" id="avatar-edit-wrap">
+        <button id="avatar-edit-btn" class="bg-gray-900 text-white rounded-md px-4 py-2 text-sm font-semibold" style="display:none;" onclick="toggleAvatarEditor()">Edit avatar</button>
+    </div>
+
     <!-- Avatar editor (own profile only) -->
     <div id="avatar-editor" class="bg-white border border-gray-200 rounded-xl p-6 mb-6" style="display:none;">
         <h2 class="outfit font-bold text-lg text-gray-900 mb-1">Your avatar</h2>
@@ -343,7 +348,18 @@
 
             // Stats
             document.getElementById('stat-comments').textContent = comments.length;
-        if (isOwnProfile) initAvatarEditor(user);
+        if (isOwnProfile) {
+            if (user.avatar_seed) {
+                // Avatar already set: show the Edit button, keep the editor hidden
+                document.getElementById('avatar-edit-btn').style.display = 'inline-block';
+                document.getElementById('avatar-editor').style.display = 'none';
+                initAvatarEditor(user);
+            } else {
+                // No avatar yet: show the editor straight away
+                initAvatarEditor(user);
+                document.getElementById('avatar-edit-btn').style.display = 'none';
+            }
+        }
             document.getElementById('stat-chats').textContent = chatCount;
 
             // Not-your-profile notice (only if logged in but viewing someone else)
@@ -383,6 +399,11 @@
         document.getElementById('avatar-style').value = user.avatar_style || 'initials';
         document.getElementById('avatar-seed').value = user.avatar_seed || '';
         previewAvatar();
+    }
+
+    function toggleAvatarEditor() {
+        const box = document.getElementById('avatar-editor');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
     }
 
     function previewAvatar() {
