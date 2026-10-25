@@ -701,7 +701,7 @@
     const rows = [
       ['in', 'sk-bubble'], ['out', 'sk-bubble'], ['in', 'sk-bubble'], ['out', 'sk-bubble']
     ];
-    return `<div class="msgs">` + rows.map(([dir]) => `
+    return `<div class="msgs" id="msgs">` + rows.map(([dir]) => `
       <div class="sk-bubble-row ${dir}">
         <div class="sk sk-bubble-av"></div>
         <div class="sk sk-bubble"></div>
