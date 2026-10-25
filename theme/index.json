@@ -1,0 +1,8 @@
+// theme/index.json
+{
+  "default": "light",
+  "themes": [
+    { "id": "light", "name": "Light", "file": "light.json" },
+    { "id": "dark", "name": "Dark", "file": "dark.json" }
+  ]
+}
