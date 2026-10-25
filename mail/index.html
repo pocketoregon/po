@@ -733,5 +733,24 @@
   };
 })();
 </script>
+<script>
+// Skeleton placeholders for the theme and mailbox dropdowns while they load.
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `.dd-skel { height: 42px; width: 170px; border-radius: 12px; }`;
+  document.head.appendChild(st);
+
+  // Show the page shell immediately when signed in, so the placeholders are visible.
+  if (localStorage.getItem('po_token')) {
+    document.getElementById('mail-view').style.display = 'block';
+  }
+
+  // Fill both dropdown boxes with a placeholder. dropdown() replaces it once real data arrives.
+  ['theme-dd', 'mb-dd'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="sk dd-skel"></div>';
+  });
+})();
+</script>
 </body>
 </html>
