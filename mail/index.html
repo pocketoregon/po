@@ -39,7 +39,22 @@
 
   .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
   .top h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; margin-right: auto; }
-  .top select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: var(--input); color: var(--text); max-width: 280px; }
+  .top select {
+    appearance: auto;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    max-width: 280px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .top select:hover { border-color: var(--accent); }
+  .top select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
   .status { font-size: 0.8rem; color: var(--text-muted); }
   .btn { background: var(--btn); color: var(--btn-text); border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
   .btn:hover { filter: brightness(1.15); }
