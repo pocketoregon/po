@@ -80,11 +80,7 @@
     transform: rotate(-35deg);
     animation: drift var(--dur) ease-in-out infinite alternate;
   }
-  /* Travels from beyond the bottom-left edge to beyond the top-right edge, then loops */
-  @keyframes drift {
-    from { transform: translate(-30vw, 30vh) rotate(-35deg); }
-    to   { transform: translate(130vw, -130vh) rotate(-35deg); }
-  }
+  @keyframes drift { from { translate: 0 0; } to { translate: 40px -30px; } }
   @media (prefers-reduced-motion: reduce) { .deco-icon { animation: none; } }
   main { position: relative; z-index: 1; }
 
@@ -146,8 +142,7 @@
     display: block;
     opacity: 0.18;
     transform: rotate(-35deg);
-    animation: drift var(--dur) linear infinite;
-    animation-delay: var(--delay, 0s);
+    animation: drift var(--dur) ease-in-out infinite alternate;
     -webkit-mask: none;
     mask: none;
     background: none;
@@ -648,8 +643,6 @@
         const size = 34 + ((r * 7 + c * 5) % 4) * 8;
         img.style.width = img.style.height = size + 'px';
         img.style.setProperty('--dur', (18 + ((r + c) % 5) * 3) + 's');
-        // Negative delay starts each icon partway along its path, so they're spread across the screen
-        img.style.setProperty('--delay', `-${((r * cols + c) * 1.7).toFixed(1)}s`);
         layer.appendChild(img);
       }
     }
@@ -670,6 +663,74 @@
 
   // Build once after the theme has had time to load.
   window.addEventListener('load', () => setTimeout(buildIcons, 400));
+})();
+</script>
+<script>
+// Skeleton placeholders shown while mail is loading.
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `
+    .sk { position: relative; overflow: hidden; background: var(--border); border-radius: 6px; }
+    .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 70%, transparent), transparent); animation: sk-shine 1.2s infinite; }
+    @keyframes sk-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+    .sk-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .sk-av { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; }
+    .sk-line { height: 10px; margin-bottom: 8px; }
+    .sk-line:last-child { margin-bottom: 0; }
+    .sk-bubble-row { display: flex; gap: 8px; align-items: flex-end; }
+    .sk-bubble-row.out { flex-direction: row-reverse; }
+    .sk-bubble { height: 56px; width: 55%; border-radius: 12px; }
+    .sk-bubble-row.out .sk-bubble { width: 45%; }
+    .sk-bubble-av { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+  `;
+  document.head.appendChild(st);
+
+  function listSkeleton(count = 6) {
+    const row = `
+      <div class="sk-row">
+        <div class="sk sk-av"></div>
+        <div style="flex:1; min-width:0;">
+          <div class="sk sk-line" style="width:45%;"></div>
+          <div class="sk sk-line" style="width:70%;"></div>
+        </div>
+      </div>`;
+    return row.repeat(count);
+  }
+
+  function bubbleSkeleton() {
+    const rows = [
+      ['in', 'sk-bubble'], ['out', 'sk-bubble'], ['in', 'sk-bubble'], ['out', 'sk-bubble']
+    ];
+    return `<div class="msgs">` + rows.map(([dir]) => `
+      <div class="sk-bubble-row ${dir}">
+        <div class="sk sk-bubble-av"></div>
+        <div class="sk sk-bubble"></div>
+      </div>`).join('') + `</div>`;
+  }
+
+  // 1. Left list: show skeleton on first page load (before any data arrives).
+  $('convo-list').innerHTML = listSkeleton();
+
+  // 2. Refresh / mailbox change: show skeleton only when there is no data yet.
+  const originalRefresh = refreshMail;
+  refreshMail = async function () {
+    if (!rows.inbox.length && !rows.sent.length) {
+      $('convo-list').innerHTML = listSkeleton();
+    }
+    return originalRefresh();
+  };
+
+  // 3. Opening a conversation: replace the "Loading messages..." text with bubble placeholders.
+  // openThread sets up the pane synchronously before its first await, so this runs right after it.
+  const originalOpenThread = openThread;
+  openThread = function (peer) {
+    const promise = originalOpenThread(peer);
+    const box = $('msgs');
+    if (box && box.textContent.includes('Loading')) {
+      box.outerHTML = bubbleSkeleton();
+    }
+    return promise;
+  };
 })();
 </script>
 </body>
