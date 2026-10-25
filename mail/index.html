@@ -9,62 +9,78 @@
 <script src="/avatar.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
 <style>
+  /* Default values, used if no theme file loads. Themes override these. */
+  :root {
+    --page: #f9fafb;
+    --surface: #ffffff;
+    --text: #1f1e24;
+    --text-muted: #6b7280;
+    --accent: #f97316;
+    --btn: #1f1e24;
+    --btn-light: #f3f4f6;
+    --bubble-in: #ffffff;
+    --bubble-out: #1f1e24;
+    --input: #ffffff;
+    --border: #e5e7eb;
+    /* Optional: text on buttons and outgoing bubbles */
+    --btn-text: #ffffff;
+    --bubble-out-text: #ffffff;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #1f1e24; min-height: 100vh; }
-  nav { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 10; }
+  body { font-family: 'Inter', sans-serif; background: var(--page); color: var(--text); min-height: 100vh; }
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
   .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1f1e24; font-family: 'Outfit', sans-serif; font-weight: 800; }
-  .nav-back { font-size: 0.875rem; color: #6b7280; text-decoration: none; }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-family: 'Outfit', sans-serif; font-weight: 800; }
+  .nav-back { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
   main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
-  .msg { padding: 2rem; text-align: center; color: #6b7280; background: white; border: 1px solid #e5e7eb; border-radius: 10px; }
-  .msg a { color: #f97316; font-weight: 600; }
+  .msg { padding: 2rem; text-align: center; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .msg a { color: var(--accent); font-weight: 600; }
 
   .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
   .top h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; margin-right: auto; }
-  .top select { padding: 7px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.9rem; background: white; max-width: 280px; }
-  .status { font-size: 0.8rem; color: #9ca3af; }
-  .btn { background: #1f1e24; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-  .btn:hover { background: #374151; }
-  .btn:disabled { background: #9ca3af; cursor: not-allowed; }
-  .btn-light { background: #f3f4f6; color: #374151; }
-  .btn-light:hover { background: #e5e7eb; }
+  .top select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: var(--input); color: var(--text); max-width: 280px; }
+  .status { font-size: 0.8rem; color: var(--text-muted); }
+  .btn { background: var(--btn); color: var(--btn-text); border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+  .btn:hover { filter: brightness(1.15); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-light { background: var(--btn-light); color: var(--text); }
 
-  .panes { display: grid; grid-template-columns: 320px 1fr; height: 72vh; min-height: 480px; background: white; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
-  .list { border-right: 1px solid #e5e7eb; overflow-y: auto; }
+  .panes { display: grid; grid-template-columns: 320px 1fr; height: 72vh; min-height: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .list { border-right: 1px solid var(--border); overflow-y: auto; }
   .thread { display: flex; flex-direction: column; min-height: 0; }
-  .empty { text-align: center; padding: 2.5rem 1rem; color: #9ca3af; font-size: 0.9rem; }
+  .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem; }
 
-  .convo { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
-  .convo:hover { background: #fafafa; }
-  .convo.active { background: #fff7ed; }
-  .av { width: 38px; height: 38px; border-radius: 50%; background: #1f1e24; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .convo { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .convo:hover { filter: brightness(0.97); }
+  .convo.active { background: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
   .cbody { flex: 1; min-width: 0; }
   .crow { display: flex; justify-content: space-between; gap: 8px; }
   .cname { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cname.bold { font-weight: 700; }
-  .ctime { font-size: 0.72rem; color: #9ca3af; white-space: nowrap; }
-  .csub { font-size: 0.8rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-  .badge { background: #f97316; color: white; font-size: 0.7rem; font-weight: 700; border-radius: 999px; padding: 2px 7px; }
+  .ctime { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+  .csub { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .badge { background: var(--accent); color: var(--btn-text); font-size: 0.7rem; font-weight: 700; border-radius: 999px; padding: 2px 7px; }
 
-  .thead { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+  .thead { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
   .tname { font-weight: 700; font-size: 0.95rem; }
-  .taddr { font-size: 0.78rem; color: #6b7280; }
-  .back { display: none; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #374151; }
+  .taddr { font-size: 0.78rem; color: var(--text-muted); }
+  .back { display: none; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text); }
 
-  .msgs { flex: 1; overflow-y: auto; padding: 16px; background: #f9fafb; display: flex; flex-direction: column; gap: 10px; }
+  .msgs { flex: 1; overflow-y: auto; padding: 16px; background: var(--page); display: flex; flex-direction: column; gap: 10px; }
   .row-msg { display: flex; gap: 8px; align-items: flex-end; }
   .row-msg.out { justify-content: flex-start; flex-direction: row-reverse; }
-  .bubble { max-width: 72%; background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; }
-  .row-msg.out .bubble { background: #1f1e24; border-color: #1f1e24; color: white; }
+  .bubble { max-width: 72%; background: var(--bubble-in); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .row-msg.out .bubble { background: var(--bubble-out); color: var(--bubble-out-text); border-color: var(--bubble-out); }
   .bsubj { font-size: 0.78rem; font-weight: 700; margin-bottom: 4px; overflow-wrap: anywhere; }
-  .row-msg.out .bsubj { color: #fdba74; }
+  .row-msg.out .bsubj { opacity: 0.85; }
   .btext { font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
-  .btime { font-size: 0.7rem; color: #9ca3af; margin-top: 6px; text-align: right; }
-  .row-msg.out .btime { color: #d1d5db; }
+  .btime { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; text-align: right; }
+  .row-msg.out .btime { opacity: 0.7; color: var(--bubble-out-text); }
 
-  .reply { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e5e7eb; background: white; }
-  .reply textarea, .compose-form textarea, .compose-form input { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; padding: 9px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; resize: vertical; }
-  .reply textarea:focus, .compose-form textarea:focus, .compose-form input:focus { border-color: #f97316; }
+  .reply { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--surface); }
+  .reply textarea, .compose-form textarea, .compose-form input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; resize: vertical; background: var(--input); color: var(--text); }
+  .reply textarea:focus, .compose-form textarea:focus, .compose-form input:focus { border-color: var(--accent); }
   .compose-form { display: flex; flex-direction: column; gap: 10px; padding: 16px; flex: 1; overflow-y: auto; }
   .row-end { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
@@ -99,6 +115,7 @@
   <div id="mail-view" style="display:none;">
     <div class="top">
       <h1>Mail</h1>
+      <select id="theme-select" onchange="changeTheme(this.value)" title="Theme"></select>
       <select id="mb-select" onchange="changeMailbox(this.value)"></select>
       <span id="status" class="status"></span>
       <button class="btn btn-light" id="refresh-btn" onclick="refreshMail()">Refresh</button>
@@ -116,10 +133,12 @@
 
 <script>
   const WORKER_URL = 'https://po.pocketoregon.workers.dev';
+  const THEME_KEY = 'po_mail_theme';
+  let themeIndex = null;
   let mailboxes = [];
   let currentMailbox = '';
   let rows = { inbox: [], sent: [] };   // list rows, loaded on open / refresh only
-  const bodies = new Map();             // message id -> body text, loaded when a thread opens
+  const bodies = new Map();             // message id -> body text
   let currentPeer = null;
   let composing = false;
   let busy = false;
@@ -127,7 +146,54 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  // "Pocket Core" <a@b.com>  ->  a@b.com   (plain addresses pass through)
+  // ---------- Themes ----------
+  // Themes live in /theme. index.json lists them; each file maps role names to colors.
+  // Every key in a theme file becomes a CSS variable: "accent" -> --accent.
+  async function loadThemeIndex() {
+    try {
+      const res = await fetch('/theme/index.json');
+      themeIndex = await res.json();
+    } catch (e) {
+      themeIndex = { default: 'default', themes: [] };
+    }
+    const select = $('theme-select');
+    const list = themeIndex.themes || [];
+    select.innerHTML = list.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+    if (!list.length) select.style.display = 'none';
+  }
+
+  async function applyTheme(id) {
+    const list = (themeIndex && themeIndex.themes) || [];
+    const entry = list.find(t => t.id === id) || list.find(t => t.id === themeIndex.default);
+    if (!entry) return;                  // no themes: built-in defaults stay
+    try {
+      const res = await fetch('/theme/' + entry.file);
+      if (!res.ok) throw new Error('theme not found');
+      const values = await res.json();
+      Object.entries(values).forEach(([key, value]) => {
+        if (key === 'name') return;
+        document.documentElement.style.setProperty('--' + key, value);
+      });
+      $('theme-select').value = entry.id;
+    } catch (e) {
+      console.warn('Theme could not load, using defaults:', e);
+    }
+  }
+
+  async function changeTheme(id) {
+    localStorage.setItem(THEME_KEY, id);
+    await applyTheme(id);
+  }
+
+  async function initTheme() {
+    await loadThemeIndex();
+    const saved = localStorage.getItem(THEME_KEY);
+    const id = saved || (themeIndex && themeIndex.default);
+    if (id) await applyTheme(id);
+  }
+
+  // ---------- Helpers ----------
+  // "Pocket Core" <a@b.com>  ->  a@b.com
   function addrOf(s) {
     const m = String(s || '').match(/<([^>]+)>/);
     return (m ? m[1] : String(s || '')).trim().toLowerCase();
@@ -295,8 +361,15 @@
       const showSubj = subj !== prev;
       prev = subj;
       const body = bodies.has(m.id) ? bodies.get(m.id) : '…';
+      const isOut = m.dir === 'out';
+      const avatar = window.poAvatarHTML(
+        isOut
+          ? { name: 'Me', avatar_style: m.recipient_style, avatar_seed: m.recipient_seed }
+          : { name: nameOf(m.from_addr), avatar_style: m.sender_style, avatar_seed: m.sender_seed },
+        28
+      );
       return `
-        <div class="row-msg ${m.dir === 'out' ? 'out' : 'in'}">${window.poAvatarHTML({ name: m.dir === 'in' ? nameOf(m.from_addr) : 'Me', avatar_style: m.sender_style, avatar_seed: m.sender_seed }, 28)}
+        <div class="row-msg ${isOut ? 'out' : 'in'}">${avatar}
           <div class="bubble">
             ${showSubj ? `<div class="bsubj">${esc(m.subject || '(no subject)')}</div>` : ''}
             <div class="btext">${esc(body)}</div>
@@ -421,6 +494,7 @@
   }
 
   window.addEventListener('load', async () => {
+    await initTheme();
     if (!localStorage.getItem('po_token')) {
       $('signed-out').style.display = 'block';
       return;
