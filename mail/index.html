@@ -136,6 +136,17 @@
     .back { display: inline-block; }
     .bubble { max-width: 88%; }
   }
+  /* Decorative icon override: plain images, no CSS mask */
+  .deco-icon {
+    position: absolute;
+    display: block;
+    opacity: 0.18;
+    transform: rotate(-35deg);
+    animation: drift var(--dur) ease-in-out infinite alternate;
+    -webkit-mask: none;
+    mask: none;
+    background: none;
+  }
 </style>
 </head>
 <body>
@@ -600,6 +611,59 @@
       handleErr(e);
     }
   });
+</script>
+<script>
+// Decorative background icons. Images come from Iconify and are colored by the theme's "deco" value.
+(function () {
+  const ICONS = [
+    'tabler/bat', 'tabler/pizza', 'tabler/question-mark', 'tabler/cross', 'tabler/circle',
+    'tabler/cloud', 'tabler/car', 'tabler/ball-football', 'tabler/number-7', 'tabler/trophy'
+  ];
+
+  function decoColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--deco').trim() || '#9ca3af';
+  }
+
+  function buildIcons() {
+    document.querySelectorAll('.deco').forEach(n => n.remove());
+    const color = decoColor();
+    const layer = document.createElement('div');
+    layer.className = 'deco';
+    layer.setAttribute('aria-hidden', 'true');
+    const rows = 7, cols = 9;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const name = ICONS[(r * 3 + c) % ICONS.length];
+        const img = document.createElement('img');
+        img.className = 'deco-icon';
+        img.alt = '';
+        img.src = `https://api.iconify.design/${name}.svg?color=${encodeURIComponent(color)}`;
+        img.style.left = `${c * (100 / cols) + r * 5 - 8}%`;
+        img.style.top = `${r * (100 / rows) - 4}%`;
+        const size = 34 + ((r * 7 + c * 5) % 4) * 8;
+        img.style.width = img.style.height = size + 'px';
+        img.style.setProperty('--dur', (18 + ((r + c) % 5) * 3) + 's');
+        layer.appendChild(img);
+      }
+    }
+    document.body.prepend(layer);
+  }
+
+  // Replace any older builder so every caller uses this version.
+  window.buildDeco = buildIcons;
+
+  // Rebuild the icons when the theme changes, so the grey follows the theme.
+  if (typeof window.changeTheme === 'function') {
+    const originalChangeTheme = window.changeTheme;
+    window.changeTheme = async function (id) {
+      await originalChangeTheme(id);
+      buildIcons();
+    };
+  }
+
+  // Build once after the theme has had time to load.
+  window.addEventListener('load', () => setTimeout(buildIcons, 400));
+})();
 </script>
 </body>
 </html>
