@@ -1,0 +1,15 @@
+{
+  "page": "#111318",
+  "surface": "#1b1e26",
+  "text": "#e8eaf0",
+  "text-muted": "#8a90a0",
+  "accent": "#f97316",
+  "btn": "#f97316",
+  "btn-light": "#2a2e38",
+  "btn-text": "#ffffff",
+  "bubble-in": "#1b1e26",
+  "bubble-out": "#f97316",
+  "bubble-out-text": "#ffffff",
+  "input": "#111318",
+  "border": "#2a2e38"
+}
