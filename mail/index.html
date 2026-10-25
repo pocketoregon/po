@@ -55,6 +55,20 @@
   }
   .top select:hover { border-color: var(--accent); }
   .top select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+  /* Custom dropdown, based on the notes dropdown and styled with theme variables */
+  .dropdown { border: 1px solid var(--border); border-radius: 12px; transition: all 300ms; display: flex; flex-direction: column; min-height: 42px; background-color: var(--surface); overflow: visible; position: relative; max-width: 280px; min-width: 180px; }
+  .dropdown input:where(:checked) ~ .dd-list { opacity: 1; transform: translateY(0); pointer-events: auto; transition: opacity 220ms ease, transform 220ms ease; }
+  .dropdown input:where(:not(:checked)) ~ .dd-list { opacity: 0; transform: translateY(-6px); user-select: none; pointer-events: none; transition: opacity 180ms ease-out, transform 180ms ease-out; }
+  .dropdown input:where(:checked) + .trigger:before { rotate: 90deg; transition-delay: 0ms; }
+  .trigger { cursor: pointer; list-style: none; user-select: none; font-weight: 600; color: var(--text); width: 100%; display: flex; align-items: center; flex-flow: row; gap: 0.5rem; padding: 0.55rem 0.85rem; height: max-content; position: relative; z-index: 99; border-radius: inherit; background-color: var(--surface); font-size: 0.875rem; font-family: 'Inter', sans-serif; }
+  .trigger:before { content: "\203a"; position: relative; display: flex; justify-content: center; align-items: center; rotate: -90deg; width: 17px; height: 17px; color: var(--text); border-radius: 2px; font-size: 26px; transition: all 350ms ease; transition-delay: 85ms; margin-left: auto; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+  .dd-list { position: absolute; top: calc(100% + 6px); left: 0; right: 0; max-height: 16rem; display: grid; grid-auto-flow: row; overflow: hidden auto; overscroll-behavior: contain; gap: 0.3rem; padding: 0.4rem; margin: 0; list-style: none; background-color: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.15); z-index: 1000; }
+  .listitem { width: 100%; list-style: none; }
+  .article { padding: 0.38rem 0.7rem; border-radius: 6px; font-size: 12.5px; font-weight: 500; text-align: left; width: 100%; border: 1px solid var(--border); display: inline-block; background-color: var(--surface); cursor: pointer; font-family: 'Inter', sans-serif; color: var(--text); box-sizing: border-box; }
+  .article:hover { border-color: var(--accent); color: var(--accent); }
+  .article.selected { background-color: var(--btn); border-color: var(--btn); color: var(--btn-text); }
   .status { font-size: 0.8rem; color: var(--text-muted); }
   .btn { background: var(--btn); color: var(--btn-text); border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
   .btn:hover { filter: brightness(1.15); }
@@ -130,8 +144,8 @@
   <div id="mail-view" style="display:none;">
     <div class="top">
       <h1>Mail</h1>
-      <select id="theme-select" onchange="changeTheme(this.value)" title="Theme"></select>
-      <select id="mb-select" onchange="changeMailbox(this.value)"></select>
+      <div class="dropdown" id="theme-dd"></div>
+      <div class="dropdown" id="mb-dd"></div>
       <span id="status" class="status"></span>
       <button class="btn btn-light" id="refresh-btn" onclick="refreshMail()">Refresh</button>
       <button class="btn" id="new-btn" onclick="openNew()">New message</button>
