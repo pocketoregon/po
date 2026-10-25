@@ -161,6 +161,30 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+  // Builds a custom dropdown inside the container with the given id.
+  // items: [{ id, name }], selected: id string, onPick: called with the chosen id.
+  function dropdown(containerId, items, selected, onPick) {
+    const box = $(containerId);
+    const uid = containerId + '-toggle';
+    const current = items.find(i => i.id === String(selected)) || items[0];
+    box.innerHTML = `
+      <input type="checkbox" class="sr-only" id="${uid}">
+      <label for="${uid}" class="trigger">${esc(current ? current.name : '')}</label>
+      <ul class="list">${items.map(i => `
+        <li class="listitem"><button type="button" class="article ${current && i.id === current.id ? 'selected' : ''}" data-id="${esc(i.id)}">${esc(i.name)}</button></li>`).join('')}
+      </ul>`;
+    box.querySelectorAll('.article').forEach(btn => btn.addEventListener('click', () => {
+      document.getElementById(uid).checked = false;
+      onPick(btn.dataset.id);
+    }));
+  }
+
+  function renderThemeDropdown(selectedId) {
+    const list = (themeIndex && themeIndex.themes) || [];
+    if (!list.length) { $('theme-dd').style.display = 'none'; return; }
+    dropdown('theme-dd', list.map(t => ({ id: t.id, name: t.name })), selectedId, changeTheme);
+  }
+
   // ---------- Themes ----------
   // Themes live in /theme. index.json lists them; each file maps role names to colors.
   // Every key in a theme file becomes a CSS variable: "accent" -> --accent.
@@ -171,10 +195,7 @@
     } catch (e) {
       themeIndex = { default: 'default', themes: [] };
     }
-    const select = $('theme-select');
-    const list = themeIndex.themes || [];
-    select.innerHTML = list.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
-    if (!list.length) select.style.display = 'none';
+    // The dropdown is drawn after the saved theme is known (see initTheme).
   }
 
   async function applyTheme(id) {
@@ -189,7 +210,7 @@
         if (key === 'name') return;
         document.documentElement.style.setProperty('--' + key, value);
       });
-      $('theme-select').value = entry.id;
+      renderThemeDropdown(entry.id);
     } catch (e) {
       console.warn('Theme could not load, using defaults:', e);
     }
@@ -205,6 +226,7 @@
     const saved = localStorage.getItem(THEME_KEY);
     const id = saved || (themeIndex && themeIndex.default);
     if (id) await applyTheme(id);
+    else renderThemeDropdown(null);
   }
 
   // ---------- Helpers ----------
@@ -258,17 +280,17 @@
     const data = await api('/mail/mailboxes');
     mailboxes = data.mailboxes || [];
     if (!mailboxes.length) {
-      $('mb-select').style.display = 'none';
+      $('mb-dd').style.display = 'none';
       $('new-btn').style.display = 'none';
       $('panes').style.display = 'none';
       setStatus('You have no mailbox yet. Ask the admin to create one for you.');
       return false;
     }
-    $('mb-select').innerHTML = mailboxes.map(b =>
-      `<option value="${b.id}">${esc(b.address)}${b.status !== 'active' ? ' (' + esc(b.status) + ')' : ''}</option>`
-    ).join('');
     currentMailbox = String(mailboxes[0].id);
-    $('mb-select').value = currentMailbox;
+    dropdown('mb-dd', mailboxes.map(b => ({
+      id: String(b.id),
+      name: b.address + (b.status !== 'active' ? ' (' + b.status + ')' : '')
+    })), currentMailbox, changeMailbox);
     return true;
   }
 
