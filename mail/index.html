@@ -184,7 +184,7 @@
     box.innerHTML = `
       <input type="checkbox" class="sr-only" id="${uid}">
       <label for="${uid}" class="trigger">${esc(current ? current.name : '')}</label>
-      <ul class="list">${items.map(i => `
+      <ul class="dd-list">${items.map(i => `
         <li class="listitem"><button type="button" class="article ${current && i.id === current.id ? 'selected' : ''}" data-id="${esc(i.id)}">${esc(i.name)}</button></li>`).join('')}
       </ul>`;
     box.querySelectorAll('.article').forEach(btn => btn.addEventListener('click', () => {
