@@ -69,6 +69,21 @@
   .article { padding: 0.38rem 0.7rem; border-radius: 6px; font-size: 12.5px; font-weight: 500; text-align: left; width: 100%; border: 1px solid var(--border); display: inline-block; background-color: var(--surface); cursor: pointer; font-family: 'Inter', sans-serif; color: var(--text); box-sizing: border-box; }
   .article:hover { border-color: var(--accent); color: var(--accent); }
   .article.selected { background-color: var(--btn); border-color: var(--btn); color: var(--btn-text); }
+  /* Decorative background icons (Iconify, colored by the theme's "deco" value) */
+  .deco { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .deco-icon {
+    position: absolute;
+    background-color: var(--deco);
+    -webkit-mask: var(--url) center / contain no-repeat;
+    mask: var(--url) center / contain no-repeat;
+    opacity: 0.18;
+    transform: rotate(-35deg);
+    animation: drift var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes drift { from { translate: 0 0; } to { translate: 40px -30px; } }
+  @media (prefers-reduced-motion: reduce) { .deco-icon { animation: none; } }
+  main { position: relative; z-index: 1; }
+
   .status { font-size: 0.8rem; color: var(--text-muted); }
   .btn { background: var(--btn); color: var(--btn-text); border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
   .btn:hover { filter: brightness(1.15); }
