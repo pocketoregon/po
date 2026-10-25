@@ -1,0 +1,14 @@
+// theme/light.json
+{
+  "page": "#f9fafb",
+  "surface": "#ffffff",
+  "text": "#1f1e24",
+  "text-muted": "#6b7280",
+  "accent": "#f97316",
+  "btn": "#1f1e24",
+  "btn-light": "#f3f4f6",
+  "bubble-in": "#ffffff",
+  "bubble-out": "#1f1e24",
+  "input": "#ffffff",
+  "border": "#e5e7eb"
+}
