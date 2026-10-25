@@ -559,7 +559,35 @@
     refreshMail();
   }
 
+  // Decorative icons, loaded from Iconify. Only the browser contacts Iconify; nothing is stored on your side.
+  const DECO_ICONS = [
+    'tabler/bat', 'tabler/pizza', 'tabler/question-mark', 'tabler/cross', 'tabler/circle',
+    'tabler/cloud', 'tabler/car', 'tabler/ball-football', 'tabler/number-7', 'tabler/trophy'
+  ];
+  function buildDeco() {
+    const layer = document.createElement('div');
+    layer.className = 'deco';
+    layer.setAttribute('aria-hidden', 'true');
+    const rows = 7, cols = 9;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const name = DECO_ICONS[(r * 3 + c) % DECO_ICONS.length];
+        const el = document.createElement('div');
+        el.className = 'deco-icon';
+        el.style.setProperty('--url', `url("https://api.iconify.design/${name}.svg")`);
+        el.style.left = `${c * (100 / cols) + r * 5 - 8}%`;
+        el.style.top = `${r * (100 / rows) - 4}%`;
+        const size = 34 + ((r * 7 + c * 5) % 4) * 8;
+        el.style.width = el.style.height = size + 'px';
+        el.style.setProperty('--dur', (18 + ((r + c) % 5) * 3) + 's');
+        layer.appendChild(el);
+      }
+    }
+    document.body.prepend(layer);
+  }
+
   window.addEventListener('load', async () => {
+    buildDeco();
     await initTheme();
     if (!localStorage.getItem('po_token')) {
       $('signed-out').style.display = 'block';
