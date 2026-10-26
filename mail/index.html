@@ -22,9 +22,9 @@
     --bubble-out: #1f1e24;
     --input: #ffffff;
     --border: #e5e7eb;
-    /* Optional: text on buttons and outgoing bubbles */
     --btn-text: #ffffff;
     --bubble-out-text: #ffffff;
+    --deco: #9ca3af;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,30 +33,19 @@
   .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
   .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-family: 'Outfit', sans-serif; font-weight: 800; }
   .nav-back { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
-  main { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+  main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
   .msg { padding: 2rem; text-align: center; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
   .msg a { color: var(--accent); font-weight: 600; }
 
   .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
   .top h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; margin-right: auto; }
-  .top select {
-    appearance: auto;
-    padding: 8px 14px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    background: var(--surface);
-    color: var(--text);
-    max-width: 280px;
-    cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .top select:hover { border-color: var(--accent); }
-  .top select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .status { font-size: 0.8rem; color: var(--text-muted); }
+  .btn { background: var(--btn); color: var(--btn-text); border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+  .btn:hover { filter: brightness(1.15); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-light { background: var(--btn-light); color: var(--text); }
 
-  /* Custom dropdown, based on the notes dropdown and styled with theme variables */
+  /* Custom dropdown */
   .dropdown { border: 1px solid var(--border); border-radius: 12px; transition: all 300ms; display: flex; flex-direction: column; min-height: 42px; background-color: var(--surface); overflow: visible; position: relative; max-width: 280px; min-width: 140px; }
   .dropdown input:where(:checked) ~ .dd-list { opacity: 1; transform: translateY(0); pointer-events: auto; transition: opacity 220ms ease, transform 220ms ease; }
   .dropdown input:where(:not(:checked)) ~ .dd-list { opacity: 0; transform: translateY(-6px); user-select: none; pointer-events: none; transition: opacity 180ms ease-out, transform 180ms ease-out; }
@@ -69,16 +58,30 @@
   .article { padding: 0.38rem 0.7rem; border-radius: 6px; font-size: 12.5px; font-weight: 500; text-align: left; width: 100%; border: 1px solid var(--border); display: inline-block; background-color: var(--surface); cursor: pointer; font-family: 'Inter', sans-serif; color: var(--text); box-sizing: border-box; }
   .article:hover { border-color: var(--accent); color: var(--accent); }
   .article.selected { background-color: var(--btn); border-color: var(--btn); color: var(--btn-text); }
-  /* Decorative background icons (Iconify, colored by the theme's "deco" value) */
+
+  /* Skeleton placeholders */
+  .sk { position: relative; overflow: hidden; background: var(--border); border-radius: 6px; }
+  .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 70%, transparent), transparent); animation: sk-shine 1.2s infinite; }
+  @keyframes sk-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .dd-skel { height: 42px; width: 170px; border-radius: 12px; }
+  .sk-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .sk-av { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; }
+  .sk-line { height: 10px; margin-bottom: 8px; }
+  .sk-line:last-child { margin-bottom: 0; }
+  .sk-bubble-row { display: flex; gap: 8px; align-items: flex-end; }
+  .sk-bubble-row.out { flex-direction: row-reverse; }
+  .sk-bubble { height: 56px; width: 55%; border-radius: 12px; }
+  .sk-bubble-row.out .sk-bubble { width: 45%; }
+  .sk-bubble-av { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Decorative background icons */
   .deco { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
   .deco-icon {
     position: absolute;
-    background-color: var(--deco);
-    -webkit-mask: var(--url) center / contain no-repeat;
-    mask: var(--url) center / contain no-repeat;
+    display: block;
     opacity: 0.18;
-    transform: rotate(-35deg);
-    animation: drift var(--dur) ease-in-out infinite alternate;
+    animation: drift var(--dur) linear infinite;
+    animation-delay: var(--delay, 0s);
   }
   /* Travels from beyond the bottom-left edge to beyond the top-right edge, then loops */
   @keyframes drift {
@@ -86,13 +89,6 @@
     to   { transform: translate(130vw, -130vh) rotate(-35deg); }
   }
   @media (prefers-reduced-motion: reduce) { .deco-icon { animation: none; } }
-  main { position: relative; z-index: 1; }
-
-  .status { font-size: 0.8rem; color: var(--text-muted); }
-  .btn { background: var(--btn); color: var(--btn-text); border: none; border-radius: 6px; padding: 8px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-  .btn:hover { filter: brightness(1.15); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-light { background: var(--btn-light); color: var(--text); }
 
   .panes { display: grid; grid-template-columns: 320px 1fr; height: 72vh; min-height: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .list { border-right: 1px solid var(--border); overflow-y: auto; }
@@ -101,13 +97,14 @@
 
   .convo { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
   .convo:hover { filter: brightness(0.97); }
-  .convo.active { background: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+  .convo.active { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
   .cbody { flex: 1; min-width: 0; }
   .crow { display: flex; justify-content: space-between; gap: 8px; }
   .cname { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cname.bold { font-weight: 700; }
   .ctime { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
   .csub { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .via { font-size: 0.7rem; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
   .badge { background: var(--accent); color: var(--btn-text); font-size: 0.7rem; font-weight: 700; border-radius: 999px; padding: 2px 7px; }
 
   .thead { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
@@ -127,8 +124,8 @@
   .row-msg.out .btime { opacity: 0.7; color: var(--bubble-out-text); }
 
   .reply { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: var(--surface); }
-  .reply textarea, .compose-form textarea, .compose-form input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; resize: vertical; background: var(--input); color: var(--text); }
-  .reply textarea:focus, .compose-form textarea:focus, .compose-form input:focus { border-color: var(--accent); }
+  .reply textarea, .compose-form textarea, .compose-form input, .compose-form select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; resize: vertical; background: var(--input); color: var(--text); }
+  .reply textarea:focus, .compose-form textarea:focus, .compose-form input:focus, .compose-form select:focus { border-color: var(--accent); }
   .compose-form { display: flex; flex-direction: column; gap: 10px; padding: 16px; flex: 1; overflow-y: auto; }
   .row-end { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
@@ -139,18 +136,6 @@
     .panes.show-thread .thread { display: flex; }
     .back { display: inline-block; }
     .bubble { max-width: 88%; }
-  }
-  /* Decorative icon override: plain images, no CSS mask */
-  .deco-icon {
-    position: absolute;
-    display: block;
-    opacity: 0.18;
-    transform: rotate(-35deg);
-    animation: drift var(--dur) linear infinite;
-    animation-delay: var(--delay, 0s);
-    -webkit-mask: none;
-    mask: none;
-    background: none;
   }
 </style>
 </head>
@@ -175,15 +160,20 @@
   <div id="mail-view" style="display:none;">
     <div class="top">
       <h1>Mail</h1>
-      <div class="dropdown" id="theme-dd"></div>
-      <div class="dropdown" id="mb-dd"></div>
+      <div class="dropdown" id="theme-dd"><div class="sk dd-skel"></div></div>
+      <div class="dropdown" id="mb-dd"><div class="sk dd-skel"></div></div>
       <span id="status" class="status"></span>
       <button class="btn btn-light" id="refresh-btn" onclick="refreshMail()">Refresh</button>
       <button class="btn" id="new-btn" onclick="openNew()">New message</button>
     </div>
 
     <div class="panes" id="panes">
-      <aside class="list" id="convo-list"></aside>
+      <aside class="list" id="convo-list">
+        <div class="sk-row"><div class="sk sk-av"></div><div style="flex:1;min-width:0;"><div class="sk sk-line" style="width:45%;"></div><div class="sk sk-line" style="width:70%;"></div></div></div>
+        <div class="sk-row"><div class="sk sk-av"></div><div style="flex:1;min-width:0;"><div class="sk sk-line" style="width:45%;"></div><div class="sk sk-line" style="width:70%;"></div></div></div>
+        <div class="sk-row"><div class="sk sk-av"></div><div style="flex:1;min-width:0;"><div class="sk sk-line" style="width:45%;"></div><div class="sk sk-line" style="width:70%;"></div></div></div>
+        <div class="sk-row"><div class="sk sk-av"></div><div style="flex:1;min-width:0;"><div class="sk sk-line" style="width:45%;"></div><div class="sk sk-line" style="width:70%;"></div></div></div>
+      </aside>
       <section class="thread" id="thread">
         <div class="empty">Select a conversation or start a new message.</div>
       </section>
@@ -194,19 +184,21 @@
 <script>
   const WORKER_URL = 'https://po.pocketoregon.workers.dev';
   const THEME_KEY = 'po_mail_theme';
+  const ALL = 'all';
+
   let themeIndex = null;
   let mailboxes = [];
-  let currentMailbox = '';
-  let rows = { inbox: [], sent: [] };   // list rows, loaded on open / refresh only
-  const bodies = new Map();             // message id -> body text
-  let currentPeer = null;
+  let currentMailbox = ALL;            // ALL, or a mailbox id
+  let rows = { inbox: [], sent: [] };  // list rows, loaded on open / refresh only
+  const bodies = new Map();            // message id -> body text
+  let currentKey = null;               // conversation key: "<mailboxId>|<address>"
   let composing = false;
   let busy = false;
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  // Builds a custom dropdown inside the container with the given id.
+  // ---------- Dropdowns ----------
   // items: [{ id, name }], selected: id string, onPick: called with the chosen id.
   function dropdown(containerId, items, selected, onPick) {
     const box = $(containerId);
@@ -240,13 +232,12 @@
     } catch (e) {
       themeIndex = { default: 'default', themes: [] };
     }
-    // The dropdown is drawn after the saved theme is known (see initTheme).
   }
 
   async function applyTheme(id) {
     const list = (themeIndex && themeIndex.themes) || [];
     const entry = list.find(t => t.id === id) || list.find(t => t.id === themeIndex.default);
-    if (!entry) return;                  // no themes: built-in defaults stay
+    if (!entry) return;
     try {
       const res = await fetch('/theme/' + entry.file);
       if (!res.ok) throw new Error('theme not found');
@@ -264,6 +255,7 @@
   async function changeTheme(id) {
     localStorage.setItem(THEME_KEY, id);
     await applyTheme(id);
+    buildDeco();   // icon color follows the theme's "deco" value
   }
 
   async function initTheme() {
@@ -296,6 +288,13 @@
     return String(s || '').replace(/^(re:\s*)+/i, '').trim();
   }
   function setStatus(t) { $('status').textContent = t; }
+  function mailboxAddress(id) {
+    const b = mailboxes.find(x => String(x.id) === String(id));
+    return b ? b.address : '';
+  }
+  function mailboxIds() {
+    return mailboxes.map(b => String(b.id));
+  }
 
   async function api(path, opts = {}) {
     const res = await fetch(WORKER_URL + path, {
@@ -321,6 +320,7 @@
     }
   }
 
+  // ---------- Mailboxes ----------
   async function loadMailboxes() {
     const data = await api('/mail/mailboxes');
     mailboxes = data.mailboxes || [];
@@ -331,29 +331,42 @@
       setStatus('You have no mailbox yet. Ask the admin to create one for you.');
       return false;
     }
-    currentMailbox = String(mailboxes[0].id);
-    dropdown('mb-dd', mailboxes.map(b => ({
+    const items = [{ id: ALL, name: 'All inboxes' }].concat(mailboxes.map(b => ({
       id: String(b.id),
       name: b.address + (b.status !== 'active' ? ' (' + b.status + ')' : '')
-    })), currentMailbox, changeMailbox);
+    })));
+    dropdown('mb-dd', items, currentMailbox, changeMailbox);
     return true;
   }
 
-  // Fetches both folders once. Runs on load, Refresh, mailbox change, and after sending.
+  // Fetches the inbox and sent folders for each given mailbox id and merges them.
+  async function fetchFolders(ids) {
+    const pairs = await Promise.all(ids.map(id => Promise.all([
+      api(`/mail?folder=inbox&mailbox_id=${id}`),
+      api(`/mail?folder=sent&mailbox_id=${id}`)
+    ])));
+    return {
+      inbox: pairs.flatMap(p => p[0].messages || []),
+      sent: pairs.flatMap(p => p[1].messages || [])
+    };
+  }
+
+  // Runs on load, Refresh, mailbox change, and after sending.
   async function refreshMail() {
-    if (!currentMailbox || busy) return;
+    if (!mailboxes.length || busy) return;
     busy = true;
     $('refresh-btn').disabled = true;
     setStatus('Loading...');
+    if (!rows.inbox.length && !rows.sent.length) {
+      $('convo-list').innerHTML = listSkeleton();
+    }
     try {
-      const [i, s] = await Promise.all([
-        api(`/mail?folder=inbox&mailbox_id=${currentMailbox}`),
-        api(`/mail?folder=sent&mailbox_id=${currentMailbox}`)
-      ]);
-      rows.inbox = i.messages || [];
-      rows.sent = s.messages || [];
+      const ids = currentMailbox === ALL ? mailboxIds() : [currentMailbox];
+      const data = await fetchFolders(ids);
+      rows.inbox = data.inbox;
+      rows.sent = data.sent;
       renderList();
-      if (currentPeer && !composing) {
+      if (currentKey && !composing) {
         await loadBodies(currentConv());
         renderMessages();
       }
@@ -366,14 +379,17 @@
     }
   }
 
-  // One conversation per other address, combining inbound and outbound messages.
+  // ---------- Conversations ----------
+  // One conversation per (your mailbox, their address). This keeps replies on the right address.
   function conversations() {
     const map = new Map();
     const add = (m, dir, peerRaw, pStyle, pSeed) => {
       const peer = addrOf(peerRaw);
       if (!peer) return;
-      if (!map.has(peer)) map.set(peer, { peer, name: nameOf(peerRaw), msgs: [], unread: 0 });
-      const c = map.get(peer);
+      const mid = String(m.mailbox_id);
+      const key = mid + '|' + peer;
+      if (!map.has(key)) map.set(key, { key, mid, peer, name: nameOf(peerRaw), msgs: [], unread: 0 });
+      const c = map.get(key);
       c.msgs.push({ ...m, dir });
       if (dir === 'in' && !m.is_read) c.unread++;
       if (pSeed) { c.style = pStyle; c.seed = pSeed; }
@@ -390,7 +406,19 @@
   }
 
   function currentConv() {
-    return conversations().find(c => c.peer === currentPeer) || null;
+    return conversations().find(c => c.key === currentKey) || null;
+  }
+
+  function listSkeleton(count = 6) {
+    const row = `
+      <div class="sk-row">
+        <div class="sk sk-av"></div>
+        <div style="flex:1; min-width:0;">
+          <div class="sk sk-line" style="width:45%;"></div>
+          <div class="sk sk-line" style="width:70%;"></div>
+        </div>
+      </div>`;
+    return row.repeat(count);
   }
 
   function renderList() {
@@ -399,8 +427,9 @@
       $('convo-list').innerHTML = '<div class="empty">No conversations yet. Use New message to start one.</div>';
       return;
     }
+    const showVia = currentMailbox === ALL;
     $('convo-list').innerHTML = list.map(c => `
-      <div class="convo ${c.peer === currentPeer && !composing ? 'active' : ''}" data-peer="${esc(c.peer)}" onclick="openThread(this.dataset.peer)">
+      <div class="convo ${c.key === currentKey && !composing ? 'active' : ''}" data-key="${esc(c.key)}" onclick="openThread(this.dataset.key)">
         ${window.poAvatarHTML({ name: c.name, avatar_style: c.style, avatar_seed: c.seed }, 38)}
         <div class="cbody">
           <div class="crow">
@@ -408,6 +437,7 @@
             <span class="ctime">${fmt(c.last.created_at)}</span>
           </div>
           <div class="csub">${c.last.dir === 'out' ? 'You: ' : ''}${esc(cleanSubject(c.last.subject) || '(no subject)')}</div>
+          ${showVia ? `<div class="via">via ${esc(mailboxAddress(c.mid))}</div>` : ''}
         </div>
         ${c.unread ? `<span class="badge">${c.unread}</span>` : ''}
       </div>`).join('');
@@ -427,6 +457,15 @@
         bodies.set(m.id, '(could not load this message)');
       }
     }));
+  }
+
+  function bubbleSkeleton() {
+    const rowsHtml = ['in', 'out', 'in', 'out'].map(dir => `
+      <div class="sk-bubble-row ${dir}">
+        <div class="sk sk-bubble-av"></div>
+        <div class="sk sk-bubble"></div>
+      </div>`).join('');
+    return `<div class="msgs" id="msgs">${rowsHtml}</div>`;
   }
 
   function renderMessages() {
@@ -462,8 +501,8 @@
     box.scrollTop = box.scrollHeight;
   }
 
-  async function openThread(peer) {
-    currentPeer = peer;
+  async function openThread(key) {
+    currentKey = key;
     composing = false;
     $('panes').classList.add('show-thread');
     const conv = currentConv();
@@ -471,11 +510,11 @@
       <div class="thead">
         <button class="back" onclick="closeThread()">←</button>
         <div>
-          <div class="tname">${esc(conv ? conv.name : peer)}</div>
-          <div class="taddr">${esc(peer)}</div>
+          <div class="tname">${esc(conv ? conv.name : '')}</div>
+          <div class="taddr">${esc(conv ? conv.peer : '')}${conv ? ' · via ' + esc(mailboxAddress(conv.mid)) : ''}</div>
         </div>
       </div>
-      <div class="msgs" id="msgs"><div class="empty">Loading messages...</div></div>
+      ${bubbleSkeleton()}
       <form class="reply" onsubmit="event.preventDefault(); sendReply();">
         <textarea id="reply-body" rows="2" placeholder="Write a reply..."></textarea>
         <button class="btn" type="submit" id="send-btn">Send</button>
@@ -487,16 +526,17 @@
 
   function closeThread() {
     $('panes').classList.remove('show-thread');
-    currentPeer = null;
+    currentKey = null;
     composing = false;
     renderList();
   }
 
-  async function deliver(to, subject, text) {
+  // ---------- Sending ----------
+  async function deliver(to, subject, text, mailboxId) {
     return api('/mail/send', {
       method: 'POST',
       body: JSON.stringify({
-        mailbox_id: Number(currentMailbox),
+        mailbox_id: Number(mailboxId),
         to,
         subject,
         html: '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>'
@@ -506,14 +546,14 @@
 
   async function sendReply() {
     const text = $('reply-body').value.trim();
-    if (!text || !currentPeer) return;
     const conv = currentConv();
-    const base = conv ? cleanSubject(conv.last.subject) : '';
+    if (!text || !conv) return;
+    const base = cleanSubject(conv.last.subject);
     const subject = base ? 'Re: ' + base : '(no subject)';
     const btn = $('send-btn');
     btn.disabled = true;
     try {
-      await deliver(currentPeer, subject, text);
+      await deliver(conv.peer, subject, text, conv.mid);
       $('reply-body').value = '';
       await refreshMail();
     } catch (e) {
@@ -525,14 +565,18 @@
 
   function openNew() {
     composing = true;
-    currentPeer = null;
+    currentKey = null;
     $('panes').classList.add('show-thread');
+    const defaultFrom = currentMailbox !== ALL ? currentMailbox : mailboxIds()[0];
     $('thread').innerHTML = `
       <div class="thead">
         <button class="back" onclick="closeThread()">←</button>
         <div class="tname">New message</div>
       </div>
       <form class="compose-form" onsubmit="event.preventDefault(); sendNew();">
+        <select id="n-from">${mailboxes.map(b =>
+          `<option value="${b.id}" ${String(b.id) === String(defaultFrom) ? 'selected' : ''}>${esc(b.address)}</option>`
+        ).join('')}</select>
         <input id="n-to" type="email" placeholder="To" required>
         <input id="n-subject" type="text" placeholder="Subject" maxlength="200" required>
         <textarea id="n-body" rows="10" placeholder="Write your message..." required></textarea>
@@ -545,6 +589,7 @@
   }
 
   async function sendNew() {
+    const from = $('n-from').value;
     const to = $('n-to').value.trim();
     const subject = $('n-subject').value.trim();
     const text = $('n-body').value.trim();
@@ -553,12 +598,11 @@
     btn.disabled = true;
     st.textContent = 'Sending...';
     try {
-      await deliver(to, subject, text);
-      const peer = addrOf(to);
+      await deliver(to, subject, text, from);
       composing = false;
-      currentPeer = peer;
+      currentKey = from + '|' + addrOf(to);
       await refreshMail();
-      await openThread(peer);
+      await openThread(currentKey);
     } catch (e) {
       st.textContent = e.message;
       btn.disabled = false;
@@ -568,196 +612,64 @@
   function changeMailbox(id) {
     currentMailbox = id;
     rows = { inbox: [], sent: [] };
-    currentPeer = null;
+    bodies.clear();
+    currentKey = null;
     composing = false;
     $('thread').innerHTML = '<div class="empty">Select a conversation or start a new message.</div>';
     $('panes').classList.remove('show-thread');
     refreshMail();
   }
 
-  // Decorative icons, loaded from Iconify. Only the browser contacts Iconify; nothing is stored on your side.
+  // ---------- Decorative icons ----------
   const DECO_ICONS = [
     'tabler/bat', 'tabler/pizza', 'tabler/question-mark', 'tabler/cross', 'tabler/circle',
     'tabler/cloud', 'tabler/car', 'tabler/ball-football', 'tabler/number-7', 'tabler/trophy'
   ];
+
   function buildDeco() {
-    const layer = document.createElement('div');
-    layer.className = 'deco';
-    layer.setAttribute('aria-hidden', 'true');
-    const rows = 7, cols = 9;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const name = DECO_ICONS[(r * 3 + c) % DECO_ICONS.length];
-        const el = document.createElement('div');
-        el.className = 'deco-icon';
-        el.style.setProperty('--url', `url("https://api.iconify.design/${name}.svg")`);
-        el.style.left = `${c * (100 / cols) + r * 5 - 8}%`;
-        el.style.top = `${r * (100 / rows) - 4}%`;
-        const size = 34 + ((r * 7 + c * 5) % 4) * 8;
-        el.style.width = el.style.height = size + 'px';
-        el.style.setProperty('--dur', (18 + ((r + c) % 5) * 3) + 's');
-        layer.appendChild(el);
-      }
-    }
-    document.body.prepend(layer);
-  }
-
-  window.addEventListener('load', async () => {
-    buildDeco();
-    await initTheme();
-    if (!localStorage.getItem('po_token')) {
-      $('signed-out').style.display = 'block';
-      return;
-    }
-    $('mail-view').style.display = 'block';
-    try {
-      if (await loadMailboxes()) await refreshMail();
-    } catch (e) {
-      handleErr(e);
-    }
-  });
-</script>
-<script>
-// Decorative background icons. Images come from Iconify and are colored by the theme's "deco" value.
-(function () {
-  const ICONS = [
-    'tabler/bat', 'tabler/pizza', 'tabler/question-mark', 'tabler/cross', 'tabler/circle',
-    'tabler/cloud', 'tabler/car', 'tabler/ball-football', 'tabler/number-7', 'tabler/trophy'
-  ];
-
-  function decoColor() {
-    return getComputedStyle(document.documentElement).getPropertyValue('--deco').trim() || '#9ca3af';
-  }
-
-  function buildIcons() {
     document.querySelectorAll('.deco').forEach(n => n.remove());
-    const color = decoColor();
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--deco').trim() || '#9ca3af';
     const layer = document.createElement('div');
     layer.className = 'deco';
     layer.setAttribute('aria-hidden', 'true');
-    const rows = 7, cols = 9;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const name = ICONS[(r * 3 + c) % ICONS.length];
+    const rowsN = 7, colsN = 9;
+    for (let r = 0; r < rowsN; r++) {
+      for (let c = 0; c < colsN; c++) {
+        const name = DECO_ICONS[(r * 3 + c) % DECO_ICONS.length];
         const img = document.createElement('img');
         img.className = 'deco-icon';
         img.alt = '';
         img.src = `https://api.iconify.design/${name}.svg?color=${encodeURIComponent(color)}`;
-        img.style.left = `${c * (100 / cols) + r * 5 - 8}%`;
-        img.style.top = `${r * (100 / rows) - 4}%`;
+        img.style.left = `${c * (100 / colsN) + r * 5 - 8}%`;
+        img.style.top = `${r * (100 / rowsN) - 4}%`;
         const size = 34 + ((r * 7 + c * 5) % 4) * 8;
         img.style.width = img.style.height = size + 'px';
         img.style.setProperty('--dur', (18 + ((r + c) % 5) * 3) + 's');
-        // Negative delay starts each icon partway along its path, so they're spread across the screen
-        img.style.setProperty('--delay', `-${((r * cols + c) * 1.7).toFixed(1)}s`);
+        img.style.setProperty('--delay', `-${((r * colsN + c) * 1.7).toFixed(1)}s`);
         layer.appendChild(img);
       }
     }
     document.body.prepend(layer);
   }
 
-  // Replace any older builder so every caller uses this version.
-  window.buildDeco = buildIcons;
-
-  // Rebuild the icons when the theme changes, so the grey follows the theme.
-  if (typeof window.changeTheme === 'function') {
-    const originalChangeTheme = window.changeTheme;
-    window.changeTheme = async function (id) {
-      await originalChangeTheme(id);
-      buildIcons();
-    };
-  }
-
-  // Build once after the theme has had time to load.
-  window.addEventListener('load', () => setTimeout(buildIcons, 400));
-})();
-</script>
-<script>
-// Skeleton placeholders shown while mail is loading.
-(function () {
-  const st = document.createElement('style');
-  st.textContent = `
-    .sk { position: relative; overflow: hidden; background: var(--border); border-radius: 6px; }
-    .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 70%, transparent), transparent); animation: sk-shine 1.2s infinite; }
-    @keyframes sk-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-    .sk-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
-    .sk-av { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; }
-    .sk-line { height: 10px; margin-bottom: 8px; }
-    .sk-line:last-child { margin-bottom: 0; }
-    .sk-bubble-row { display: flex; gap: 8px; align-items: flex-end; }
-    .sk-bubble-row.out { flex-direction: row-reverse; }
-    .sk-bubble { height: 56px; width: 55%; border-radius: 12px; }
-    .sk-bubble-row.out .sk-bubble { width: 45%; }
-    .sk-bubble-av { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
-  `;
-  document.head.appendChild(st);
-
-  function listSkeleton(count = 6) {
-    const row = `
-      <div class="sk-row">
-        <div class="sk sk-av"></div>
-        <div style="flex:1; min-width:0;">
-          <div class="sk sk-line" style="width:45%;"></div>
-          <div class="sk sk-line" style="width:70%;"></div>
-        </div>
-      </div>`;
-    return row.repeat(count);
-  }
-
-  function bubbleSkeleton() {
-    const rows = [
-      ['in', 'sk-bubble'], ['out', 'sk-bubble'], ['in', 'sk-bubble'], ['out', 'sk-bubble']
-    ];
-    return `<div class="msgs" id="msgs">` + rows.map(([dir]) => `
-      <div class="sk-bubble-row ${dir}">
-        <div class="sk sk-bubble-av"></div>
-        <div class="sk sk-bubble"></div>
-      </div>`).join('') + `</div>`;
-  }
-
-  // 1. Left list: show skeleton on first page load (before any data arrives).
-  $('convo-list').innerHTML = listSkeleton();
-
-  // 2. Refresh / mailbox change: show skeleton only when there is no data yet.
-  const originalRefresh = refreshMail;
-  refreshMail = async function () {
-    if (!rows.inbox.length && !rows.sent.length) {
-      $('convo-list').innerHTML = listSkeleton();
+  // ---------- Startup ----------
+  window.addEventListener('load', async () => {
+    const signedIn = !!localStorage.getItem('po_token');
+    if (!signedIn) {
+      $('signed-out').style.display = 'block';
+      await initTheme();
+      buildDeco();
+      return;
     }
-    return originalRefresh();
-  };
-
-  // 3. Opening a conversation: replace the "Loading messages..." text with bubble placeholders.
-  // openThread sets up the pane synchronously before its first await, so this runs right after it.
-  const originalOpenThread = openThread;
-  openThread = function (peer) {
-    const promise = originalOpenThread(peer);
-    const box = $('msgs');
-    if (box && box.textContent.includes('Loading')) {
-      box.outerHTML = bubbleSkeleton();
+    $('mail-view').style.display = 'block';
+    await initTheme();
+    buildDeco();
+    try {
+      if (await loadMailboxes()) await refreshMail();
+    } catch (e) {
+      handleErr(e);
     }
-    return promise;
-  };
-})();
-</script>
-<script>
-// Skeleton placeholders for the theme and mailbox dropdowns while they load.
-(function () {
-  const st = document.createElement('style');
-  st.textContent = `.dd-skel { height: 42px; width: 170px; border-radius: 12px; }`;
-  document.head.appendChild(st);
-
-  // Show the page shell immediately when signed in, so the placeholders are visible.
-  if (localStorage.getItem('po_token')) {
-    document.getElementById('mail-view').style.display = 'block';
-  }
-
-  // Fill both dropdown boxes with a placeholder. dropdown() replaces it once real data arrives.
-  ['theme-dd', 'mb-dd'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '<div class="sk dd-skel"></div>';
   });
-})();
 </script>
 </body>
 </html>
