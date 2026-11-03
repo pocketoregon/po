@@ -12,8 +12,7 @@ const MAIL_ICON = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" s
 
 // Checks whether this user owns at least one mailbox, then re-renders the drawer
 async function checkMailAccess() {
-  const token = localStorage.getItem('po_token');
-  if (!token) return;
+  return;
   try {
     const res = await fetch('https://po.pocketoregon.workers.dev/mail/mailboxes', {
       headers: { 'Authorization': 'Bearer ' + token }
@@ -231,7 +230,7 @@ function renderDrawerHTML(user) {
     <div class="nav-drawer-backdrop"></div>
     <div class="nav-drawer-content">
       <div class="nd-profile-block">
-        <div class="nd-avatar" style="padding:0;overflow:hidden;">${window.poAvatarHTML(user, 60)}</div>
+        <div class="nd-avatar" style="padding:0;overflow:hidden;">${typeof window.poAvatarHTML === 'function' ? window.poAvatarHTML(user, 60) : (user.name || '??').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}</div>
         <h2 class="nd-name">${user.name || 'User'}</h2>
         <p class="nd-email">${user.email || ''}</p>
       </div>
