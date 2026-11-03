@@ -147,9 +147,9 @@ import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from '/nav-drawer.j
                 initNavDrawer(data.user);
                 updateNavAvatar(data.user);
                 showApp();
-            } else { showAlert('Login failed. Try again.'); }
+            } else { console.error('Login: no user in response', data); showAlert('Login failed. Try again.'); }
         })
-        .catch(() => showAlert('Login failed. Try again.'));
+        .catch(err => { console.error('Login error:', err); showAlert('Login failed. Try again.'); });
     }
 
     // ── E2E ENCRYPTION (AES-GCM via Web Crypto API) ──────────────────
