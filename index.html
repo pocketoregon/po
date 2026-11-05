@@ -232,7 +232,7 @@
                         <span class="btn-login-text">Sign in</span>
                     </button>
                     <div id="user-area" style="display:none; position:relative;">
-                        <!-- Desktop avatar now directly triggers the universal layout drawer -->
+                        <!-- Avatar opens the nav drawer -->
                         <div id="user-avatar" class="user-avatar" onclick="if(window.openNavDrawer) window.openNavDrawer()"></div>
                     </div>
                 </div>
@@ -342,11 +342,11 @@
         </div>
     </div>
 
-    <!-- Script converted to type="module" to cleanly interact with universal nav drawer files -->
+    <!-- Module script so it can import nav-drawer.js -->
     <script type="module">
         import { initNavDrawer, openNavDrawer, updateNavDrawerUser } from './nav-drawer.js';
 
-        // Bind utility methods globally to handle legacy dynamic template layouts smoothly
+        // Expose on window for inline onclick handlers
         window.openLoginModal = openLoginModal;
         window.closeLoginModal = closeLoginModal;
         window.toggleMenu = toggleMenu;
@@ -394,7 +394,7 @@
         const CARDS_DEFAULT = [
             { id: 'default-1', title: 'Pocket Verse', date: '03/12/2026', body: 'Our creative team is currently sketching out the lore and character designs for the first installment of the Pocketverse saga.', link_text: '', link_url: '', page_content: '' },
             { id: 'default-2', title: 'Site Info', date: 'Origin: 3/13/2026', body: 'This site is a site for fiction story fundamentally.', link_text: '', link_url: '', page_content: '' },
-            { id: 'default-3', title: 'Chapters ...', date: '03/18/2026', body: "This section will be updated soon and provide insights on chapter release dates.", link_text: '', link_url: '', page_content: '' }
+            { id: 'default-3', title: 'Chapters ...', date: '03/18/2026', body: "This section will be updated soon and give chapter release dates.", link_text: '', link_url: '', page_content: '' }
         ];
 
         function waitForGoogle() {
@@ -439,7 +439,7 @@
             document.getElementById('comment-form-area').style.display = 'block';
             document.getElementById('comment-login-prompt').style.display = 'none';
             
-            // Instantly sync context records into initialized wrapper framework
+            // Pass the user to the nav drawer
             initNavDrawer(user);
         }
 
@@ -459,7 +459,7 @@
             showCustomAlert('Signed out successfully.');
         }
 
-        // Bridge universal drawer click event context directly to native front-end operations
+        // Sign-out request from the nav drawer
         window.addEventListener('nav-drawer-signout', () => {
             signOut();
         });
@@ -613,7 +613,7 @@
         }
 
         function toggleMenu() {
-            // Hand off navigation behavior straight to openNavDrawer component layer if authenticated
+            // Signed-in users get the nav drawer instead of the mobile menu
             if (currentUser) {
                 openNavDrawer();
                 return;
