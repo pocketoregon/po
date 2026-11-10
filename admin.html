@@ -1610,32 +1610,111 @@
         }
     }
 
+    async function patchbayWaitForDeployment(commitSha, filePath) {
+        if (!commitSha) {
+            throw new Error(filePath + ': GitHub did not return a commit SHA, so deployment cannot be verified.');
+        }
+
+        const maxAttempts = 180;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const response = await fetch(WORKER_URL + '/dev/status', {
+                headers: authHeader()
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(filePath + ': Could not check deployment status: ' + (data.error || 'Status request failed.'));
+            }
+
+            const run = (data.runs || []).find(item => item.commit_sha === commitSha);
+
+            if (run) {
+                if (run.status === 'completed') {
+                    if (run.conclusion !== 'success') {
+                        throw new Error(filePath + ': Deployment failed (' + (run.conclusion || 'unknown result') + '). Remaining files were not uploaded.');
+                    }
+                    return;
+                }
+
+                patchbayGlobalStatus(
+                    'Waiting for deployment of ' + filePath + ' (' + run.status + '). ' +
+                    'Next file will upload after deployment succeeds.'
+                );
+            } else {
+                patchbayGlobalStatus(
+                    'Waiting for GitHub Actions to start for ' + filePath +
+                    '. Next file is paused.'
+                );
+            }
+
+            if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
+        throw new Error(filePath + ': Deployment was not confirmed within 6 minutes. Remaining files were not uploaded.');
+    }
+
     async function patchbayGlobalApply() {
         if (!patchbayGlobalPlan || !patchbayGlobalPlan.length) {
             patchbayGlobalStatus('Preview the global patch again before applying.', true);
             return;
         }
+
         const button = document.getElementById('patchbay-global-apply');
         button.disabled = true;
         const saved = [];
+
         try {
             for (const item of patchbayGlobalPlan) {
+                patchbayGlobalStatus(
+                    'Uploading ' + (saved.length + 1) + ' of ' +
+                    patchbayGlobalPlan.length + ': ' + item.path
+                );
+
                 const response = await fetch(WORKER_URL + '/dev/file', {
                     method: 'PUT',
                     headers: { ...authHeader(), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: item.path, content: item.after, sha: item.sha, source: 'global' })
+                    body: JSON.stringify({
+                        path: item.path,
+                        content: item.after,
+                        sha: item.sha,
+                        source: 'global'
+                    })
                 });
+
                 const data = await response.json();
-                if (!response.ok) throw new Error(item.path + ': ' + (data.error || 'Save failed.'));
+
+                if (!response.ok) {
+                    throw new Error(item.path + ': ' + (data.error || 'Save failed.'));
+                }
+
                 saved.push(item.path);
-                patchbayGlobalStatus('Saved ' + saved.length + ' of ' + patchbayGlobalPlan.length + ': ' + item.path);
+
+                if (saved.length < patchbayGlobalPlan.length) {
+                    patchbayGlobalStatus(
+                        'Uploaded ' + item.path + '. Waiting for its deployment before uploading the next file...'
+                    );
+                    await patchbayWaitForDeployment(data.commitSha, item.path);
+                }
             }
-            patchbayGlobalStatus('Global patch saved successfully (' + saved.length + ' file(s)).');
+
+            patchbayGlobalStatus(
+                'Global patch saved successfully. All ' + saved.length +
+                ' file(s) uploaded and their deployments completed.'
+            );
             patchbayGlobalPlan = null;
             document.getElementById('patchbay-global-diff').style.display = 'none';
             loadDevFiles();
+            loadDevDeployStatus();
         } catch (error) {
-            patchbayGlobalStatus('Partial save: ' + saved.length + ' file(s) saved. ' + error.message, true);
+            patchbayGlobalStatus(
+                'Partial save: ' + saved.length + ' of ' +
+                patchbayGlobalPlan.length + ' file(s) uploaded. ' +
+                error.message,
+                true
+            );
             patchbayGlobalPlan = null;
         } finally {
             button.disabled = true;
