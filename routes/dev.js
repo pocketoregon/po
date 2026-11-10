@@ -271,7 +271,99 @@ export async function handleDev(path, request, env) {
       });
     }
 
-    if (path === '/dev/file' && request.method === 'PUT') {
+    if (path === '/dev/files/batch' && request.method === 'POST') {
+    try {
+      const body = await request.json();
+      const files = body.files;
+
+      if (!Array.isArray(files) || files.length === 0) {
+        return json({ success: false, error: 'No files supplied.' }, 400);
+      }
+
+      if (files.length > 50) {
+        return json({ success: false, error: 'Maximum 50 files per batch.' }, 400);
+      }
+
+      const saved = [];
+
+      for (const item of files) {
+        const p = item && item.path;
+        const content = item && item.content;
+        const sha = item && item.sha;
+
+        if (
+          typeof p !== 'string' ||
+          !p.trim() ||
+          p.startsWith('/') ||
+          p.includes('..') ||
+          p.includes('\\') ||
+          p.startsWith('.github/') ||
+          typeof content !== 'string'
+        ) {
+          return json({
+            success: false,
+            saved,
+            failedPath: p || null,
+            error: 'Invalid file path or content.'
+          }, 400);
+        }
+
+        if (content.length > 1000000) {
+          return json({
+            success: false,
+            saved,
+            failedPath: p,
+            error: 'File exceeds the 1 MB limit.'
+          }, 400);
+        }
+
+        const encodedPath = p.split('/').map(encodeURIComponent).join('/');
+        const response = await fetch(
+          'https://api.github.com/repos/' + REPO + '/contents/' + encodedPath,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + env.GITHUB_TOKEN,
+              'User-Agent': 'PocketOregon-Worker',
+              'Accept': 'application/vnd.github+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: 'admin: edit [global] ' + p,
+              content: btoa(unescape(encodeURIComponent(content))),
+              branch: 'main',
+              ...(sha ? { sha } : {})
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return json({
+            success: false,
+            saved,
+            failedPath: p,
+            error: data.message || 'GitHub rejected the file upload.'
+          }, response.status);
+        }
+
+        saved.push({
+          path: p,
+          sha: data.content && data.content.sha
+        });
+      }
+
+      return json({ success: true, saved });
+    } catch (error) {
+      return json({
+        success: false,
+        error: error.message || 'Batch upload failed.'
+      }, 500);
+    }
+  }
+
+  if (path === '/dev/file' && request.method === 'PUT') {
       const { path: p, content, sha, source } = await request.json();
       if (!p || typeof content !== 'string') return json({ error: 'Missing path or content' }, 400);
       if (p.startsWith('.github/') || p.includes('..')) return json({ error: 'This path cannot be edited here' }, 403);
