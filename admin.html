@@ -375,10 +375,20 @@
                     <div style="flex:1;min-width:0;">
                         <div id="dev-deploy-status" style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:12px;color:#475569;">Checking deployment status...</div>
 <div id="dev-file-info" style="padding:8px 16px;background:#fff;border-bottom:1px solid #e5e7eb;font-size:12px;color:#64748b;">Select a file to see its last commit information.</div>
+<div id="dev-history-panel" style="display:none;padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#fff;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+        <strong id="dev-history-title" style="font-size:13px;color:#1f2937;">History</strong>
+        <button class="btn btn-sm" style="background:#e5e7eb;color:#374151;" onclick="closeDevHistory()">Close</button>
+    </div>
+    <div id="dev-history-list" style="display:flex;flex-direction:column;gap:7px;font-size:12px;color:#475569;">Loading history...</div>
+    <pre id="dev-history-preview" style="display:none;white-space:pre;overflow:auto;max-height:350px;margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#f8fafc;font:11px/1.5 monospace;color:#374151;"></pre>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Previewing a version does not change the current file. Undo restores one latest change per click and creates a new commit.</div>
+</div>
 
 <div id="patchbay-global-panel" style="display:none;padding:14px 16px;border-bottom:1px solid #e5e7eb;background:#fff;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
         <strong style="font-size:14px;color:#1f2937;">Patchbay · Global Workspace</strong>
+        <button class="btn btn-sm" style="background:#e5e7eb;color:#374151;" onclick="loadDevHistory('global')">Global History</button>
         <button class="btn btn-dark btn-sm" onclick="patchbayToggleWorkspace()">← Opened-file Editor</button>
         <span style="font-size:11px;color:#64748b;">Multi-file · path-targeted</span>
     </div>
@@ -412,7 +422,7 @@
 
 <div id="dev-file-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
                             <span id="dev-file-name" style="font-size:0.82rem;font-weight:600;color:#374151;">Select a file</span>
-                            <span><span id="dev-status" style="font-size:0.75rem;color:#6b7280;margin-right:10px;"></span><button id="dev-save-btn" class="btn btn-dark btn-sm" style="display:none;" onclick="saveDevFile()">Save</button></span>
+                            <span><span id="dev-status" style="font-size:0.75rem;color:#6b7280;margin-right:10px;"></span><button id="dev-history-btn" class="btn btn-sm" style="display:none;background:#e5e7eb;color:#374151;margin-right:6px;" onclick="loadDevHistory('file')">File History</button><button id="dev-save-btn" class="btn btn-dark btn-sm" style="display:none;" onclick="saveDevFile()">Save</button></span>
                         </div>
                         <div style="display:flex;overflow:auto;max-height:70vh;font-family:monospace;font-size:0.78rem;line-height:1.55;">
                             <pre id="dev-gutter" style="margin:0;padding:12px 10px;text-align:right;color:#9ca3af;background:#f9fafb;user-select:none;"></pre>
@@ -1010,6 +1020,153 @@
     }
 
     let devFileInfoRequest = 0;
+    let devHistoryScope = 'file';
+    let devHistoryPath = null;
+
+    function closeDevHistory() {
+        document.getElementById('dev-history-panel').style.display = 'none';
+        document.getElementById('dev-history-preview').style.display = 'none';
+    }
+
+    async function loadDevHistory(scope) {
+        if (scope === 'file' && !devCurrent.path) return;
+
+        devHistoryScope = scope;
+        devHistoryPath = scope === 'file' ? devCurrent.path : null;
+
+        const panel = document.getElementById('dev-history-panel');
+        const list = document.getElementById('dev-history-list');
+        const preview = document.getElementById('dev-history-preview');
+
+        panel.style.display = 'block';
+        preview.style.display = 'none';
+        document.getElementById('dev-history-title').textContent =
+            scope === 'global' ? 'Global Workspace History' : 'File History · ' + devHistoryPath;
+        list.textContent = 'Loading history...';
+
+        try {
+            const query = '?scope=' + encodeURIComponent(scope) +
+                (devHistoryPath ? '&path=' + encodeURIComponent(devHistoryPath) : '');
+            const response = await fetch(WORKER_URL + '/dev/history' + query, {
+                headers: authHeader()
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Could not load history.');
+
+            list.replaceChildren();
+
+            if (!data.items || !data.items.length) {
+                list.textContent = scope === 'global'
+                    ? 'No tagged Global Workspace changes found yet. New global saves will appear here.'
+                    : 'No saved changes found for this file.';
+                return;
+            }
+
+            data.items.forEach(item => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;';
+
+                const details = document.createElement('div');
+                details.style.cssText = 'min-width:180px;flex:1;';
+
+                const pathLabel = document.createElement('div');
+                pathLabel.style.cssText = 'font-weight:600;color:#1f2937;';
+                pathLabel.textContent = item.path;
+
+                const meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:#64748b;margin-top:3px;';
+                meta.textContent = (item.date ? new Date(item.date).toLocaleString() : 'Date unavailable') +
+                    ' · ' + item.sha.slice(0, 7) +
+                    (item.legacy ? ' · older untagged save' : '') +
+                    (item.undone ? ' · already undone' : '');
+
+                details.append(pathLabel, meta);
+
+                const actions = document.createElement('div');
+                actions.style.cssText = 'display:flex;gap:6px;';
+
+                const previewButton = document.createElement('button');
+                previewButton.className = 'btn btn-sm';
+                previewButton.style.cssText = 'background:#e5e7eb;color:#374151;';
+                previewButton.textContent = 'Preview';
+                previewButton.addEventListener('click', () => previewDevHistory(item.sha, item.path));
+
+                const undoButton = document.createElement('button');
+                undoButton.className = 'btn btn-sm';
+                undoButton.style.cssText = 'background:#fef2f2;color:#b91c1c;';
+                undoButton.textContent = 'Undo';
+                undoButton.disabled = item.undone;
+                if (item.undone) undoButton.style.opacity = '0.45';
+                undoButton.addEventListener('click', () => undoDevHistory(item.sha, item.path));
+
+                actions.append(previewButton, undoButton);
+                row.append(details, actions);
+                list.appendChild(row);
+            });
+        } catch (error) {
+            list.textContent = error.message || 'Could not load history.';
+        }
+    }
+
+    async function previewDevHistory(sha, path) {
+        const preview = document.getElementById('dev-history-preview');
+        preview.style.display = 'block';
+        preview.textContent = 'Loading version...';
+
+        try {
+            const query = '?path=' + encodeURIComponent(path) + '&sha=' + encodeURIComponent(sha);
+            const response = await fetch(WORKER_URL + '/dev/history/version' + query, {
+                headers: authHeader()
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Could not load this version.');
+
+            preview.textContent = data.content;
+        } catch (error) {
+            preview.textContent = error.message || 'Could not load this version.';
+        }
+    }
+
+    async function undoDevHistory(targetSha, path) {
+        if (!confirm('Undo this change? This restores the previous file content and creates a new GitHub commit.')) return;
+
+        try {
+            const response = await fetch(WORKER_URL + '/dev/undo', {
+                method: 'POST',
+                headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    scope: devHistoryScope,
+                    path: path,
+                    targetSha: targetSha
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Undo failed.');
+
+            await loadDevHistory(devHistoryScope);
+
+            if (devCurrent.path === path) {
+                const fileResponse = await fetch(
+                    WORKER_URL + '/dev/file?path=' + encodeURIComponent(path),
+                    { headers: authHeader() }
+                );
+                const fileData = await fileResponse.json();
+                if (fileResponse.ok && fileData.content !== undefined) {
+                    devCurrent = { path: path, sha: fileData.sha, original: fileData.content };
+                    document.getElementById('dev-code').value = fileData.content;
+                    devInput();
+                    document.getElementById('dev-status').textContent = 'Undo saved. Previous version restored.';
+                    loadDevFileInfo(path);
+                }
+            }
+
+            loadDevFiles();
+            loadDevDeployStatus();
+        } catch (error) {
+            alert(error.message || 'Undo failed.');
+            loadDevHistory(devHistoryScope);
+        }
+    }
 
     async function loadDevFileInfo(path) {
         const info = document.getElementById('dev-file-info');
@@ -1105,6 +1262,8 @@
         document.getElementById('dev-gutter').textContent = '';
 
         saveBtn.style.display = 'none';
+        document.getElementById('dev-history-btn').style.display = 'none';
+        closeDevHistory();
         code.disabled = true;
         code.value = 'Loading...';
         devCurrent = { path: null, sha: null, original: '' };
@@ -1132,6 +1291,7 @@
             code.value = data.content;
             code.disabled = false;
             saveBtn.style.display = 'inline-block';
+            document.getElementById('dev-history-btn').style.display = 'inline-block';
             devInput();
         } catch (e) {
             if (requestId !== devOpenRequest) return;
@@ -1153,7 +1313,7 @@
             const res = await fetch(WORKER_URL + '/dev/file', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', ...authHeader() },
-                body: JSON.stringify({ path: p, content: content, sha: devCurrent.sha })
+                body: JSON.stringify({ path: p, content: content, sha: devCurrent.sha, source: 'file' })
             });
             const data = await res.json();
             if (data.success) {
@@ -1463,7 +1623,7 @@
                 const response = await fetch(WORKER_URL + '/dev/file', {
                     method: 'PUT',
                     headers: { ...authHeader(), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: item.path, content: item.after, sha: item.sha })
+                    body: JSON.stringify({ path: item.path, content: item.after, sha: item.sha, source: 'global' })
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(item.path + ': ' + (data.error || 'Save failed.'));
