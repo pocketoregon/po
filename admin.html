@@ -373,10 +373,13 @@
                 <div style="display:flex;min-height:480px;">
                     <div id="dev-tree" style="width:280px;flex-shrink:0;border-right:1px solid #e5e7eb;overflow:auto;max-height:70vh;padding:10px;font-size:0.82rem;line-height:1.7;">Click Refresh to load.</div>
                     <div style="flex:1;min-width:0;">
-                        <div id="dev-file-head" style="padding:10px 16px;border-bottom:1px solid #e5e7eb;font-size:0.82rem;font-weight:600;color:#374151;background:#f9fafb;">Select a file</div>
+                        <div id="dev-file-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
+                            <span id="dev-file-name" style="font-size:0.82rem;font-weight:600;color:#374151;">Select a file</span>
+                            <span><span id="dev-status" style="font-size:0.75rem;color:#6b7280;margin-right:10px;"></span><button id="dev-save-btn" class="btn btn-dark btn-sm" style="display:none;" onclick="saveDevFile()">Save</button></span>
+                        </div>
                         <div style="display:flex;overflow:auto;max-height:70vh;font-family:monospace;font-size:0.78rem;line-height:1.55;">
                             <pre id="dev-gutter" style="margin:0;padding:12px 10px;text-align:right;color:#9ca3af;background:#f9fafb;user-select:none;"></pre>
-                            <pre id="dev-code" style="margin:0;padding:12px 14px;flex:1;white-space:pre;"></pre>
+                            <textarea id="dev-code" wrap="off" spellcheck="false" disabled oninput="devInput()" style="margin:0;padding:12px 14px;flex:1;border:none;outline:none;resize:none;white-space:pre;overflow-y:hidden;overflow-x:auto;font-family:monospace;font-size:0.78rem;line-height:1.55;background:white;color:#1f1e24;"></textarea>
                         </div>
                     </div>
                 </div>
@@ -885,22 +888,71 @@
         return html;
     }
 
-    async function openDevFile(path) {
-        const head = document.getElementById('dev-file-head');
+    let devCurrent = { path: null, sha: null, original: '' };
+
+    function devDirty() {
+        return devCurrent.path && document.getElementById('dev-code').value !== devCurrent.original;
+    }
+
+    function devInput() {
         const code = document.getElementById('dev-code');
-        const gutter = document.getElementById('dev-gutter');
-        head.textContent = path;
-        code.textContent = 'Loading...';
-        gutter.textContent = '';
+        const lines = code.value.split('\n').length;
+        document.getElementById('dev-gutter').textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+        code.style.height = 'auto';
+        code.style.height = code.scrollHeight + 'px';
+        document.getElementById('dev-status').textContent = devDirty() ? 'Unsaved changes' : '';
+    }
+
+    async function openDevFile(path) {
+        if (devDirty() && !confirm('Discard unsaved changes?')) return;
+        const code = document.getElementById('dev-code');
+        const saveBtn = document.getElementById('dev-save-btn');
+        document.getElementById('dev-file-name').textContent = path;
+        document.getElementById('dev-status').textContent = '';
+        document.getElementById('dev-gutter').textContent = '';
+        saveBtn.style.display = 'none';
+        code.disabled = true;
+        code.value = 'Loading...';
+        devCurrent = { path: null, sha: null, original: '' };
         try {
             const res = await fetch(WORKER_URL + '/dev/file?path=' + encodeURIComponent(path), { headers: authHeader() });
             const data = await res.json();
-            if (!res.ok) { code.textContent = data.error || 'Failed to load.'; return; }
-            if (data.binary) { code.textContent = '(binary file, cannot display)'; return; }
-            const lines = data.content.split('\n');
-            gutter.textContent = lines.map((_, i) => i + 1).join('\n');
-            code.textContent = data.content;
-        } catch (e) { code.textContent = 'Network error.'; }
+            if (!res.ok) { code.value = data.error || 'Failed to load.'; return; }
+            if (data.binary) { code.value = '(binary file, cannot edit)'; return; }
+            devCurrent = { path: path, sha: data.sha, original: data.content };
+            code.value = data.content;
+            code.disabled = false;
+            saveBtn.style.display = 'inline-block';
+            devInput();
+        } catch (e) { code.value = 'Network error.'; }
+    }
+
+    async function saveDevFile() {
+        if (!devCurrent.path) return;
+        const p = devCurrent.path;
+        const risky = p === 'worker.js' || p === 'admin.html' || p.startsWith('lib/') || p.startsWith('routes/');
+        if (risky && !confirm('Saving ' + p + ' can break the live site if it has an error. Save anyway?')) return;
+        const btn = document.getElementById('dev-save-btn');
+        const status = document.getElementById('dev-status');
+        const content = document.getElementById('dev-code').value;
+        btn.disabled = true;
+        status.textContent = 'Saving...';
+        try {
+            const res = await fetch(WORKER_URL + '/dev/file', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', ...authHeader() },
+                body: JSON.stringify({ path: p, content: content, sha: devCurrent.sha })
+            });
+            const data = await res.json();
+            if (data.success) {
+                devCurrent.sha = data.sha;
+                devCurrent.original = content;
+                status.textContent = 'Saved. Live in about 2 minutes.';
+            } else {
+                status.textContent = data.error || 'Save failed.';
+            }
+        } catch (e) { status.textContent = 'Network error.'; }
+        btn.disabled = false;
     }
 
     let horizonProjects = [];
