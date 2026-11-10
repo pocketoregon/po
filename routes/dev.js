@@ -29,6 +29,7 @@ export async function handleDev(path, request, env) {
         status: r.status,
         conclusion: r.conclusion,
         sha: (r.head_sha || '').slice(0, 7),
+        commit_sha: r.head_sha || '',
         message: ((r.head_commit && r.head_commit.message) || '').split('\n')[0],
         created_at: r.created_at,
         url: r.html_url
@@ -293,7 +294,11 @@ export async function handleDev(path, request, env) {
       });
       const data = await res.json();
       if (!res.ok) return json({ error: data.message || ('GitHub error ' + res.status) }, res.status === 409 ? 409 : 502);
-      return json({ success: true, sha: data.content && data.content.sha });
+      return json({
+        success: true,
+        sha: data.content && data.content.sha,
+        commitSha: data.commit && data.commit.sha
+      });
     }
 
     if (path === '/dev/file' && request.method === 'GET') {
