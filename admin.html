@@ -375,6 +375,23 @@
                     <div style="flex:1;min-width:0;">
                         <div id="dev-deploy-status" style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:12px;color:#475569;">Checking deployment status...</div>
 <div id="dev-file-info" style="padding:8px 16px;background:#fff;border-bottom:1px solid #e5e7eb;font-size:12px;color:#64748b;">Select a file to see its last commit information.</div>
+
+<div id="patchbay-panel" style="padding:14px 16px;border-bottom:1px solid #e5e7eb;background:#f8fafc;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+        <strong style="font-size:13px;color:#1f2937;">Patchbay</strong>
+        <span id="patchbay-target" style="font-size:11px;color:#64748b;">No file selected</span>
+    </div>
+    <textarea id="patchbay-input" spellcheck="false" placeholder="Enter your Patchbay script here..." style="width:100%;min-height:180px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font:12px/1.5 monospace;resize:vertical;background:white;color:#1f2937;"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn btn-dark btn-sm" onclick="patchbayPreview()">Preview Patch</button>
+        <button class="btn btn-sm" style="background:#e5e7eb;color:#374151;" onclick="patchbayClear()">Clear</button>
+        <button id="patchbay-apply-btn" class="btn btn-sm" style="background:#16a34a;color:white;" onclick="patchbayApply()" disabled>Apply &amp; Save</button>
+    </div>
+    <div id="patchbay-status" style="font-size:12px;margin-top:9px;color:#64748b;">Open a file, enter a patch, and preview it.</div>
+    <pre id="patchbay-diff" style="display:none;white-space:pre-wrap;overflow:auto;max-height:350px;margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font:11px/1.5 monospace;color:#374151;"></pre>
+</div>
+
+<div id="dev-file-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
 <div id="dev-file-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
                             <span id="dev-file-name" style="font-size:0.82rem;font-weight:600;color:#374151;">Select a file</span>
                             <span><span id="dev-status" style="font-size:0.75rem;color:#6b7280;margin-right:10px;"></span><button id="dev-save-btn" class="btn btn-dark btn-sm" style="display:none;" onclick="saveDevFile()">Save</button></span>
@@ -1279,6 +1296,295 @@
             else { showCustomAlert(data.error || 'Delete failed.'); }
         } catch(e) { showCustomAlert('Network error.'); }
     }
+
+    // ── PATCHBAY ────────────────────────────────────────────────
+    let patchbayPreviewContent = null;
+    let patchbayPreviewPath = null;
+
+    function patchbayStatus(message, error = false) {
+        const el = document.getElementById('patchbay-status');
+        el.textContent = message;
+        el.style.color = error ? '#dc2626' : '#64748b';
+    }
+
+    function patchbayClear() {
+        document.getElementById('patchbay-input').value = '';
+        document.getElementById('patchbay-diff').style.display = 'none';
+        document.getElementById('patchbay-apply-btn').disabled = true;
+        patchbayPreviewContent = null;
+        patchbayPreviewPath = null;
+        patchbayStatus('Patch cleared.');
+    }
+
+    function patchbayParse(source) {
+        const lines = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
+        const ops = [];
+        const errors = [];
+        const OPEN = '['.repeat(3);
+        const CLOSE = ']'.repeat(3);
+        let i = 0;
+
+        function readBlock(commandLine) {
+            while (i < lines.length && !lines[i].trim()) i++;
+            if (lines[i] !== OPEN) {
+                errors.push('Line ' + commandLine + ': expected block opener.');
+                return null;
+            }
+            i++;
+            const content = [];
+            while (i < lines.length && lines[i] !== CLOSE) {
+                content.push(lines[i++]);
+            }
+            if (i >= lines.length) {
+                errors.push('Line ' + commandLine + ': missing block closer.');
+                return null;
+            }
+            i++;
+            return content.join('\n');
+        }
+
+        while (i < lines.length) {
+            const raw = lines[i];
+            const lineNo = i + 1;
+            const command = raw.trim();
+            i++;
+
+            if (!command || command.startsWith('#')) continue;
+
+            let match;
+
+            if ((match = command.match(/^(REPLACE|INSERT_AFTER|INSERT_BEFORE)\s+(\d+)(?:-(\d+))?$/))) {
+                const type = match[1];
+                const start = Number(match[2]);
+                const end = match[3] ? Number(match[3]) : start;
+
+                if (!start || !end || end < start || (type !== 'REPLACE' && end !== start)) {
+                    errors.push('Line ' + lineNo + ': invalid line range.');
+                    continue;
+                }
+
+                const content = readBlock(lineNo);
+                if (content !== null) ops.push({ type, start, end, content });
+                continue;
+            }
+
+            if ((match = command.match(/^DELETE\s+(\d+)(?:-(\d+))?$/))) {
+                const start = Number(match[1]);
+                const end = match[2] ? Number(match[2]) : start;
+                if (!start || end < start) errors.push('Line ' + lineNo + ': invalid DELETE range.');
+                else ops.push({ type: 'DELETE', start, end });
+                continue;
+            }
+
+            if (command === 'FIND') {
+                const find = readBlock(lineNo);
+                if (find === null) continue;
+
+                while (i < lines.length && !lines[i].trim()) i++;
+
+                if (lines[i] && lines[i].trim() === 'REPLACE_WITH') {
+                    i++;
+                    const replacement = readBlock(lineNo);
+                    if (replacement !== null) ops.push({ type: 'FIND', find, replacement });
+                } else {
+                    errors.push('Line ' + lineNo + ': FIND must be followed by REPLACE_WITH.');
+                }
+                continue;
+            }
+
+            if (command === 'PREPEND' || command === 'APPEND') {
+                const content = readBlock(lineNo);
+                if (content !== null) ops.push({ type: command, content });
+                continue;
+            }
+
+            errors.push('Line ' + lineNo + ': unrecognized command "' + command + '".');
+        }
+
+        return { ops, errors };
+    }
+
+    function patchbayApplyOperations(original, ops) {
+        const lines = original.split('\n');
+        const lineOps = ops.filter(op =>
+            ['REPLACE', 'DELETE', 'INSERT_AFTER', 'INSERT_BEFORE'].includes(op.type)
+        );
+
+        const ranges = lineOps.filter(op => op.type === 'REPLACE' || op.type === 'DELETE')
+            .map(op => ({ start: op.start, end: op.end }));
+
+        const anchors = lineOps.filter(op => op.type === 'INSERT_AFTER' || op.type === 'INSERT_BEFORE')
+            .map(op => op.start);
+
+        for (let i = 0; i < ranges.length; i++) {
+            for (let j = i + 1; j < ranges.length; j++) {
+                if (ranges[i].start <= ranges[j].end && ranges[j].start <= ranges[i].end) {
+                    throw new Error('Overlapping line edits detected.');
+                }
+            }
+            if (anchors.some(n => n >= ranges[i].start && n <= ranges[i].end)) {
+                throw new Error('An insertion overlaps a replaced or deleted range.');
+            }
+        }
+
+        for (const op of lineOps) {
+            if (op.start > lines.length || op.end > lines.length) {
+                throw new Error(op.type + ' references a line outside the file.');
+            }
+        }
+
+        lineOps.sort((a, b) => {
+            if (a.start !== b.start) return b.start - a.start;
+            const priority = { INSERT_AFTER: 3, INSERT_BEFORE: 2, REPLACE: 1, DELETE: 1 };
+            return priority[b.type] - priority[a.type];
+        });
+
+        lineOps.forEach(op => {
+            const index = op.start - 1;
+            if (op.type === 'REPLACE') {
+                lines.splice(index, op.end - op.start + 1, ...op.content.split('\n'));
+            } else if (op.type === 'DELETE') {
+                lines.splice(index, op.end - op.start + 1);
+            } else if (op.type === 'INSERT_BEFORE') {
+                lines.splice(index, 0, ...op.content.split('\n'));
+            } else if (op.type === 'INSERT_AFTER') {
+                lines.splice(index + 1, 0, ...op.content.split('\n'));
+            }
+        });
+
+        let result = lines.join('\n');
+
+        ops.filter(op => op.type === 'FIND').forEach(op => {
+            const first = result.indexOf(op.find);
+            if (first === -1) throw new Error('FIND text was not found.');
+            if (result.indexOf(op.find, first + op.find.length) !== -1) {
+                throw new Error('FIND text matches more than once. Make it more specific.');
+            }
+            result = result.slice(0, first) + op.replacement + result.slice(first + op.find.length);
+        });
+
+        ops.filter(op => op.type === 'PREPEND').forEach(op => {
+            result = op.content + (result ? '\n' + result : '');
+        });
+
+        ops.filter(op => op.type === 'APPEND').forEach(op => {
+            result = (result ? result + '\n' : '') + op.content;
+        });
+
+        return result;
+    }
+
+    function patchbayPreview() {
+        patchbayPreviewContent = null;
+        patchbayPreviewPath = null;
+        document.getElementById('patchbay-apply-btn').disabled = true;
+        document.getElementById('patchbay-diff').style.display = 'none';
+
+        const editor = document.getElementById('dev-code');
+
+        if (!devCurrent.path || editor.disabled) {
+            patchbayStatus('Open an editable file first.', true);
+            return;
+        }
+
+        const source = document.getElementById('patchbay-input').value;
+        if (!source.trim()) {
+            patchbayStatus('Enter a patch script first.', true);
+            return;
+        }
+
+        const parsed = patchbayParse(source);
+
+        if (parsed.errors.length) {
+            patchbayStatus('Patch rejected: ' + parsed.errors.join(' '), true);
+            return;
+        }
+
+        if (!parsed.ops.length) {
+            patchbayStatus('No valid patch commands found.', true);
+            return;
+        }
+
+        try {
+            const original = editor.value;
+            const result = patchbayApplyOperations(original, parsed.ops);
+
+            if (result === original) {
+                patchbayStatus('The patch produced no changes.', true);
+                return;
+            }
+
+            patchbayPreviewContent = result;
+            patchbayPreviewPath = devCurrent.path;
+
+            const before = original.split('\n');
+            const after = result.split('\n');
+            const output = [];
+            const max = Math.max(before.length, after.length);
+
+            for (let i = 0; i < max; i++) {
+                if (before[i] === after[i]) {
+                    output.push('  ' + (before[i] === undefined ? '' : before[i]));
+                } else {
+                    if (before[i] !== undefined) output.push('- ' + before[i]);
+                    if (after[i] !== undefined) output.push('+ ' + after[i]);
+                }
+            }
+
+            const diff = document.getElementById('patchbay-diff');
+            diff.textContent = output.join('\n');
+            diff.style.display = 'block';
+
+            document.getElementById('patchbay-apply-btn').disabled = false;
+            document.getElementById('patchbay-target').textContent = devCurrent.path;
+            patchbayStatus('Preview ready. ' + parsed.ops.length + ' operation(s) validated.');
+        } catch (error) {
+            patchbayStatus('Patch rejected: ' + error.message, true);
+        }
+    }
+
+    async function patchbayApply() {
+        if (patchbayPreviewContent === null || patchbayPreviewPath !== devCurrent.path) {
+            patchbayStatus('Preview is no longer valid. Preview the patch again.', true);
+            return;
+        }
+
+        const editor = document.getElementById('dev-code');
+        const previous = editor.value;
+        const button = document.getElementById('patchbay-apply-btn');
+
+        editor.value = patchbayPreviewContent;
+        devInput();
+        button.disabled = true;
+        patchbayStatus('Saving patched file...');
+
+        await saveDevFile();
+
+        if (devCurrent.original === editor.value) {
+            patchbayStatus('Patch saved successfully.');
+            patchbayPreviewContent = null;
+            patchbayPreviewPath = null;
+            document.getElementById('patchbay-diff').style.display = 'none';
+        } else {
+            editor.value = previous;
+            devInput();
+            patchbayStatus('Save was not completed. Original editor content restored.', true);
+        }
+
+        button.disabled = true;
+    }
+
+    // Keep the selected file visible in the Patchbay target label.
+    const patchbayFileObserver = new MutationObserver(() => {
+        const target = document.getElementById('patchbay-target');
+        if (target) target.textContent = devCurrent.path || 'No file selected';
+    });
+
+    patchbayFileObserver.observe(document.getElementById('dev-file-name'), {
+        childList: true,
+        characterData: true,
+        subtree: true
+    });
 
 </script>
 </body>
