@@ -9,6 +9,7 @@ import { handleHorizon } from './routes/horizon.js';
 import { handleStories } from './routes/stories.js';
 import { handleContent, handleCards } from './routes/content.js';
 import { handleMail, handleInboundEmail, cleanupExpiredMail } from './lib/mail.js';
+import { handleDev } from './routes/dev.js';
 
 async function githubFile(env, filePath, content, sha) {
   const encoded = btoa(unescape(encodeURIComponent(content || '')));
@@ -908,6 +909,10 @@ export default {
       await env.DB.prepare('UPDATE users SET avatar_style = ?, avatar_seed = ? WHERE id = ?').bind(style, cleanSeed, user.id).run();
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders2, 'Content-Type': 'application/json' } });
     }
+
+    // Dev (file browser)
+    const devRes = await handleDev(path, request, env);
+    if (devRes) return devRes;
 
     // Mail routes
     if (path.startsWith('/mail')) {
