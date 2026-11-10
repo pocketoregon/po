@@ -376,16 +376,33 @@
                         <div id="dev-deploy-status" style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:12px;color:#475569;">Checking deployment status...</div>
 <div id="dev-file-info" style="padding:8px 16px;background:#fff;border-bottom:1px solid #e5e7eb;font-size:12px;color:#64748b;">Select a file to see its last commit information.</div>
 
+<div id="patchbay-global-panel" style="padding:14px 16px;border-bottom:1px solid #e5e7eb;background:#fff;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+        <strong style="font-size:14px;color:#1f2937;">Patchbay · Global Workspace</strong>
+        <span style="font-size:11px;color:#64748b;">Multi-file · path-targeted</span>
+    </div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:8px;">Use <b>FILE path/to/file</b> to start a target block, then use the standard line-edit commands. Separate file blocks with another FILE command.</div>
+    <textarea id="patchbay-global-input" spellcheck="false" placeholder="FILE admin.html\nREPLACE 1\n[[[\n<!-- replacement -->\n]]]\n\nFILE routes/dev.js\nAPPEND\n[[[\n// add code\n]]]" style="width:100%;min-height:150px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font:12px/1.5 monospace;resize:vertical;background:white;color:#1f2937;"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button class="btn btn-dark btn-sm" onclick="patchbayGlobalPreview()">Preview Global Patch</button>
+        <button class="btn btn-sm" style="background:#e5e7eb;color:#374151;" onclick="patchbayGlobalClear()">Clear</button>
+        <button id="patchbay-global-apply" class="btn btn-sm" style="background:#16a34a;color:white;" onclick="patchbayGlobalApply()" disabled>Apply All &amp; Save</button>
+    </div>
+    <div id="patchbay-global-status" style="font-size:12px;margin-top:9px;color:#64748b;">Global mode can target files without opening them. Preview before applying.</div>
+    <pre id="patchbay-global-diff" style="display:none;white-space:pre-wrap;overflow:auto;max-height:350px;margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#f8fafc;font:11px/1.5 monospace;color:#374151;"></pre>
+</div>
+
 <div id="patchbay-panel" style="padding:14px 16px;border-bottom:1px solid #e5e7eb;background:#f8fafc;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
-        <strong style="font-size:13px;color:#1f2937;">Patchbay</strong>
+        <strong style="font-size:13px;color:#1f2937;">Patchbay · Opened-file mode</strong>
+        <label style="font-size:11px;color:#475569;display:flex;align-items:center;gap:6px;"><input id="patchbay-file-toggle" type="checkbox" onchange="patchbaySetFileMode(this.checked)"> Enable for opened file only</label>
         <span id="patchbay-target" style="font-size:11px;color:#64748b;">No file selected</span>
     </div>
     <textarea id="patchbay-input" spellcheck="false" placeholder="Enter your Patchbay script here..." style="width:100%;min-height:180px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font:12px/1.5 monospace;resize:vertical;background:white;color:#1f2937;"></textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
         <button class="btn btn-dark btn-sm" onclick="patchbayPreview()">Preview Patch</button>
         <button class="btn btn-sm" style="background:#e5e7eb;color:#374151;" onclick="patchbayClear()">Clear</button>
-        <button id="patchbay-apply-btn" class="btn btn-sm" style="background:#16a34a;color:white;" onclick="patchbayApply()" disabled>Apply &amp; Save</button>
+        <button id="patchbay-apply-btn" class="btn btn-sm" style="background:#16a34a;color:white;" onclick="patchbayApply()" disabled>Apply & Save</button>
     </div>
     <div id="patchbay-status" style="font-size:12px;margin-top:9px;color:#64748b;">Open a file, enter a patch, and preview it.</div>
     <pre id="patchbay-diff" style="display:none;white-space:pre-wrap;overflow:auto;max-height:350px;margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font:11px/1.5 monospace;color:#374151;"></pre>
@@ -422,7 +439,7 @@
         box.textContent = msg; box.style.display = 'block';
         setTimeout(() => box.style.display = 'none', 3000);
     }
-    function esc(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function esc(str) { return String(str || '').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>'); }
     function fmt(ts) { if (!ts) return '—'; return new Date(ts).toLocaleDateString([], { month:'short', day:'numeric', year:'numeric' }); }
 
     function authHeader() {
@@ -1296,6 +1313,128 @@
         } catch(e) { showCustomAlert('Network error.'); }
     }
 
+
+    // ── PATCHBAY GLOBAL WORKSPACE ─────────────────────────────────
+    let patchbayGlobalPlan = null;
+
+    function patchbayGlobalStatus(message, error = false) {
+        const el = document.getElementById('patchbay-global-status');
+        el.textContent = message;
+        el.style.color = error ? '#dc2626' : '#64748b';
+    }
+
+    function patchbayGlobalClear() {
+        document.getElementById('patchbay-global-input').value = '';
+        document.getElementById('patchbay-global-diff').style.display = 'none';
+        document.getElementById('patchbay-global-apply').disabled = true;
+        patchbayGlobalPlan = null;
+        patchbayGlobalStatus('Global script cleared.');
+    }
+
+    function patchbayGlobalParse(source) {
+        const lines = source.replace(/^\\uFEFF/, '').replace(/\\r\\n?/g, '\\n').split('\\n');
+        const blocks = [];
+        let current = null;
+        let start = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const match = lines[i].trim().match(/^FILE\\s+(.+)$/i);
+            if (!match) continue;
+            if (current) current.script = lines.slice(start, i).join('\\n').trim();
+            current = { path: match[1].trim(), script: '' };
+            blocks.push(current);
+            start = i + 1;
+        }
+        if (current) current.script = lines.slice(start).join('\\n').trim();
+        if (!blocks.length) throw new Error('Add at least one FILE path/to/file block.');
+        const seen = new Set();
+        for (const block of blocks) {
+            if (!block.path || block.path.startsWith('/') || block.path.includes('\\\\') ||
+                block.path.split('/').some(part => !part || part === '.' || part === '..') ||
+                block.path.startsWith('.github/')) {
+                throw new Error('Unsafe or invalid repository path: ' + block.path);
+            }
+            if (seen.has(block.path)) throw new Error('Duplicate FILE target: ' + block.path);
+            seen.add(block.path);
+            if (!block.script) throw new Error('No commands supplied for ' + block.path);
+        }
+        return blocks;
+    }
+
+    async function patchbayGlobalPreview() {
+        patchbayGlobalPlan = null;
+        const apply = document.getElementById('patchbay-global-apply');
+        const diff = document.getElementById('patchbay-global-diff');
+        apply.disabled = true;
+        diff.style.display = 'none';
+        try {
+            const blocks = patchbayGlobalParse(document.getElementById('patchbay-global-input').value);
+            const plan = [];
+            const preview = [];
+            for (const block of blocks) {
+                const response = await fetch(WORKER_URL + '/dev/file?path=' + encodeURIComponent(block.path), { headers: authHeader() });
+                const data = await response.json();
+                if (!response.ok) throw new Error(block.path + ': ' + (data.error || 'Unable to read file.'));
+                if (data.binary) throw new Error(block.path + ': binary files are not supported.');
+                const parsed = patchbayParse(block.script);
+                if (parsed.errors.length) throw new Error(block.path + ': ' + parsed.errors.join(' '));
+                if (!parsed.ops.length) throw new Error(block.path + ': no valid patch commands.');
+                const updated = patchbayApplyOperations(data.content, parsed.ops);
+                if (updated === data.content) throw new Error(block.path + ': patch produces no changes.');
+                plan.push({ path: block.path, sha: data.sha, before: data.content, after: updated });
+                preview.push('===== ' + block.path + ' =====');
+                const before = data.content.split('\\n'), after = updated.split('\\n');
+                const max = Math.max(before.length, after.length);
+                for (let i = 0; i < max; i++) {
+                    if (before[i] === after[i]) preview.push('  ' + (before[i] ?? ''));
+                    else {
+                        if (before[i] !== undefined) preview.push('- ' + before[i]);
+                        if (after[i] !== undefined) preview.push('+ ' + after[i]);
+                    }
+                }
+                preview.push('');
+            }
+            patchbayGlobalPlan = plan;
+            diff.textContent = preview.join('\\n');
+            diff.style.display = 'block';
+            apply.disabled = false;
+            patchbayGlobalStatus('Preview ready: ' + plan.length + ' file(s). Apply will save them one by one.');
+        } catch (error) {
+            patchbayGlobalStatus('Global patch rejected: ' + error.message, true);
+        }
+    }
+
+    async function patchbayGlobalApply() {
+        if (!patchbayGlobalPlan || !patchbayGlobalPlan.length) {
+            patchbayGlobalStatus('Preview the global patch again before applying.', true);
+            return;
+        }
+        const button = document.getElementById('patchbay-global-apply');
+        button.disabled = true;
+        const saved = [];
+        try {
+            for (const item of patchbayGlobalPlan) {
+                const response = await fetch(WORKER_URL + '/dev/file', {
+                    method: 'PUT',
+                    headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: item.path, content: item.after, sha: item.sha })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(item.path + ': ' + (data.error || 'Save failed.'));
+                saved.push(item.path);
+                patchbayGlobalStatus('Saved ' + saved.length + ' of ' + patchbayGlobalPlan.length + ': ' + item.path);
+            }
+            patchbayGlobalStatus('Global patch saved successfully (' + saved.length + ' file(s)).');
+            patchbayGlobalPlan = null;
+            document.getElementById('patchbay-global-diff').style.display = 'none';
+            loadDevFiles();
+        } catch (error) {
+            patchbayGlobalStatus('Partial save: ' + saved.length + ' file(s) saved. ' + error.message, true);
+            patchbayGlobalPlan = null;
+        } finally {
+            button.disabled = true;
+        }
+    }
+
     // ── PATCHBAY ────────────────────────────────────────────────
     let patchbayPreviewContent = null;
     let patchbayPreviewPath = null;
@@ -1473,6 +1612,21 @@
         return result;
     }
 
+    function patchbaySetFileMode(enabled) {
+        const input = document.getElementById('patchbay-input');
+        const preview = document.querySelector('#patchbay-panel button[onclick="patchbayPreview()"]');
+        input.disabled = !enabled;
+        preview.disabled = !enabled;
+        if (!enabled) {
+            patchbayPreviewContent = null;
+            patchbayPreviewPath = null;
+            document.getElementById('patchbay-apply-btn').disabled = true;
+            patchbayStatus('Opened-file DSL is off. Enable it to edit only the currently opened file.');
+        } else {
+            patchbayStatus(devCurrent.path ? 'File mode enabled for ' + devCurrent.path : 'Open a file to use file mode.');
+        }
+    }
+
     function patchbayPreview() {
         patchbayPreviewContent = null;
         patchbayPreviewPath = null;
@@ -1481,6 +1635,10 @@
 
         const editor = document.getElementById('dev-code');
 
+        if (!document.getElementById('patchbay-file-toggle').checked) {
+            patchbayStatus('Enable opened-file mode first.', true);
+            return;
+        }
         if (!devCurrent.path || editor.disabled) {
             patchbayStatus('Open an editable file first.', true);
             return;
@@ -1578,6 +1736,8 @@
         const target = document.getElementById('patchbay-target');
         if (target) target.textContent = devCurrent.path || 'No file selected';
     });
+
+    patchbaySetFileMode(false);
 
     patchbayFileObserver.observe(document.getElementById('dev-file-name'), {
         childList: true,
