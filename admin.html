@@ -1332,31 +1332,58 @@
     }
 
     function patchbayGlobalParse(source) {
-        const lines = source.replace(/^\\uFEFF/, '').replace(/\\r\\n?/g, '\\n').split('\\n');
+        // Remove invisible characters that can interfere with FILE detection.
+        const normalized = String(source || '')
+            .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, '')
+            .replace(/\r\n?/g, '\n');
+        const lines = normalized.split('\n');
         const blocks = [];
         let current = null;
-        let start = 0;
+        let blockStart = 0;
+
         for (let i = 0; i < lines.length; i++) {
-            const match = lines[i].trim().match(/^FILE\\s+(.+)$/i);
+            const commandLine = lines[i].trim()
+                .replace(/^```(?:\w+)?\s*/i, '')
+                .replace(/```\s*$/, '')
+                .trim();
+            const match = commandLine.match(/^FILE\s+(.+?)\s*$/i);
             if (!match) continue;
-            if (current) current.script = lines.slice(start, i).join('\\n').trim();
+
+            if (current) {
+                current.script = lines.slice(blockStart, i).join('\n').trim();
+            }
             current = { path: match[1].trim(), script: '' };
             blocks.push(current);
-            start = i + 1;
+            blockStart = i + 1;
         }
-        if (current) current.script = lines.slice(start).join('\\n').trim();
-        if (!blocks.length) throw new Error('Add at least one FILE path/to/file block.');
+
+        if (current) {
+            current.script = lines.slice(blockStart).join('\n').trim();
+        }
+        if (!blocks.length) {
+            throw new Error('Add at least one FILE path/to/file block.');
+        }
+
         const seen = new Set();
         for (const block of blocks) {
-            if (!block.path || block.path.startsWith('/') || block.path.includes('\\\\') ||
-                block.path.split('/').some(part => !part || part === '.' || part === '..') ||
+            if (!block.path || block.path.startsWith('/') ||
+                block.path.includes('\\') ||
+                block.path.split('/').some(part =>
+                    !part || part === '.' || part === '..'
+                ) ||
+                block.path === '.github' ||
                 block.path.startsWith('.github/')) {
                 throw new Error('Unsafe or invalid repository path: ' + block.path);
             }
-            if (seen.has(block.path)) throw new Error('Duplicate FILE target: ' + block.path);
+            if (seen.has(block.path)) {
+                throw new Error('Duplicate FILE target: ' + block.path);
+            }
             seen.add(block.path);
-            if (!block.script) throw new Error('No commands supplied for ' + block.path);
+            if (!block.script) {
+                throw new Error('No commands supplied for ' + block.path);
+            }
         }
+
         return blocks;
     }
 
