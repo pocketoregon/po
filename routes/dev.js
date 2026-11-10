@@ -20,6 +20,38 @@ export async function handleDev(path, request, env) {
   });
 
   try {
+    if (path === '/dev/status' && request.method === 'GET') {
+      const res = await gh('/actions/runs?branch=main&per_page=6');
+      if (!res.ok) return json({ error: 'GitHub error ' + res.status }, 502);
+      const data = await res.json();
+      const runs = (data.workflow_runs || []).map(r => ({
+        name: r.name,
+        status: r.status,
+        conclusion: r.conclusion,
+        sha: (r.head_sha || '').slice(0, 7),
+        message: ((r.head_commit && r.head_commit.message) || '').split('\n')[0],
+        created_at: r.created_at,
+        url: r.html_url
+      }));
+      return json({ runs });
+    }
+
+    if (path === '/dev/file-info' && request.method === 'GET') {
+      const p = new URL(request.url).searchParams.get('path');
+      if (!p) return json({ error: 'Missing path' }, 400);
+      const res = await gh('/commits?sha=main&per_page=1&path=' + encodeURIComponent(p));
+      if (!res.ok) return json({ error: 'GitHub error ' + res.status }, 502);
+      const data = await res.json();
+      const c = data[0];
+      if (!c) return json({ found: false });
+      return json({
+        found: true,
+        sha: c.sha.slice(0, 7),
+        message: (c.commit.message || '').split('\n')[0],
+        date: c.commit.committer && c.commit.committer.date
+      });
+    }
+
     if (path === '/dev/files' && request.method === 'GET') {
       const res = await gh('/git/trees/main?recursive=1');
       if (!res.ok) return json({ error: 'GitHub error ' + res.status }, 502);
