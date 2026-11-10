@@ -218,3 +218,4 @@ Worker & config:
   - Added a "Merge and turn off" feature that safely merges subtab content back into the main tab when subtabs are disabled.
   - Updated reader view (`stories/read.html`) to filter out hidden tabs and subtabs, and added a subtab navigation bar for lore-heavy sections.
   - Implemented data migration in `loadWorld()` to ensure existing world data is compatible with the new structure.
+tesitng one two three
