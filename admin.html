@@ -1389,6 +1389,24 @@
         return blocks;
     }
 
+    function patchbayRenderDiff(text) {
+        return text.split('\n').map(line => {
+            const safe = line.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+
+            if (line.startsWith('- ')) {
+                return '<span style="display:block;background:#ffebe9;color:#cf222e;padding:1px 8px;">' + safe + '</span>';
+            }
+            if (line.startsWith('+ ')) {
+                return '<span style="display:block;background:#dafbe1;color:#1a7f37;padding:1px 8px;">' + safe + '</span>';
+            }
+            return '<span style="display:block;padding:1px 8px;">' + safe + '</span>';
+        }).join('');
+    }
+
     async function patchbayGlobalPreview() {
         patchbayGlobalPlan = null;
         const apply = document.getElementById('patchbay-global-apply');
@@ -1423,7 +1441,7 @@
                 preview.push('');
             }
             patchbayGlobalPlan = plan;
-            diff.textContent = preview.join('\\n');
+            diff.innerHTML = patchbayRenderDiff(preview.join('\\n'));
             diff.style.display = 'block';
             apply.disabled = false;
             patchbayGlobalStatus('Preview ready: ' + plan.length + ' file(s). Apply will save them one by one.');
@@ -1732,7 +1750,7 @@
             }
 
             const diff = document.getElementById('patchbay-diff');
-            diff.textContent = output.join('\n');
+            diff.innerHTML = patchbayRenderDiff(output.join('\n'));
             diff.style.display = 'block';
 
             document.getElementById('patchbay-apply-btn').disabled = false;
