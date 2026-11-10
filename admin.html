@@ -151,6 +151,7 @@
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
             <button class="tab-btn" onclick="switchTab('horizon')">🚀 Horizon</button>
             <button class="tab-btn" onclick="switchTab('mailboxes')">✉️ Mailboxes</button>
+            <button class="tab-btn" onclick="switchTab('dev')">🛠 Files</button>
         </div>
 
         <!-- DATA TAB -->
@@ -362,6 +363,26 @@
             </div>
         </div>
 
+        <!-- FILES TAB -->
+        <div id="tab-dev" class="tab-panel">
+            <div class="bg-white border border-gray-200 rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="outfit font-bold text-lg">🛠 Files <span class="text-xs text-gray-400 font-normal">pocketoregon/po · main</span></h2>
+                    <button class="btn btn-dark btn-sm" onclick="loadDevFiles()">↻ Refresh</button>
+                </div>
+                <div style="display:flex;min-height:480px;">
+                    <div id="dev-tree" style="width:280px;flex-shrink:0;border-right:1px solid #e5e7eb;overflow:auto;max-height:70vh;padding:10px;font-size:0.82rem;line-height:1.7;">Click Refresh to load.</div>
+                    <div style="flex:1;min-width:0;">
+                        <div id="dev-file-head" style="padding:10px 16px;border-bottom:1px solid #e5e7eb;font-size:0.82rem;font-weight:600;color:#374151;background:#f9fafb;">Select a file</div>
+                        <div style="display:flex;overflow:auto;max-height:70vh;font-family:monospace;font-size:0.78rem;line-height:1.55;">
+                            <pre id="dev-gutter" style="margin:0;padding:12px 10px;text-align:right;color:#9ca3af;background:#f9fafb;user-select:none;"></pre>
+                            <pre id="dev-code" style="margin:0;padding:12px 14px;flex:1;white-space:pre;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -397,6 +418,7 @@
         if (name === 'stories') loadDashboard();
         if (name === 'horizon') loadHorizonTab();
         if (name === 'mailboxes') { document.getElementById('mb-result').textContent = ''; loadMailboxList(); }
+        if (name === 'dev') loadDevFiles();
     }
 
     function handleAdminLogin(response) {
@@ -830,6 +852,57 @@
 
 
     // ── HORIZON ADMIN ──────────────────────────────────────────────
+    // ── DEV FILES (read-only) ──────────────────────────────────────
+    async function loadDevFiles() {
+        const tree = document.getElementById('dev-tree');
+        tree.textContent = 'Loading...';
+        try {
+            const res = await fetch(WORKER_URL + '/dev/files', { headers: authHeader() });
+            const data = await res.json();
+            if (!res.ok) { tree.textContent = data.error || 'Failed to load.'; return; }
+            const root = { dirs: {}, files: [] };
+            data.files.forEach(f => {
+                const parts = f.path.split('/');
+                let node = root;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!node.dirs[parts[i]]) node.dirs[parts[i]] = { dirs: {}, files: [] };
+                    node = node.dirs[parts[i]];
+                }
+                node.files.push({ name: parts[parts.length - 1], path: f.path });
+            });
+            tree.innerHTML = renderDevNode(root);
+        } catch (e) { tree.textContent = 'Network error.'; }
+    }
+
+    function renderDevNode(node) {
+        let html = '';
+        Object.keys(node.dirs).sort().forEach(d => {
+            html += '<details><summary style="cursor:pointer;">📁 ' + esc(d) + '</summary><div style="padding-left:14px;">' + renderDevNode(node.dirs[d]) + '</div></details>';
+        });
+        node.files.sort((a, b) => a.name.localeCompare(b.name)).forEach(f => {
+            html += '<div data-path="' + esc(f.path) + '" onclick="openDevFile(this.dataset.path)" style="cursor:pointer;">📄 ' + esc(f.name) + '</div>';
+        });
+        return html;
+    }
+
+    async function openDevFile(path) {
+        const head = document.getElementById('dev-file-head');
+        const code = document.getElementById('dev-code');
+        const gutter = document.getElementById('dev-gutter');
+        head.textContent = path;
+        code.textContent = 'Loading...';
+        gutter.textContent = '';
+        try {
+            const res = await fetch(WORKER_URL + '/dev/file?path=' + encodeURIComponent(path), { headers: authHeader() });
+            const data = await res.json();
+            if (!res.ok) { code.textContent = data.error || 'Failed to load.'; return; }
+            if (data.binary) { code.textContent = '(binary file, cannot display)'; return; }
+            const lines = data.content.split('\n');
+            gutter.textContent = lines.map((_, i) => i + 1).join('\n');
+            code.textContent = data.content;
+        } catch (e) { code.textContent = 'Network error.'; }
+    }
+
     let horizonProjects = [];
 
     async function loadHorizonTab() {
