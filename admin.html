@@ -373,7 +373,9 @@
                 <div style="display:flex;min-height:480px;">
                     <div id="dev-tree" style="width:280px;flex-shrink:0;border-right:1px solid #e5e7eb;overflow:auto;max-height:70vh;padding:10px;font-size:0.82rem;line-height:1.7;">Click Refresh to load.</div>
                     <div style="flex:1;min-width:0;">
-                        <div id="dev-file-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
+                        <div id="dev-deploy-status" style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:12px;color:#475569;">Checking deployment status...</div>
+<div id="dev-file-info" style="padding:8px 16px;background:#fff;border-bottom:1px solid #e5e7eb;font-size:12px;color:#64748b;">Select a file to see its last commit information.</div>
+<div id="dev-file-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
                             <span id="dev-file-name" style="font-size:0.82rem;font-weight:600;color:#374151;">Select a file</span>
                             <span><span id="dev-status" style="font-size:0.75rem;color:#6b7280;margin-right:10px;"></span><button id="dev-save-btn" class="btn btn-dark btn-sm" style="display:none;" onclick="saveDevFile()">Save</button></span>
                         </div>
@@ -413,15 +415,31 @@
     }
 
     function switchTab(name) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if (name !== 'dev') stopDevStatusPolling();
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle(
+                'active',
+                btn.getAttribute('onclick') === "switchTab('" + name + "')"
+            );
+        });
+
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.getElementById('tab-' + name).classList.add('active');
-        event.target.classList.add('active');
+
         if (name === 'content') loadContentEditor();
         if (name === 'stories') loadDashboard();
         if (name === 'horizon') loadHorizonTab();
-        if (name === 'mailboxes') { document.getElementById('mb-result').textContent = ''; loadMailboxList(); }
-        if (name === 'dev') loadDevFiles();
+
+        if (name === 'mailboxes') {
+            document.getElementById('mb-result').textContent = '';
+            loadMailboxList();
+        }
+
+        if (name === 'dev') {
+            loadDevFiles();
+            startDevStatusPolling();
+        }
     }
 
     function handleAdminLogin(response) {
@@ -856,6 +874,141 @@
 
     // ── HORIZON ADMIN ──────────────────────────────────────────────
     // ── DEV FILES (read-only) ──────────────────────────────────────
+    let devStatusTimer = null;
+    let devStatusController = null;
+    let devStatusActive = false;
+    let devStatusGeneration = 0;
+
+    async function loadDevDeployStatus() {
+        if (!devStatusActive || devStatusController) return;
+
+        const controller = new AbortController();
+        devStatusController = controller;
+        const generation = devStatusGeneration;
+        const bar = document.getElementById('dev-deploy-status');
+
+        try {
+            const res = await fetch(WORKER_URL + '/dev/status', {
+                headers: authHeader(),
+                signal: controller.signal
+            });
+            const data = await res.json();
+
+            if (!devStatusActive || generation !== devStatusGeneration) return;
+            if (!res.ok) throw new Error(data.error || 'Unable to fetch deployment status.');
+
+            const latest = data.runs && data.runs[0];
+            if (!latest) {
+                bar.textContent = 'No deployment runs found.';
+                return;
+            }
+
+            const state = latest.status === 'completed'
+                ? (latest.conclusion || 'completed')
+                : latest.status;
+
+            const colors = {
+                success: '#15803d',
+                failure: '#dc2626',
+                cancelled: '#64748b',
+                in_progress: '#2563eb',
+                queued: '#d97706'
+            };
+
+            const status = document.createElement('strong');
+            status.textContent = 'Deploy: ' + state.toUpperCase();
+            status.style.color = colors[state] || '#64748b';
+
+            const details = document.createElement('span');
+            details.style.marginLeft = '10px';
+            details.textContent = (latest.name || 'GitHub Actions') +
+                (latest.sha ? ' · ' + latest.sha : '') +
+                (latest.message ? ' · ' + latest.message : '');
+
+            bar.replaceChildren(status, details);
+
+            if (latest.created_at) {
+                const time = document.createElement('span');
+                time.style.marginLeft = '10px';
+                time.textContent = new Date(latest.created_at).toLocaleString();
+                bar.appendChild(time);
+            }
+
+            if (latest.url) {
+                const link = document.createElement('a');
+                link.href = latest.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = 'View run ↗';
+                link.style.marginLeft = '12px';
+                bar.appendChild(link);
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            if (!devStatusActive || generation !== devStatusGeneration) return;
+            bar.textContent = 'Deployment status unavailable: ' + error.message;
+        } finally {
+            if (devStatusController === controller) devStatusController = null;
+        }
+    }
+
+    function startDevStatusPolling() {
+        stopDevStatusPolling();
+        devStatusActive = true;
+        loadDevDeployStatus();
+        devStatusTimer = setInterval(loadDevDeployStatus, 5000);
+    }
+
+    function stopDevStatusPolling() {
+        devStatusActive = false;
+        devStatusGeneration++;
+
+        if (devStatusTimer) {
+            clearInterval(devStatusTimer);
+            devStatusTimer = null;
+        }
+
+        if (devStatusController) {
+            devStatusController.abort();
+            devStatusController = null;
+        }
+    }
+
+    let devFileInfoRequest = 0;
+
+    async function loadDevFileInfo(path) {
+        const info = document.getElementById('dev-file-info');
+        const requestId = ++devFileInfoRequest;
+        info.textContent = 'Loading file history...';
+
+        try {
+            const res = await fetch(
+                WORKER_URL + '/dev/file-info?path=' + encodeURIComponent(path),
+                { headers: authHeader() }
+            );
+            const data = await res.json();
+
+            if (requestId !== devFileInfoRequest) return;
+            if (!res.ok) throw new Error(data.error || 'Unable to load file history.');
+
+            if (!data.found) {
+                info.textContent = 'No commit history found for this file.';
+                return;
+            }
+
+            const date = data.date
+                ? new Date(data.date).toLocaleString()
+                : 'Unknown date';
+
+            info.textContent = 'Last updated: ' + date +
+                ' · Commit: ' + (data.sha || 'Unknown') +
+                ' · ' + (data.message || 'No commit message');
+        } catch (error) {
+            if (requestId !== devFileInfoRequest) return;
+            info.textContent = 'File history unavailable: ' + error.message;
+        }
+    }
+
     async function loadDevFiles() {
         const tree = document.getElementById('dev-tree');
         tree.textContent = 'Loading...';
@@ -903,28 +1056,52 @@
         document.getElementById('dev-status').textContent = devDirty() ? 'Unsaved changes' : '';
     }
 
+    let devOpenRequest = 0;
+
     async function openDevFile(path) {
         if (devDirty() && !confirm('Discard unsaved changes?')) return;
+
+        const requestId = ++devOpenRequest;
         const code = document.getElementById('dev-code');
         const saveBtn = document.getElementById('dev-save-btn');
+
         document.getElementById('dev-file-name').textContent = path;
         document.getElementById('dev-status').textContent = '';
         document.getElementById('dev-gutter').textContent = '';
+
         saveBtn.style.display = 'none';
         code.disabled = true;
         code.value = 'Loading...';
         devCurrent = { path: null, sha: null, original: '' };
+
+        loadDevFileInfo(path);
+
         try {
-            const res = await fetch(WORKER_URL + '/dev/file?path=' + encodeURIComponent(path), { headers: authHeader() });
+            const res = await fetch(
+                WORKER_URL + '/dev/file?path=' + encodeURIComponent(path),
+                { headers: authHeader() }
+            );
             const data = await res.json();
-            if (!res.ok) { code.value = data.error || 'Failed to load.'; return; }
-            if (data.binary) { code.value = '(binary file, cannot edit)'; return; }
+
+            if (requestId !== devOpenRequest) return;
+            if (!res.ok) {
+                code.value = data.error || 'Failed to load.';
+                return;
+            }
+            if (data.binary) {
+                code.value = '(binary file, cannot edit)';
+                return;
+            }
+
             devCurrent = { path: path, sha: data.sha, original: data.content };
             code.value = data.content;
             code.disabled = false;
             saveBtn.style.display = 'inline-block';
             devInput();
-        } catch (e) { code.value = 'Network error.'; }
+        } catch (e) {
+            if (requestId !== devOpenRequest) return;
+            code.value = 'Network error.';
+        }
     }
 
     async function saveDevFile() {
@@ -948,6 +1125,8 @@
                 devCurrent.sha = data.sha;
                 devCurrent.original = content;
                 status.textContent = 'Saved. Live in about 2 minutes.';
+                loadDevFileInfo(p);
+                loadDevDeployStatus();
             } else {
                 status.textContent = data.error || 'Save failed.';
             }
