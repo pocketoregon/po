@@ -1557,6 +1557,54 @@
         return blocks;
     }
 
+    function patchbayDiffInto(out, a, b) {
+        let s = 0;
+        while (s < a.length && s < b.length && a[s] === b[s]) s++;
+        let ea = a.length, eb = b.length;
+        while (ea > s && eb > s && a[ea - 1] === b[eb - 1]) { ea--; eb--; }
+        const A = a.slice(s, ea), B = b.slice(s, eb);
+        const n = A.length, m = B.length;
+        const ops = [];
+
+        if (n * m > 4000000) {
+            A.forEach(l => ops.push(['-', l]));
+            B.forEach(l => ops.push(['+', l]));
+        } else {
+            const dp = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
+            for (let i = n - 1; i >= 0; i--) {
+                for (let j = m - 1; j >= 0; j--) {
+                    dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+                }
+            }
+            let i = 0, j = 0;
+            while (i < n && j < m) {
+                if (A[i] === B[j]) { ops.push([' ', A[i]]); i++; j++; }
+                else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push(['-', A[i]]); i++; }
+                else { ops.push(['+', B[j]]); j++; }
+            }
+            while (i < n) { ops.push(['-', A[i]]); i++; }
+            while (j < m) { ops.push(['+', B[j]]); j++; }
+        }
+
+        const all = [];
+        for (let k = 0; k < s; k++) all.push([' ', a[k]]);
+        ops.forEach(o => all.push(o));
+        for (let k = ea; k < a.length; k++) all.push([' ', a[k]]);
+
+        const keep = new Array(all.length).fill(false);
+        all.forEach((o, idx) => {
+            if (o[0] === ' ') return;
+            for (let k = Math.max(0, idx - 3); k <= Math.min(all.length - 1, idx + 3); k++) keep[k] = true;
+        });
+
+        let gap = false;
+        all.forEach((o, idx) => {
+            if (!keep[idx]) { gap = true; return; }
+            if (gap) { out.push('  ...'); gap = false; }
+            out.push(o[0] + ' ' + o[1]);
+        });
+    }
+
     function patchbayRenderDiff(text) {
         return text.split('\n').map(line => {
             const safe = line.replace(/&/g, '&amp;')
@@ -1597,7 +1645,8 @@
                 if (updated === data.content) throw new Error(block.path + ': patch produces no changes.');
                 plan.push({ path: block.path, sha: data.sha, before: data.content, after: updated });
                 preview.push('===== ' + block.path + ' =====');
-                const before = data.content.split('\n'), after = updated.split('\n');
+                patchbayDiffInto(preview, data.content.split('\n'), updated.split('\n'));
+                const before = [], after = [];
                 const max = Math.max(before.length, after.length);
                 for (let i = 0; i < max; i++) {
                     if (before[i] === after[i]) preview.push('  ' + (before[i] ?? ''));
