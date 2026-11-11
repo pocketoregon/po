@@ -1,1 +1,3 @@
 PATCHBAY GLOBAL DSL TEST PASSED.
+
+Patchbay multi-file test: file 1 of 2
