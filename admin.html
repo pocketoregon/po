@@ -1597,7 +1597,7 @@
                 if (updated === data.content) throw new Error(block.path + ': patch produces no changes.');
                 plan.push({ path: block.path, sha: data.sha, before: data.content, after: updated });
                 preview.push('===== ' + block.path + ' =====');
-                const before = data.content.split('\\n'), after = updated.split('\\n');
+                const before = data.content.split('\n'), after = updated.split('\n');
                 const max = Math.max(before.length, after.length);
                 for (let i = 0; i < max; i++) {
                     if (before[i] === after[i]) preview.push('  ' + (before[i] ?? ''));
@@ -1609,7 +1609,7 @@
                 preview.push('');
             }
             patchbayGlobalPlan = plan;
-            diff.innerHTML = patchbayRenderDiff(preview.join('\\n'));
+            diff.innerHTML = patchbayRenderDiff(preview.join('\n'));
             diff.style.display = 'block';
             apply.disabled = false;
             patchbayGlobalPlan._manualIndex = 0;
