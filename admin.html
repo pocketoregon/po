@@ -84,6 +84,22 @@
                 <path d="M12 2L2 8l3 3 7-4 7 4 3-3-10-6z M12 8l-5 4 5 10 5-10-5-4z"></path>
             </svg>
             <span class="outfit font-bold text-lg">PocketOregon Admin</span>
+            <style>.admin-menu-item{display:block;width:100%;text-align:left;padding:9px 12px;border:none;background:none;border-radius:6px;font-size:0.9rem;font-weight:500;color:#374151;cursor:pointer;}.admin-menu-item:hover{background:#f3f4f6;}</style>
+            <div id="admin-menu-wrap" style="position:relative;margin-left:8px;">
+                <button type="button" onclick="adminMenuToggle()" title="Open menu" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid #e5e7eb;border-radius:8px;background:white;font-size:0.85rem;font-weight:600;color:#1f1e24;cursor:pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    Menu
+                </button>
+                <div id="admin-menu" style="display:none;position:absolute;top:calc(100% + 8px);left:0;min-width:210px;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,0.12);padding:6px;z-index:900;">
+                    <button type="button" class="admin-menu-item" data-page="overview" onclick="adminMenuGo('overview')">🏠 Overview</button>
+                    <button type="button" class="admin-menu-item" data-page="data" onclick="adminMenuGo('data')">📊 Data</button>
+                    <button type="button" class="admin-menu-item" data-page="stories" onclick="adminMenuGo('stories')">📚 Stories</button>
+                    <button type="button" class="admin-menu-item" data-page="content" onclick="adminMenuGo('content')">✏️ Content Editor</button>
+                    <button type="button" class="admin-menu-item" data-page="horizon" onclick="adminMenuGo('horizon')">🚀 Horizon</button>
+                    <button type="button" class="admin-menu-item" data-page="mailboxes" onclick="adminMenuGo('mailboxes')">✉️ Mailboxes</button>
+                    <button type="button" class="admin-menu-item" data-page="dev" onclick="adminMenuGo('dev')">🛠 Files</button>
+                </div>
+            </div>
         </div>
         <div class="flex items-center gap-4">
             <span id="admin-name" class="text-sm text-gray-500"></span>
@@ -92,7 +108,7 @@
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 py-10">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div id="admin-stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             <div class="stat-card"><div id="stat-users" class="stat-num">—</div>
   <!-- Site Status Toggle -->
   <div id="site-status-card" style="background:#1f1e24;border:2px solid #374151;border-radius:12px;padding:1.5rem 2rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
@@ -145,7 +161,7 @@
             <div class="stat-card"><div id="stat-age" class="stat-num">—</div><div class="stat-label">Site Age (days)</div></div>
         </div>
 
-        <div class="tab-bar">
+        <div id="admin-tab-bar" class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('data')">Data</button>
             <button class="tab-btn" onclick="switchTab('stories')">📚 Stories</button>
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
@@ -2253,6 +2269,36 @@
 
         button.disabled = true;
     }
+
+    // ── ADMIN MENU (full-page tabs) ──────────────────────────────
+    function adminMenuToggle(force) {
+        const menu = document.getElementById('admin-menu');
+        const open = typeof force === 'boolean' ? force : menu.style.display === 'none';
+        menu.style.display = open ? 'block' : 'none';
+    }
+
+    function adminMenuGo(name) {
+        adminMenuToggle(false);
+        const stats = document.getElementById('admin-stats-grid');
+        const bar = document.getElementById('admin-tab-bar');
+        const overview = name === 'overview';
+        stats.style.display = overview ? '' : 'none';
+        bar.style.display = overview ? '' : 'none';
+        switchTab(overview ? 'data' : name);
+        document.querySelectorAll('#admin-menu .admin-menu-item').forEach(b => {
+            b.style.background = b.dataset.page === name ? '#f3f4f6' : '';
+        });
+        window.scrollTo(0, 0);
+    }
+
+    document.addEventListener('click', e => {
+        const wrap = document.getElementById('admin-menu-wrap');
+        if (wrap && !wrap.contains(e.target)) adminMenuToggle(false);
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') adminMenuToggle(false);
+    });
 
     // Keep the selected file visible in the Patchbay target label.
     const patchbayFileObserver = new MutationObserver(() => {
