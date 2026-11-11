@@ -399,6 +399,13 @@
         <button class="btn btn-sm" style="background:#e5e7eb;color:#374151;" onclick="patchbayGlobalClear()">Clear</button>
         <button id="patchbay-global-apply" class="btn btn-sm" style="background:#16a34a;color:white;" onclick="patchbayGlobalApply()" disabled>Apply All &amp; Save</button>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <label for="patchbay-global-upload-mode" style="font-size:12px;color:#64748b;font-weight:600;">Upload mode</label>
+        <select id="patchbay-global-upload-mode" style="font-size:12px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;background:white;color:#1f2937;">
+            <option value="automatic">Automatic (Cloudflare)</option>
+            <option value="manual">Manual (Browser, one file per click)</option>
+        </select>
+    </div>
     <div id="patchbay-global-status" style="font-size:12px;margin-top:9px;color:#64748b;">Global mode can target files without opening them. Preview before applying.</div>
     <pre id="patchbay-global-diff" style="display:none;white-space:pre-wrap;overflow:auto;max-height:350px;margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#f8fafc;font:11px/1.5 monospace;color:#374151;"></pre>
 </div>
@@ -1491,6 +1498,7 @@
         document.getElementById('patchbay-global-apply').disabled = true;
         patchbayGlobalPlan = null;
         patchbayGlobalStatus('Global script cleared.');
+        document.getElementById('patchbay-global-apply').textContent = 'Apply All & Save';
     }
 
     function patchbayGlobalParse(source) {
@@ -1604,7 +1612,9 @@
             diff.innerHTML = patchbayRenderDiff(preview.join('\\n'));
             diff.style.display = 'block';
             apply.disabled = false;
-            patchbayGlobalStatus('Preview ready: ' + plan.length + ' file(s). Apply will save them one by one.');
+            patchbayGlobalPlan._manualIndex = 0;
+            apply.textContent = 'Apply All & Save';
+            patchbayGlobalStatus('Preview ready: ' + plan.length + ' file(s). Choose Automatic or Manual upload mode, then apply.');
         } catch (error) {
             patchbayGlobalStatus('Global patch rejected: ' + error.message, true);
         }
@@ -1656,7 +1666,100 @@
         throw new Error(filePath + ': Deployment was not confirmed within 6 minutes. Remaining files were not uploaded.');
     }
 
+    async function patchbayGlobalBatchUpload(items) {
+        const response = await fetch(WORKER_URL + '/dev/files/batch', {
+            method: 'POST',
+            headers: { ...authHeader(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                files: items.map(item => ({ path: item.path, content: item.after, sha: item.sha }))
+            })
+        });
+        const data = await response.json().catch(() => ({}));
+        return { ok: response.ok && data.success, data };
+    }
+
     async function patchbayGlobalApply() {
+        if (!patchbayGlobalPlan || !patchbayGlobalPlan.length) {
+            patchbayGlobalStatus('Preview the global patch again before applying.', true);
+            return;
+        }
+
+        const button = document.getElementById('patchbay-global-apply');
+        const mode = document.getElementById('patchbay-global-upload-mode').value;
+        const plan = patchbayGlobalPlan;
+        if (typeof plan._manualIndex !== 'number') plan._manualIndex = 0;
+
+        button.disabled = true;
+
+        try {
+            if (mode === 'automatic') {
+                patchbayGlobalStatus('Cloudflare is uploading ' + plan.length + ' file(s) one after another. Please wait...');
+                const result = await patchbayGlobalBatchUpload(plan);
+                const saved = Array.isArray(result.data.saved) ? result.data.saved : [];
+
+                if (!result.ok) {
+                    patchbayGlobalStatus(
+                        'Upload stopped. ' + saved.length + ' of ' + plan.length + ' file(s) saved.' +
+                        (result.data.failedPath ? ' Failed at: ' + result.data.failedPath + '.' : '') +
+                        ' ' + (result.data.error || 'Upload failed.') + ' Preview the patch again before retrying.',
+                        true
+                    );
+                    patchbayGlobalPlan = null;
+                    button.textContent = 'Apply All & Save';
+                    return;
+                }
+
+                patchbayGlobalStatus('Global patch saved successfully (' + saved.length + ' file(s)).');
+                patchbayGlobalPlan = null;
+                button.textContent = 'Apply All & Save';
+                document.getElementById('patchbay-global-diff').style.display = 'none';
+                loadDevFiles();
+                loadDevDeployStatus();
+                return;
+            }
+
+            // Manual mode: upload exactly one file per click.
+            const index = plan._manualIndex;
+            const item = plan[index];
+            patchbayGlobalStatus('Uploading file ' + (index + 1) + ' of ' + plan.length + ': ' + item.path);
+
+            const result = await patchbayGlobalBatchUpload([item]);
+
+            if (!result.ok) {
+                patchbayGlobalStatus(
+                    'Upload stopped after ' + index + ' of ' + plan.length + ' file(s). Failed at: ' + item.path +
+                    '. ' + (result.data.error || 'Upload failed.') + ' Preview the patch again before retrying.',
+                    true
+                );
+                patchbayGlobalPlan = null;
+                button.textContent = 'Apply All & Save';
+                return;
+            }
+
+            plan._manualIndex++;
+
+            if (plan._manualIndex < plan.length) {
+                button.textContent = 'Upload Next File (' + (plan._manualIndex + 1) + '/' + plan.length + ')';
+                patchbayGlobalStatus('Saved ' + plan._manualIndex + ' of ' + plan.length + ' file(s). Click the button for the next file.');
+                return;
+            }
+
+            patchbayGlobalStatus('Global patch saved successfully (' + plan.length + ' file(s)).');
+            patchbayGlobalPlan = null;
+            button.textContent = 'Apply All & Save';
+            document.getElementById('patchbay-global-diff').style.display = 'none';
+            loadDevFiles();
+            loadDevDeployStatus();
+        } catch (error) {
+            patchbayGlobalStatus('Upload failed: ' + error.message + ' Preview the patch again before retrying.', true);
+            patchbayGlobalPlan = null;
+            button.textContent = 'Apply All & Save';
+        } finally {
+            button.disabled = !patchbayGlobalPlan;
+        }
+    }
+
+    async function patchbayGlobalApplyLegacy() {
         if (!patchbayGlobalPlan || !patchbayGlobalPlan.length) {
             patchbayGlobalStatus('Preview the global patch again before applying.', true);
             return;
