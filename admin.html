@@ -1563,6 +1563,77 @@
         let ea = a.length, eb = b.length;
         while (ea > s && eb > s && a[ea - 1] === b[eb - 1]) { ea--; eb--; }
         const A = a.slice(s, ea), B = b.slice(s, eb);
+        const N = A.length, M = B.length, MAX = N + M, offset = MAX;
+        const ops = [];
+
+        if (MAX > 0) {
+            const V = new Int32Array(2 * MAX + 2);
+            const trace = [];
+            let found = false;
+
+            for (let d = 0; d <= MAX && d <= 4000 && !found; d++) {
+                trace.push(V.slice());
+                for (let k = -d; k <= d; k += 2) {
+                    let x;
+                    if (k === -d || (k !== d && V[offset + k - 1] < V[offset + k + 1])) x = V[offset + k + 1];
+                    else x = V[offset + k - 1] + 1;
+                    let y = x - k;
+                    while (x < N && y < M && A[x] === B[y]) { x++; y++; }
+                    V[offset + k] = x;
+                    if (x >= N && y >= M) { found = true; break; }
+                }
+            }
+
+            if (!found) {
+                A.forEach(l => ops.push(['-', l]));
+                B.forEach(l => ops.push(['+', l]));
+            } else {
+                let x = N, y = M;
+                const rev = [];
+                for (let d = trace.length - 1; d >= 0; d--) {
+                    const Vd = trace[d];
+                    const k = x - y;
+                    let prevK;
+                    if (k === -d || (k !== d && Vd[offset + k - 1] < Vd[offset + k + 1])) prevK = k + 1;
+                    else prevK = k - 1;
+                    const prevX = Vd[offset + prevK];
+                    const prevY = prevX - prevK;
+                    while (x > prevX && y > prevY) { rev.push([' ', A[x - 1]]); x--; y--; }
+                    if (d > 0) {
+                        if (x === prevX) rev.push(['+', B[y - 1]]);
+                        else rev.push(['-', A[x - 1]]);
+                    }
+                    x = prevX; y = prevY;
+                }
+                rev.reverse().forEach(o => ops.push(o));
+            }
+        }
+
+        const all = [];
+        for (let k = 0; k < s; k++) all.push([' ', a[k]]);
+        ops.forEach(o => all.push(o));
+        for (let k = ea; k < a.length; k++) all.push([' ', a[k]]);
+
+        const keep = new Array(all.length).fill(false);
+        all.forEach((o, idx) => {
+            if (o[0] === ' ') return;
+            for (let k = Math.max(0, idx - 3); k <= Math.min(all.length - 1, idx + 3); k++) keep[k] = true;
+        });
+
+        let gap = false;
+        all.forEach((o, idx) => {
+            if (!keep[idx]) { gap = true; return; }
+            if (gap) { out.push('  ...'); gap = false; }
+            out.push(o[0] + ' ' + o[1]);
+        });
+    }
+
+    function patchbayDiffIntoOld(out, a, b) {
+        let s = 0;
+        while (s < a.length && s < b.length && a[s] === b[s]) s++;
+        let ea = a.length, eb = b.length;
+        while (ea > s && eb > s && a[ea - 1] === b[eb - 1]) { ea--; eb--; }
+        const A = a.slice(s, ea), B = b.slice(s, eb);
         const n = A.length, m = B.length;
         const ops = [];
 
