@@ -35,3 +35,125 @@ a.btn:hover{opacity:.85}
 </main>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Page not found · PocketOregon</title>
+<style>
+:root{--bg:#0b110d;--fg:#e6f0e8;--muted:#7f9686;--accent:#5fd38d;--line:rgba(95,211,141,.35)}
+@media (prefers-color-scheme:light){:root{--bg:#f3f7f4;--fg:#101c14;--muted:#5b7263;--accent:#1c8f4e;--line:rgba(28,143,78,.4)}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;min-height:100svh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 28px;position:relative;z-index:3}
+header a{color:var(--fg);text-decoration:none;font-size:13px;font-weight:600}
+header nav a{color:var(--muted);text-transform:uppercase;font-size:11px;font-weight:400}
+header nav a:hover{color:var(--fg)}
+main{flex:1;display:grid;place-items:center;position:relative;z-index:3;padding:0 20px 120px;text-align:center}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.art-wrap{position:relative;display:inline-block;max-width:100%;overflow:hidden}
+pre.art{margin:0;font-size:clamp(7px,2.8vw,20px);line-height:1.15;color:var(--fg);user-select:none}
+.scan{position:absolute;left:0;right:0;top:0;height:22%;background:linear-gradient(to bottom,transparent,var(--accent),transparent);opacity:.25;pointer-events:none;animation:scan 3.6s linear infinite}
+@keyframes scan{from{transform:translateY(-100%)}to{transform:translateY(450%)}}
+.msg{margin:28px 0 0;color:var(--muted);font-size:13px}
+.msg a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--line)}
+.msg a:hover{border-bottom-color:var(--accent)}
+.corner{position:fixed;width:16px;height:16px;border:0 solid var(--line);z-index:1}
+.tl{left:18px;top:18px;border-top-width:1px;border-left-width:1px}
+.tr{right:18px;top:18px;border-top-width:1px;border-right-width:1px}
+.bl{left:18px;bottom:18px;border-bottom-width:1px;border-left-width:1px}
+.br{right:18px;bottom:18px;border-bottom-width:1px;border-right-width:1px}
+#wave{position:fixed;left:0;right:0;bottom:0;width:100%;height:190px;z-index:0;pointer-events:none;-webkit-mask-image:linear-gradient(to top,#000 0%,#000 34%,transparent 78%);mask-image:linear-gradient(to top,#000 0%,#000 34%,transparent 78%)}
+.ghost{position:fixed;left:0;top:0;z-index:2;pointer-events:none;color:var(--accent);transition:transform 2.4s cubic-bezier(.45,0,.2,1)}
+.ghost pre{margin:0;font-size:10px;line-height:1.1;animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.quip{display:block;margin-top:6px;font-size:11px;color:var(--muted);opacity:0;transition:opacity .3s;white-space:nowrap}
+.quip.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.scan,.ghost pre{animation:none}.ghost{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="wave" aria-hidden="true"></canvas>
+<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+<div class="ghost" id="ghost" aria-hidden="true"><pre> ▄████▄ 
+█  ██  █
+█ ▄██ ▄█
+████████
+▀██▀▀██▀</pre><span class="quip" id="quip"></span></div>
+<header>
+  <a href="/">PocketOregon</a>
+  <nav><a href="/">Home</a></nav>
+</header>
+<main>
+  <div>
+    <h1 class="sr">Page not found</h1>
+    <div class="art-wrap">
+<pre class="art" aria-hidden="true">████╗   ████╗   ████████████╗   ████╗   ████╗
+████║   ████║   ████████████║   ████║   ████║
+████║   ████║   ████╔═══████║   ████║   ████║
+████████████║   ████║   ████║   ████████████║
+████████████║   ████║   ████║   ████████████║
+╚═══════████║   ████║   ████║   ╚═══════████║
+        ████║   ████████████║           ████║
+        ████║   ████████████║           ████║
+        ╚═══╝   ╚═══════════╝           ╚═══╝</pre>
+      <div class="scan" aria-hidden="true"></div>
+    </div>
+    <p class="msg">This page wandered off. <a href="/">Take me home</a></p>
+  </div>
+</main>
+<script>
+(function(){
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var c=document.getElementById("wave"),x=c.getContext("2d");
+  var w=0,h=0,t=0,frame=0,accent="#5fd38d",chars=" .:-=+*#%@";
+  function size(){
+    var d=window.devicePixelRatio||1;
+    w=c.clientWidth;h=c.clientHeight;
+    c.width=w*d;c.height=h*d;
+    x.setTransform(d,0,0,d,0,0);
+    accent=getComputedStyle(document.documentElement).getPropertyValue("--accent");
+    draw();
+  }
+  function draw(){
+    var cw=8,ch=12,i,j,v,k;
+    x.clearRect(0,0,w,h);
+    x.fillStyle=accent;
+    x.font="12px ui-monospace,monospace";
+    x.textBaseline="top";
+    for(j=0;j<h/ch;j++){
+      for(i=0;i<w/cw;i++){
+        v=(Math.sin(i*0.09+t)+Math.sin(j*0.35-t*1.3+i*0.05)+2)/4;
+        k=Math.floor(v*(chars.length-1));
+        if(k>0){x.fillText(chars.charAt(k),i*cw,j*ch);}
+      }
+    }
+  }
+  function loop(){
+    frame++;
+    if(frame%2===0){t+=0.05;draw();}
+    requestAnimationFrame(loop);
+  }
+  window.addEventListener("resize",size);
+  size();
+  if(!reduce){loop();}
+
+  var g=document.getElementById("ghost"),q=document.getElementById("quip");
+  var quips=["wrong turn","nothing here","have you tried home?","404 and counting","just a ghost, sorry"];
+  function move(){
+    var gx=16+Math.random()*Math.max(0,window.innerWidth-g.offsetWidth-32);
+    var gy=70+Math.random()*Math.max(0,window.innerHeight-g.offsetHeight-90);
+    g.style.transform="translate3d("+gx+"px,"+gy+"px,0)";
+    q.textContent=quips[Math.floor(Math.random()*quips.length)];
+    q.classList.add("on");
+    setTimeout(function(){q.classList.remove("on");},2200);
+  }
+  move();
+  if(!reduce){setInterval(move,4200);}
+})();
+</script>
+</body>
+</html>
