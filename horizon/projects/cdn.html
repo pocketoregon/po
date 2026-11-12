@@ -23,12 +23,12 @@
                     },
                     colors: {
                         studio: {
-                            950: '#09090b',
-                            900: '#101014',
-                            850: '#16161c',
-                            800: '#1e1e26',
-                            700: '#2b2b36',
-                            600: '#3f3f4e',
+                            950: '#0b0f19',
+                            900: '#111827',
+                            850: '#161e2e',
+                            800: '#1f2937',
+                            700: '#374151',
+                            600: '#4b5563',
                         }
                     }
                 }
@@ -42,23 +42,23 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #101014;
+            background: #0b0f19;
         }
         ::-webkit-scrollbar-thumb {
-            background: #2b2b36;
+            background: #374151;
             border-radius: 9999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #3f3f4e;
+            background: #4b5563;
         }
 
         /* Checkerboard pattern for transparent canvas preview */
         .checkerboard-bg {
             background-image: 
-                linear-gradient(45deg, #18181b 25%, transparent 25%), 
-                linear-gradient(-45deg, #18181b 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #18181b 75%), 
-                linear-gradient(-45deg, transparent 75%, #18181b 75%);
+                linear-gradient(45deg, #131a29 25%, transparent 25%), 
+                linear-gradient(-45deg, #131a29 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #131a29 75%), 
+                linear-gradient(-45deg, transparent 75%, #131a29 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
@@ -104,14 +104,14 @@
             
             <!-- Brand Logo -->
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                     <i data-lucide="layers" class="w-4 h-4 text-white"></i>
                 </div>
                 <div>
                     <h1 class="text-sm sm:text-base font-semibold tracking-tight text-white flex items-center gap-2">
                         SnapLayer
                         <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-                            CDN STUDIO
+                            100% CLOUD CDN
                         </span>
                     </h1>
                 </div>
@@ -119,17 +119,23 @@
         </div>
 
         <!-- Center Quick Hint Pill (Desktop) -->
-        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-studio-850 border border-zinc-800 text-xs text-zinc-400">
+        <div class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-studio-850 border border-zinc-800 text-xs text-zinc-400">
             <span class="inline-flex items-center gap-1 text-zinc-200 font-medium">
                 <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-zinc-800 border border-zinc-700 rounded text-zinc-300">Ctrl</kbd>
                 +
                 <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-zinc-800 border border-zinc-700 rounded text-zinc-300">V</kbd>
             </span>
-            <span>anywhere to paste image into active group</span>
+            <span>anywhere to paste image straight to Cloudinary</span>
         </div>
 
         <!-- Right Controls -->
         <div class="flex items-center gap-2">
+            <!-- Sync / Reload from Cloud Button -->
+            <button id="headerSyncBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-studio-850 hover:bg-zinc-800 text-zinc-200 text-xs font-medium border border-zinc-700/70 transition active:scale-95" title="Reload latest groups, images & layers from Cloudinary">
+                <i data-lucide="refresh-cw" id="headerSyncIcon" class="w-3.5 h-3.5 text-sky-400"></i>
+                <span class="hidden md:inline">Sync Cloud</span>
+            </button>
+
             <!-- Paste Trigger Button -->
             <button id="headerPasteBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-200 text-xs font-medium border border-zinc-700/70 transition active:scale-95" title="Paste image from clipboard">
                 <i data-lucide="clipboard-paste" class="w-3.5 h-3.5 text-emerald-400"></i>
@@ -137,23 +143,83 @@
             </button>
 
             <!-- Upload File Fallback -->
-            <label class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-200 text-xs font-medium border border-zinc-700/70 transition active:scale-95" title="Upload image files">
+            <label class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-200 text-xs font-medium border border-zinc-700/70 transition active:scale-95" title="Upload image files to Cloudinary">
                 <i data-lucide="upload" class="w-3.5 h-3.5 text-indigo-400"></i>
                 <span class="hidden sm:inline">Upload</span>
                 <input type="file" id="fileInput" accept="image/*" multiple class="hidden">
             </label>
 
             <!-- Cloudinary Status & Settings Button -->
-            <button id="openCloudinaryModalBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition active:scale-95">
+            <button id="openCloudinaryModalBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-medium transition active:scale-95">
                 <span id="cdnStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
                 <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
-                <span id="cdnStatusLabel" class="hidden sm:inline">Local Mode</span>
+                <span id="cdnStatusLabel" class="hidden sm:inline">Connect Cloud</span>
             </button>
         </div>
     </header>
 
     <!-- Main Workspace Layout -->
     <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- ===================================================================== -->
+        <!-- FULL-SCREEN CONNECT TO CLOUDINARY GATE (Shown when unconfigured)      -->
+        <!-- ===================================================================== -->
+        <div id="cloudGateScreen" class="hidden absolute inset-0 z-30 bg-studio-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div class="max-w-lg w-full bg-studio-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-auto">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+                        <i data-lucide="cloud" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight">Connect to Cloudinary CDN</h2>
+                        <p class="text-xs text-zinc-400 mt-0.5">100% Cloud-Synced Workspace • Zero Local Database</p>
+                    </div>
+                </div>
+
+                <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                    Enter your Cloudinary credentials below. All your image groups, captions, pasted screenshots, and toggleable drawing layers are stored directly in Cloudinary and restored automatically on any browser or after clearing cookies.
+                </p>
+
+                <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200/90 space-y-1.5 leading-relaxed">
+                    <div class="font-semibold flex items-center gap-1.5 text-amber-300">
+                        <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+                        <span>One-Time Cloudinary Security Setting</span>
+                    </div>
+                    <p>
+                        In your Cloudinary Console, go to <strong>Settings → Security → Restricted media types</strong> and make sure <strong>Resource list</strong> is <strong>unchecked</strong> so SnapLayer can load your saved cloud workspace state.
+                    </p>
+                </div>
+
+                <form id="gateCloudinaryForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-300 mb-1.5">Cloud Name <span class="text-red-400">*</span></label>
+                        <input type="text" id="gateCloudNameInput" required placeholder="e.g. esihex4u" 
+                            class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-300 mb-1.5">Unsigned Upload Preset <span class="text-red-400">*</span></label>
+                        <input type="text" id="gateUploadPresetInput" required placeholder="e.g. snaplayer_unsigned" 
+                            class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-300 mb-1.5">Folder Path (Optional)</label>
+                        <input type="text" id="gateCloudFolderInput" placeholder="e.g. snaplayer-studio" value="snaplayer-studio"
+                            class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
+                    </div>
+
+                    <div id="gateDiagnosticBox" class="hidden p-3 rounded-xl text-xs leading-relaxed"></div>
+
+                    <div class="pt-1 flex flex-col sm:flex-row gap-2.5">
+                        <button type="submit" id="gateConnectSubmitBtn" class="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 transition active:scale-95">
+                            <i data-lucide="cloud-download" class="w-4 h-4"></i>
+                            <span>Connect & Load Cloud Workspace</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Mobile Backdrop -->
         <div id="sidebarBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-20 hidden lg:hidden"></div>
@@ -204,8 +270,17 @@
                 <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center mb-3">
                     <i data-lucide="image-plus" class="w-7 h-7 text-indigo-300"></i>
                 </div>
-                <p class="text-base font-semibold text-white">Drop images to add to current group</p>
-                <p class="text-xs text-indigo-200/80 mt-1">Automatically uploads to Cloudinary CDN if configured</p>
+                <p class="text-base font-semibold text-white">Drop images to upload to Cloudinary</p>
+                <p class="text-xs text-indigo-200/80 mt-1">Automatically syncs to your active cloud group</p>
+            </div>
+
+            <!-- Cloud Loading Overlay -->
+            <div id="cloudLoadingOverlay" class="hidden absolute inset-0 bg-studio-950/80 backdrop-blur-xs z-20 flex flex-col items-center justify-center">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center mb-3">
+                    <i data-lucide="loader-2" class="w-6 h-6 text-indigo-400 animate-spin"></i>
+                </div>
+                <p id="cloudLoadingText" class="text-sm font-medium text-white">Syncing workspace from Cloudinary CDN...</p>
+                <p class="text-xs text-zinc-400 mt-1">Fetching latest groups, images, and annotation layers</p>
             </div>
 
             <!-- Active Group Workspace Container -->
@@ -225,8 +300,8 @@
                         <p id="activeGroupMeta" class="text-xs text-zinc-500 mt-1 flex items-center gap-3">
                             <span>Created just now</span>
                             <span>•</span>
-                            <span class="text-emerald-400/90 flex items-center gap-1">
-                                <i data-lucide="check-circle-2" class="w-3 h-3"></i> Auto-saved
+                            <span id="cloudSyncBadge" class="text-emerald-400/90 flex items-center gap-1">
+                                <i data-lucide="cloud-check" class="w-3 h-3"></i> Synced to Cloud
                             </span>
                         </p>
                     </div>
@@ -272,11 +347,11 @@
                         <div class="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center mx-auto mb-4">
                             <i data-lucide="clipboard-copy" class="w-6 h-6 text-indigo-400"></i>
                         </div>
-                        <h3 class="text-base font-semibold text-zinc-200">No images in this group yet</h3>
+                        <h3 class="text-base font-semibold text-zinc-200">No images in this cloud group yet</h3>
                         <p class="text-sm text-zinc-400 max-w-md mx-auto mt-1.5 leading-relaxed">
                             Copy any screenshot or image to your clipboard and press 
                             <kbd class="px-1.5 py-0.5 text-xs font-mono bg-zinc-800 border border-zinc-700 rounded text-zinc-200">Ctrl + V</kbd> 
-                            to paste it right here, or drag & drop files.
+                            to upload it directly to Cloudinary CDN, or drag & drop files.
                         </p>
                         <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
                             <button onclick="triggerClipboardPaste()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-md shadow-indigo-500/20 transition">
@@ -300,7 +375,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- MODAL 1: CLOUDINARY CDN CONFIGURATION                                 -->
+    <!-- MODAL 1: CLOUDINARY CDN CONFIGURATION & DIAGNOSTICS                   -->
     <!-- ===================================================================== -->
     <div id="cloudinaryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
         <div class="bg-studio-900 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -310,8 +385,8 @@
                         <i data-lucide="cloud-cog" class="w-4 h-4 text-indigo-400"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-semibold text-white">Cloudinary CDN Setup</h3>
-                        <p class="text-[11px] text-zinc-400">Configure unsigned direct browser uploads</p>
+                        <h3 class="text-sm font-semibold text-white">Cloudinary CDN Settings</h3>
+                        <p class="text-[11px] text-zinc-400">100% Cloud Storage & Tag-Based State Sync</p>
                     </div>
                 </div>
                 <button id="closeCloudinaryModalBtn" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">
@@ -320,38 +395,42 @@
             </div>
 
             <form id="cloudinaryForm" class="p-5 space-y-4">
-                <div class="p-3 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-xs text-indigo-200/90 leading-relaxed">
-                    <strong>How it works:</strong> When configured, pasted images upload straight to your Cloudinary CDN via unsigned upload preset. Without credentials, images automatically save locally in your browser's IndexedDB.
+                <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-200/90 leading-relaxed">
+                    <strong>Required Cloudinary Setting:</strong> Ensure <strong>Resource list</strong> is <strong>unchecked</strong> in your Cloudinary Console under <em>Settings → Security → Restricted media types</em> so SnapLayer can read your saved cloud state.
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Cloud Name</label>
-                    <input type="text" id="cloudNameInput" placeholder="e.g. dxyz123abc" 
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Cloud Name <span class="text-red-400">*</span></label>
+                    <input type="text" id="cloudNameInput" required placeholder="e.g. esihex4u" 
                         class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Unsigned Upload Preset</label>
-                    <input type="text" id="uploadPresetInput" placeholder="e.g. ml_default or snaplayer_unsigned" 
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Unsigned Upload Preset <span class="text-red-400">*</span></label>
+                    <input type="text" id="uploadPresetInput" required placeholder="e.g. snaplayer_unsigned" 
                         class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-zinc-300 mb-1.5">Folder Path (Optional)</label>
-                    <input type="text" id="cloudFolderInput" placeholder="e.g. snaplayer-groups" 
+                    <input type="text" id="cloudFolderInput" placeholder="e.g. snaplayer-studio" 
                         class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
                 </div>
 
-                <div class="flex items-center justify-between pt-2">
-                    <button type="button" id="clearCloudinaryBtn" class="text-xs text-zinc-400 hover:text-red-400 transition">
-                        Disconnect / Use Local Mode
+                <!-- Diagnostic Result Box -->
+                <div id="modalDiagnosticBox" class="hidden p-3 rounded-xl text-xs leading-relaxed"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/80">
+                    <button type="button" id="testCloudConnectionBtn" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-medium transition">
+                        <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                        <span>Test Sync</span>
                     </button>
                     <div class="flex items-center gap-2">
-                        <button type="button" id="cancelCloudinaryBtn" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300 transition">
-                            Cancel
+                        <button type="button" id="clearCloudinaryBtn" class="px-3 py-2 rounded-xl text-xs text-zinc-400 hover:text-red-400 transition">
+                            Sign Out
                         </button>
                         <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-medium text-white shadow-lg shadow-indigo-500/20 transition">
-                            Save CDN Config
+                            Save & Sync
                         </button>
                     </div>
                 </div>
@@ -388,8 +467,8 @@
                 </button>
 
                 <button id="saveDrawingLayerBtn" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition active:scale-95">
-                    <i data-lucide="check" class="w-4 h-4"></i>
-                    <span>Save Layer</span>
+                    <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                    <span>Save Layer to Cloud</span>
                 </button>
             </div>
         </div>
@@ -521,62 +600,29 @@
     <script>
         /**
          * ============================================================================
-         * SNAPLAYER STUDIO — ARCHITECTURE & STATE MANAGEMENT
+         * SNAPLAYER STUDIO — 100% CLOUD-ONLY ARCHITECTURE (CLOUDINARY CDN)
          * ============================================================================
-         * 1. Storage Engine: Uses IndexedDB ('SnapLayerDB') so high-resolution pasted
-         *    images and transparent PNG annotation layers never hit the 5MB localStorage
-         *    limit, while Cloudinary credentials stay in localStorage.
-         * 2. Cloudinary Integration: Uploads pasted/dropped image blobs directly to
-         *    https://api.cloudinary.com/v1_1/{cloudName}/image/upload using unsigned presets.
-         *    Falls back seamlessly to DataURL storage when Cloudinary is unconfigured.
-         * 3. Non-Destructive Layer System: Each image object stores:
-         *    - `baseUrl`: Cloudinary secure_url (or local dataURL)
-         *    - `layerDataUrl`: Transparent PNG dataURL containing ONLY user drawings
-         *    - `layerVisible`: Boolean toggling the overlay canvas/img visibility
+         * 1. Zero Local Database: IndexedDB and Local Mode are completely removed.
+         *    Only Cloudinary credentials ('Cloud Name', 'Unsigned Upload Preset',
+         *    and optional 'Folder Path') are cached in localStorage.
+         * 2. Tag-Based Cloud State Sync (Zero Overwrite Required):
+         *    - Because unsigned presets prohibit `overwrite: true`, every workspace
+         *      change uploads a timestamped raw JSON snapshot (`state_{ts}.json`)
+         *      tagged with `snaplayer_state`.
+         *    - On load, credential entry, or manual Sync, the app queries Cloudinary's
+         *      Client-Side Resource List API:
+         *      `https://res.cloudinary.com/{cloudName}/raw/list/snaplayer_state.json`
+         *      sorts by `created_at` descending, and loads the latest state JSON.
+         * 3. Pure CDN Media & Layers:
+         *    - Pasted/dropped images upload to `/image/upload` with tag `snaplayer_asset`.
+         *    - Drawing annotations export as transparent PNG blobs, upload to
+         *      `/image/upload` with tag `snaplayer_layer`, and store their `secure_url`
+         *      as `layerUrl` alongside `layerVisible`.
          */
 
-        // --- IndexedDB Helper Wrapper ---
-        const DB_NAME = 'SnapLayerStudioDB';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'workspace';
-
-        const idbStorage = {
-            db: null,
-            async init() {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(DB_NAME, DB_VERSION);
-                    request.onupgradeneeded = (e) => {
-                        const db = e.target.result;
-                        if (!db.objectStoreNames.contains(STORE_NAME)) {
-                            db.createObjectStore(STORE_NAME);
-                        }
-                    };
-                    request.onsuccess = (e) => {
-                        this.db = e.target.result;
-                        resolve();
-                    };
-                    request.onerror = (e) => reject(e.target.error);
-                });
-            },
-            async getState() {
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(STORE_NAME, 'readonly');
-                    const store = tx.objectStore(STORE_NAME);
-                    const req = store.get('appState');
-                    req.onsuccess = () => resolve(req.result || null);
-                    req.onerror = () => reject(req.error);
-                });
-            },
-            async saveState(state) {
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(STORE_NAME, 'readwrite');
-                    const store = tx.objectStore(STORE_NAME);
-                    const req = store.put(state, 'appState');
-                    req.onsuccess = () => resolve();
-                    req.onerror = () => reject(req.error);
-                });
-            }
-        };
+        const STATE_TAG = 'snaplayer_state';
+        const ASSET_TAG = 'snaplayer_asset';
+        const LAYER_TAG = 'snaplayer_layer';
 
         // --- Application State ---
         let appState = {
@@ -589,6 +635,10 @@
             uploadPreset: '',
             folder: 'snaplayer-studio'
         };
+
+        let syncTimer = null;
+        let isSyncingToCloud = false;
+        let pendingSyncAfterCurrent = false;
 
         // --- Drawing Studio State ---
         let editorState = {
@@ -606,130 +656,30 @@
             layerVisible: true
         };
 
-        // --- Sample Starter Image Generator (SVG Data URL) ---
-        function createSampleDiagramDataUrl() {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540">
-                <defs>
-                    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#18181b"/>
-                        <stop offset="100%" stop-color="#09090b"/>
-                    </linearGradient>
-                </defs>
-                <rect width="900" height="540" fill="url(#bg)"/>
-                <g stroke="#27272a" stroke-width="1">
-                    <line x1="0" y1="90" x2="900" y2="90"/>
-                    <line x1="0" y1="180" x2="900" y2="180"/>
-                    <line x1="0" y1="270" x2="900" y2="270"/>
-                    <line x1="0" y1="360" x2="900" y2="360"/>
-                    <line x1="0" y1="450" x2="900" y2="450"/>
-                    <line x1="180" y1="0" x2="180" y2="540"/>
-                    <line x1="360" y1="0" x2="360" y2="540"/>
-                    <line x1="540" y1="0" x2="540" y2="540"/>
-                    <line x1="720" y1="0" x2="720" y2="540"/>
-                </g>
-                <rect x="80" y="70" width="740" height="400" rx="18" fill="#121216" stroke="#3f3f46" stroke-width="2"/>
-                <circle cx="112" cy="100" r="6" fill="#ef4444"/>
-                <circle cx="132" cy="100" r="6" fill="#f59e0b"/>
-                <circle cx="152" cy="100" r="6" fill="#10b981"/>
-                <rect x="120" y="145" width="290" height="130" rx="12" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5"/>
-                <text x="145" y="190" fill="#e0e7ff" font-family="sans-serif" font-size="18" font-weight="bold">1. Paste via Ctrl + V</text>
-                <text x="145" y="220" fill="#a5b4fc" font-family="sans-serif" font-size="13">Clipboard images upload directly to</text>
-                <text x="145" y="240" fill="#a5b4fc" font-family="sans-serif" font-size="13">Cloudinary CDN inside your active group.</text>
-                <rect x="450" y="145" width="330" height="130" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
-                <text x="475" y="190" fill="#d1fae5" font-family="sans-serif" font-size="18" font-weight="bold">2. Toggleable Draw Layer</text>
-                <text x="475" y="220" fill="#6ee7b7" font-family="sans-serif" font-size="13">Sketch callouts on a separate overlay</text>
-                <text x="475" y="240" fill="#6ee7b7" font-family="sans-serif" font-size="13">and switch visibility ON/OFF anytime.</text>
-                <rect x="120" y="305" width="660" height="125" rx="12" fill="#18181b" stroke="#3f3f46"/>
-                <text x="145" y="350" fill="#f4f4f5" font-family="sans-serif" font-size="16" font-weight="bold">Try it now: Click "Draw Layer" on this card or press Ctrl+V to paste a screenshot!</text>
-                <text x="145" y="380" fill="#a1a1aa" font-family="sans-serif" font-size="13">You can toggle the red sample markup layer ON or OFF using the eye button below.</text>
-            </svg>`;
-            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
-
-        function createSampleAnnotationLayerDataUrl() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 900;
-            canvas.height = 540;
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 5;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            // Highlight circle around step 2
-            ctx.beginPath();
-            ctx.ellipse(615, 210, 180, 78, 0, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Curved arrow pointing to it
-            ctx.beginPath();
-            ctx.moveTo(410, 325);
-            ctx.quadraticCurveTo(490, 315, 535, 275);
-            ctx.stroke();
-
-            // Arrowhead
-            ctx.beginPath();
-            ctx.moveTo(535, 275);
-            ctx.lineTo(516, 277);
-            ctx.moveTo(535, 275);
-            ctx.lineTo(529, 293);
-            ctx.stroke();
-
-            return canvas.toDataURL('image/png');
-        }
-
         // --- Initialization ---
         async function initApp() {
             lucide.createIcons();
+            bindGlobalEvents();
             loadCloudinaryConfig();
 
-            try {
-                await idbStorage.init();
-                const savedState = await idbStorage.getState();
-                if (savedState && Array.isArray(savedState.groups) && savedState.groups.length > 0) {
-                    appState = savedState;
-                } else {
-                    // Seed initial welcome group so user can test immediately
-                    const starterGroupId = 'grp_' + Date.now();
-                    appState = {
-                        activeGroupId: starterGroupId,
-                        groups: [
-                            {
-                                id: starterGroupId,
-                                title: 'Product Walkthrough & Markups',
-                                caption: 'Welcome to SnapLayer! Press Ctrl+V anywhere to paste screenshots from your clipboard into this group. Each image has an independent drawing layer you can toggle ON or OFF.',
-                                createdAt: Date.now(),
-                                images: [
-                                    {
-                                        id: 'img_' + Date.now(),
-                                        baseUrl: createSampleDiagramDataUrl(),
-                                        layerDataUrl: createSampleAnnotationLayerDataUrl(),
-                                        layerVisible: true,
-                                        storageType: 'demo',
-                                        uploading: false,
-                                        createdAt: Date.now()
-                                    }
-                                ]
-                            }
-                        ]
-                    };
-                    await persistWorkspace();
-                }
-            } catch (err) {
-                console.error('IndexedDB initialization error:', err);
-                showToast('Using in-memory session storage.', 'warning');
+            if (!isCloudinaryConfigured()) {
+                showCloudGateScreen(true);
+                return;
             }
 
-            bindGlobalEvents();
-            renderGroupsSidebar();
-            renderActiveWorkspace();
+            showCloudGateScreen(false);
+            await loadWorkspaceFromCloud(true);
         }
 
-        async function persistWorkspace() {
-            try {
-                await idbStorage.saveState(appState);
-            } catch (e) {
-                console.error('Failed to persist state:', e);
+        function showCloudGateScreen(show) {
+            const gate = document.getElementById('cloudGateScreen');
+            if (show) {
+                document.getElementById('gateCloudNameInput').value = cloudinaryConfig.cloudName || '';
+                document.getElementById('gateUploadPresetInput').value = cloudinaryConfig.uploadPreset || '';
+                document.getElementById('gateCloudFolderInput').value = cloudinaryConfig.folder || 'snaplayer-studio';
+                gate.classList.remove('hidden');
+            } else {
+                gate.classList.add('hidden');
             }
         }
 
@@ -758,23 +708,42 @@
                 label.textContent = `CDN: ${cloudinaryConfig.cloudName}`;
             } else {
                 dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-                label.textContent = 'Local Mode (Setup CDN)';
+                label.textContent = 'Connect Cloud';
             }
+        }
+
+        function setCloudSyncIndicator(status, customText = '') {
+            const badge = document.getElementById('cloudSyncBadge');
+            if (!badge) return;
+            if (status === 'syncing') {
+                badge.className = 'text-amber-300 flex items-center gap-1';
+                badge.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> ${customText || 'Syncing to Cloud...'}`;
+            } else if (status === 'error') {
+                badge.className = 'text-red-400 flex items-center gap-1';
+                badge.innerHTML = `<i data-lucide="alert-circle" class="w-3 h-3"></i> ${customText || 'Cloud Sync Error'}`;
+            } else {
+                badge.className = 'text-emerald-400/90 flex items-center gap-1';
+                badge.innerHTML = `<i data-lucide="cloud-check" class="w-3 h-3"></i> ${customText || 'Synced to Cloud'}`;
+            }
+            lucide.createIcons({ root: badge });
         }
 
         /**
          * Uploads an image Blob/File to Cloudinary CDN using unsigned upload preset.
-         * Returns secure_url on success, or falls back to local DataURL.
          */
-        async function uploadImageToCloudinary(blob) {
+        async function uploadImageToCloudinary(blob, tag = ASSET_TAG, filename = null) {
             if (!isCloudinaryConfigured()) {
-                const localUrl = await blobToDataUrl(blob);
-                return { url: localUrl, storageType: 'local' };
+                throw new Error('Cloudinary credentials are not configured.');
             }
 
             const formData = new FormData();
-            formData.append('file', blob);
+            if (filename) {
+                formData.append('file', blob, filename);
+            } else {
+                formData.append('file', blob);
+            }
             formData.append('upload_preset', cloudinaryConfig.uploadPreset.trim());
+            formData.append('tags', tag);
             if (cloudinaryConfig.folder && cloudinaryConfig.folder.trim()) {
                 formData.append('folder', cloudinaryConfig.folder.trim());
             }
@@ -792,7 +761,251 @@
             }
 
             const data = await response.json();
-            return { url: data.secure_url, storageType: 'cloudinary' };
+            return data.secure_url;
+        }
+
+        /**
+         * Debounced cloud state persistence: uploads a timestamped JSON snapshot
+         * tagged with `snaplayer_state` so unsigned presets never require overwrite.
+         */
+        function scheduleCloudSync(immediate = false) {
+            if (!isCloudinaryConfigured()) return;
+            setCloudSyncIndicator('syncing', 'Pending Cloud Sync...');
+            clearTimeout(syncTimer);
+            if (immediate) {
+                pushWorkspaceStateToCloud();
+            } else {
+                syncTimer = setTimeout(() => {
+                    pushWorkspaceStateToCloud();
+                }, 900);
+            }
+        }
+
+        async function pushWorkspaceStateToCloud() {
+            if (!isCloudinaryConfigured()) return;
+            if (isSyncingToCloud) {
+                pendingSyncAfterCurrent = true;
+                return;
+            }
+
+            isSyncingToCloud = true;
+            setCloudSyncIndicator('syncing', 'Saving to Cloud...');
+
+            try {
+                // Strip any transient uploading flags or local previews before saving JSON
+                const cleanState = {
+                    updatedAt: Date.now(),
+                    activeGroupId: appState.activeGroupId,
+                    groups: appState.groups.map(g => ({
+                        id: g.id,
+                        title: g.title,
+                        caption: g.caption || '',
+                        createdAt: g.createdAt,
+                        images: g.images
+                            .filter(img => img.baseUrl && img.baseUrl.startsWith('http'))
+                            .map(img => ({
+                                id: img.id,
+                                baseUrl: img.baseUrl,
+                                layerUrl: img.layerUrl || null,
+                                layerVisible: img.layerVisible !== false,
+                                createdAt: img.createdAt
+                            }))
+                    }))
+                };
+
+                const jsonBlob = new Blob([JSON.stringify(cleanState)], { type: 'application/json' });
+                const snapshotFilename = `snaplayer_state_${Date.now()}.json`;
+
+                const formData = new FormData();
+                formData.append('file', jsonBlob, snapshotFilename);
+                formData.append('upload_preset', cloudinaryConfig.uploadPreset.trim());
+                formData.append('tags', STATE_TAG);
+                if (cloudinaryConfig.folder && cloudinaryConfig.folder.trim()) {
+                    formData.append('folder', cloudinaryConfig.folder.trim());
+                }
+
+                const endpoint = `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudinaryConfig.cloudName.trim())}/raw/upload`;
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error?.message || `HTTP ${response.status}`);
+                }
+
+                setCloudSyncIndicator('synced', 'Synced to Cloud');
+            } catch (err) {
+                console.error('Failed to sync state to Cloudinary:', err);
+                setCloudSyncIndicator('error', 'Sync Failed');
+                showToast(`Cloud sync error: ${err.message}`, 'error');
+            } finally {
+                isSyncingToCloud = false;
+                if (pendingSyncAfterCurrent) {
+                    pendingSyncAfterCurrent = false;
+                    pushWorkspaceStateToCloud();
+                }
+            }
+        }
+
+        /**
+         * Fetches the newest `snaplayer_state` JSON snapshot from Cloudinary's
+         * tag-based Client-Side Resource List API and restores the workspace.
+         */
+        async function loadWorkspaceFromCloud(showOverlay = false) {
+            if (!isCloudinaryConfigured()) {
+                showCloudGateScreen(true);
+                return;
+            }
+
+            const overlay = document.getElementById('cloudLoadingOverlay');
+            const syncIcon = document.getElementById('headerSyncIcon');
+            if (showOverlay) overlay.classList.remove('hidden');
+            if (syncIcon) syncIcon.classList.add('animate-spin');
+            setCloudSyncIndicator('syncing', 'Loading from Cloud...');
+
+            try {
+                const cloudName = encodeURIComponent(cloudinaryConfig.cloudName.trim());
+                const listUrl = `https://res.cloudinary.com/${cloudName}/raw/list/${STATE_TAG}.json?t=${Date.now()}`;
+
+                const listRes = await fetch(listUrl, { cache: 'no-store' });
+
+                if (listRes.status === 404) {
+                    // Brand-new cloud environment with no saved state yet — initialize default cloud group
+                    await initializeFirstCloudGroup();
+                    return;
+                }
+
+                if (listRes.status === 401 || listRes.status === 403) {
+                    throw new Error('Resource list is restricted in Cloudinary. Uncheck "Resource list" under Settings → Security → Restricted media types.');
+                }
+
+                if (!listRes.ok) {
+                    throw new Error(`Cloudinary list lookup failed (HTTP ${listRes.status})`);
+                }
+
+                const listData = await listRes.json();
+                const resources = Array.isArray(listData.resources) ? listData.resources : [];
+
+                if (resources.length === 0) {
+                    await initializeFirstCloudGroup();
+                    return;
+                }
+
+                // Sort newest snapshot first
+                resources.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                const latest = resources[0];
+
+                // Build raw delivery URL using version & public_id
+                const versionPart = latest.version ? `v${latest.version}/` : '';
+                const formatPart = latest.format && !latest.public_id.endsWith(`.${latest.format}`) ? `.${latest.format}` : '';
+                const stateFileUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${versionPart}${latest.public_id}${formatPart}?t=${Date.now()}`;
+
+                const stateRes = await fetch(stateFileUrl, { cache: 'no-store' });
+                if (!stateRes.ok) {
+                    throw new Error(`Could not download state file (HTTP ${stateRes.status})`);
+                }
+
+                const remoteState = await stateRes.json();
+                if (remoteState && Array.isArray(remoteState.groups) && remoteState.groups.length > 0) {
+                    appState = {
+                        activeGroupId: remoteState.activeGroupId || remoteState.groups[0].id,
+                        groups: remoteState.groups
+                    };
+                    if (!appState.groups.some(g => g.id === appState.activeGroupId)) {
+                        appState.activeGroupId = appState.groups[0].id;
+                    }
+                } else {
+                    await initializeFirstCloudGroup();
+                    return;
+                }
+
+                renderGroupsSidebar();
+                renderActiveWorkspace();
+                setCloudSyncIndicator('synced', 'Synced to Cloud');
+                showToast('Workspace restored from Cloudinary CDN!', 'success');
+            } catch (err) {
+                console.error('Error loading from Cloudinary:', err);
+                setCloudSyncIndicator('error', 'Load Error');
+                showToast(err.message, 'error');
+
+                // Ensure UI still renders an empty workspace if no groups loaded
+                if (appState.groups.length === 0) {
+                    renderGroupsSidebar();
+                    renderActiveWorkspace();
+                }
+            } finally {
+                if (showOverlay) overlay.classList.add('hidden');
+                if (syncIcon) syncIcon.classList.remove('animate-spin');
+            }
+        }
+
+        async function initializeFirstCloudGroup() {
+            const starterGroupId = 'grp_' + Date.now();
+            appState = {
+                activeGroupId: starterGroupId,
+                groups: [
+                    {
+                        id: starterGroupId,
+                        title: 'Cloud Design Workspace',
+                        caption: '100% Cloud-Synced Group. Press Ctrl+V anywhere to paste images directly to Cloudinary CDN, or click Draw Layer to save non-destructive annotations to the cloud.',
+                        createdAt: Date.now(),
+                        images: []
+                    }
+                ]
+            };
+            renderGroupsSidebar();
+            renderActiveWorkspace();
+            await pushWorkspaceStateToCloud();
+        }
+
+        /**
+         * Diagnostic utility to verify both unsigned upload and tag-based resource list reading.
+         */
+        async function runCloudDiagnostics(cloudName, uploadPreset, folder, outputEl) {
+            outputEl.classList.remove('hidden');
+            outputEl.className = 'p-3 rounded-xl text-xs leading-relaxed bg-zinc-800/80 border border-zinc-700 text-zinc-300';
+            outputEl.innerHTML = 'Testing Cloudinary unsigned upload & tag list permissions...';
+
+            try {
+                // 1. Test unsigned raw upload
+                const probeBlob = new Blob([JSON.stringify({ ping: Date.now() })], { type: 'application/json' });
+                const fd = new FormData();
+                fd.append('file', probeBlob, `diag_${Date.now()}.json`);
+                fd.append('upload_preset', uploadPreset);
+                fd.append('tags', 'snaplayer_diag');
+                if (folder) fd.append('folder', folder);
+
+                const upRes = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/raw/upload`, {
+                    method: 'POST',
+                    body: fd
+                });
+
+                if (!upRes.ok) {
+                    const errJson = await upRes.json().catch(() => ({}));
+                    throw new Error(`Upload check failed: ${errJson.error?.message || upRes.status}`);
+                }
+
+                // 2. Test Resource List endpoint
+                const listRes = await fetch(`https://res.cloudinary.com/${encodeURIComponent(cloudName)}/raw/list/snaplayer_diag.json?t=${Date.now()}`, {
+                    cache: 'no-store'
+                });
+
+                if (listRes.status === 401 || listRes.status === 403) {
+                    outputEl.className = 'p-3 rounded-xl text-xs leading-relaxed bg-amber-500/15 border border-amber-500/35 text-amber-200';
+                    outputEl.innerHTML = '<strong>Upload works, but Resource List is blocked!</strong><br>Go to Cloudinary <em>Settings → Security → Restricted media types</em> and uncheck <strong>Resource list</strong>, then test again.';
+                    return false;
+                }
+
+                outputEl.className = 'p-3 rounded-xl text-xs leading-relaxed bg-emerald-500/15 border border-emerald-500/35 text-emerald-200';
+                outputEl.innerHTML = '<strong>All checks passed!</strong> Unsigned uploads and cloud state sync are ready.';
+                return true;
+            } catch (err) {
+                outputEl.className = 'p-3 rounded-xl text-xs leading-relaxed bg-red-500/15 border border-red-500/35 text-red-200';
+                outputEl.innerHTML = `<strong>Connection Error:</strong> ${escapeHtml(err.message)}`;
+                return false;
+            }
         }
 
         function blobToDataUrl(blob) {
@@ -819,22 +1032,27 @@
             };
             appState.groups.unshift(newGrp);
             appState.activeGroupId = newGrp.id;
-            persistWorkspace();
             renderGroupsSidebar();
             renderActiveWorkspace();
-            showToast(`Group "${newGrp.title}" created`, 'success');
+            scheduleCloudSync(true);
+            showToast(`Cloud group "${newGrp.title}" created`, 'success');
         }
 
         function switchGroup(groupId) {
             appState.activeGroupId = groupId;
-            persistWorkspace();
             renderGroupsSidebar();
             renderActiveWorkspace();
+            scheduleCloudSync();
             closeMobileSidebar();
         }
 
         // --- Image Ingestion (Paste / Drop / File Picker) ---
         async function handleIncomingImageFiles(fileList) {
+            if (!isCloudinaryConfigured()) {
+                showCloudGateScreen(true);
+                return;
+            }
+
             const activeGroup = getActiveGroup();
             if (!activeGroup) {
                 showToast('Please create or select a group first.', 'warning');
@@ -844,25 +1062,19 @@
             const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
             if (imageFiles.length === 0) return;
 
-            showToast(
-                isCloudinaryConfigured()
-                    ? `Uploading ${imageFiles.length} image(s) to Cloudinary...`
-                    : `Pasting ${imageFiles.length} image(s) into "${activeGroup.title}"...`,
-                'info'
-            );
+            showToast(`Uploading ${imageFiles.length} image(s) to Cloudinary CDN...`, 'info');
 
             for (const file of imageFiles) {
-                // Create immediate optimistic preview card using DataURL
-                const tempDataUrl = await blobToDataUrl(file);
+                // Temporary preview while uploading straight to Cloudinary
+                const tempPreviewUrl = await blobToDataUrl(file);
                 const imgId = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
 
                 const newImageObj = {
                     id: imgId,
-                    baseUrl: tempDataUrl,
-                    layerDataUrl: null,
+                    baseUrl: tempPreviewUrl,
+                    layerUrl: null,
                     layerVisible: true,
-                    storageType: isCloudinaryConfigured() ? 'cloudinary' : 'local',
-                    uploading: isCloudinaryConfigured(),
+                    uploading: true,
                     createdAt: Date.now()
                 };
 
@@ -870,31 +1082,23 @@
                 renderGroupsSidebar();
                 renderActiveWorkspace();
 
-                if (isCloudinaryConfigured()) {
-                    try {
-                        const result = await uploadImageToCloudinary(file);
-                        const target = activeGroup.images.find(i => i.id === imgId);
-                        if (target) {
-                            target.baseUrl = result.url;
-                            target.storageType = result.storageType;
-                            target.uploading = false;
-                        }
-                        await persistWorkspace();
-                        renderActiveWorkspace();
-                        showToast('Image stored on Cloudinary CDN!', 'success');
-                    } catch (err) {
-                        console.error('Cloudinary upload failed:', err);
-                        const target = activeGroup.images.find(i => i.id === imgId);
-                        if (target) {
-                            target.uploading = false;
-                            target.storageType = 'local';
-                        }
-                        await persistWorkspace();
-                        renderActiveWorkspace();
-                        showToast(`Cloudinary error: ${err.message}. Kept local copy.`, 'error');
+                try {
+                    const secureUrl = await uploadImageToCloudinary(file, ASSET_TAG);
+                    const target = activeGroup.images.find(i => i.id === imgId);
+                    if (target) {
+                        target.baseUrl = secureUrl;
+                        target.uploading = false;
                     }
-                } else {
-                    await persistWorkspace();
+                    renderActiveWorkspace();
+                    await pushWorkspaceStateToCloud();
+                    showToast('Image uploaded & synced to Cloudinary!', 'success');
+                } catch (err) {
+                    console.error('Cloudinary upload failed:', err);
+                    // Remove failed item since we are 100% cloud-only
+                    activeGroup.images = activeGroup.images.filter(i => i.id !== imgId);
+                    renderGroupsSidebar();
+                    renderActiveWorkspace();
+                    showToast(`Cloudinary upload failed: ${err.message}`, 'error');
                 }
             }
         }
@@ -981,8 +1185,8 @@
             if (!group) {
                 workspaceEl.innerHTML = `
                     <div class="h-full flex flex-col items-center justify-center text-center p-6">
-                        <p class="text-zinc-400 text-sm mb-3">No image groups available.</p>
-                        <button onclick="openNewGroupModal()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-medium">Create First Group</button>
+                        <p class="text-zinc-400 text-sm mb-3">No cloud image groups yet.</p>
+                        <button onclick="document.getElementById('createGroupBtn').click()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-medium">Create First Cloud Group</button>
                     </div>
                 `;
                 return;
@@ -997,8 +1201,8 @@
             document.getElementById('activeGroupMeta').innerHTML = `
                 <span>Created ${dateStr}</span>
                 <span>•</span>
-                <span class="text-emerald-400/90 flex items-center gap-1">
-                    <i data-lucide="check-circle-2" class="w-3 h-3"></i> Synced
+                <span id="cloudSyncBadge" class="text-emerald-400/90 flex items-center gap-1">
+                    <i data-lucide="cloud-check" class="w-3 h-3"></i> Synced to Cloud
                 </span>
             `;
 
@@ -1011,7 +1215,7 @@
             } else {
                 emptyState.classList.add('hidden');
                 gridEl.innerHTML = group.images.map((img, idx) => {
-                    const hasLayer = Boolean(img.layerDataUrl);
+                    const hasLayer = Boolean(img.layerUrl);
                     const isLayerOn = img.layerVisible !== false;
 
                     return `
@@ -1024,47 +1228,45 @@
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 animate-pulse">
                                             <i data-lucide="loader-2" class="w-2.5 h-2.5 animate-spin"></i> Uploading CDN...
                                         </span>
-                                    ` : img.storageType === 'cloudinary' ? `
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30" title="Hosted on Cloudinary CDN">
-                                            <i data-lucide="cloud" class="w-2.5 h-2.5"></i> Cloudinary
-                                        </span>
                                     ` : `
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700/70" title="Stored locally in browser">
-                                            <i data-lucide="hard-drive" class="w-2.5 h-2.5"></i> Local
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30" title="Hosted on Cloudinary CDN">
+                                            <i data-lucide="cloud" class="w-2.5 h-2.5"></i> Cloudinary CDN
                                         </span>
                                     `}
                                 </div>
 
                                 <div class="flex items-center gap-1">
-                                    ${img.storageType === 'cloudinary' ? `
+                                    ${!img.uploading ? `
                                         <button onclick="copyCdnUrl('${img.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Copy Cloudinary CDN URL">
                                             <i data-lucide="link" class="w-3.5 h-3.5"></i>
                                         </button>
                                     ` : ''}
-                                    <button onclick="confirmDeleteImage('${img.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-950/40 transition" title="Remove image">
+                                    <button onclick="confirmDeleteImage('${img.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-950/40 transition" title="Remove image from group">
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Layered Image Viewport (Base Image + Toggleable Drawing Layer) -->
-                            <div onclick="openDrawingStudio('${img.id}')" class="relative aspect-video bg-studio-950 checkerboard-bg overflow-hidden cursor-pointer flex items-center justify-center">
+                            <div onclick="${img.uploading ? '' : `openDrawingStudio('${img.id}')`}" class="relative aspect-video bg-studio-950 checkerboard-bg overflow-hidden cursor-pointer flex items-center justify-center">
                                 <!-- Base Image -->
-                                <img src="${img.baseUrl}" alt="Group item" loading="lazy" class="w-full h-full object-contain select-none">
+                                <img src="${img.baseUrl}" alt="Group item" crossorigin="anonymous" loading="lazy" class="w-full h-full object-contain select-none">
 
-                                <!-- Independent Drawing Overlay Layer -->
+                                <!-- Independent Cloud Drawing Overlay Layer -->
                                 ${hasLayer ? `
-                                    <img src="${img.layerDataUrl}" alt="Annotation overlay" 
+                                    <img src="${img.layerUrl}" alt="Annotation overlay" crossorigin="anonymous"
                                          class="absolute inset-0 w-full h-full object-contain pointer-events-none layer-fade ${isLayerOn ? 'opacity-100' : 'opacity-0'}">
                                 ` : ''}
 
                                 <!-- Hover Edit Prompt -->
-                                <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                    <span class="px-3.5 py-1.5 rounded-full bg-zinc-900/95 text-white text-xs font-medium border border-zinc-700 shadow-xl flex items-center gap-1.5">
-                                        <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-indigo-400"></i>
-                                        Open Layer Editor
-                                    </span>
-                                </div>
+                                ${!img.uploading ? `
+                                    <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                        <span class="px-3.5 py-1.5 rounded-full bg-zinc-900/95 text-white text-xs font-medium border border-zinc-700 shadow-xl flex items-center gap-1.5">
+                                            <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                            Open Layer Editor
+                                        </span>
+                                    </div>
+                                ` : ''}
                             </div>
 
                             <!-- Card Footer: Layer Toggle & Draw Action -->
@@ -1099,27 +1301,27 @@
         }
 
         // --- Per-Image Layer Toggle & Bulk Toggle ---
-        async function toggleImageLayer(imageId) {
+        function toggleImageLayer(imageId) {
             const group = getActiveGroup();
             if (!group) return;
             const img = group.images.find(i => i.id === imageId);
             if (!img) return;
 
-            if (!img.layerDataUrl) {
+            if (!img.layerUrl) {
                 openDrawingStudio(imageId);
                 return;
             }
 
             img.layerVisible = !(img.layerVisible !== false);
-            await persistWorkspace();
             renderActiveWorkspace();
+            scheduleCloudSync();
         }
 
-        async function toggleAllLayersInGroup() {
+        function toggleAllLayersInGroup() {
             const group = getActiveGroup();
             if (!group || group.images.length === 0) return;
 
-            const layeredImages = group.images.filter(i => Boolean(i.layerDataUrl));
+            const layeredImages = group.images.filter(i => Boolean(i.layerUrl));
             if (layeredImages.length === 0) {
                 showToast('No images in this group have drawing layers yet.', 'info');
                 return;
@@ -1132,8 +1334,8 @@
                 i.layerVisible = nextState;
             });
 
-            await persistWorkspace();
             renderActiveWorkspace();
+            scheduleCloudSync();
             showToast(`All drawing layers turned ${nextState ? 'ON' : 'OFF'}`, 'info');
         }
 
@@ -1152,7 +1354,7 @@
         }
 
         // ============================================================================
-        // NON-DESTRUCTIVE DRAWING LAYER STUDIO ENGINE
+        // NON-DESTRUCTIVE DRAWING LAYER STUDIO ENGINE (CLOUD PNG LAYER UPLOAD)
         // ============================================================================
         const drawingModal = document.getElementById('drawingModal');
         const studioBaseImage = document.getElementById('studioBaseImage');
@@ -1162,7 +1364,7 @@
         function openDrawingStudio(imageId) {
             const group = getActiveGroup();
             const img = group?.images.find(i => i.id === imageId);
-            if (!img) return;
+            if (!img || img.uploading) return;
 
             editorState.isOpen = true;
             editorState.imageId = imageId;
@@ -1175,7 +1377,7 @@
             drawingModal.classList.remove('hidden');
             drawingModal.classList.add('flex');
 
-            // Load base image to size canvas accurately
+            // Load base image from Cloudinary CDN to size canvas accurately
             studioBaseImage.crossOrigin = 'anonymous';
             studioBaseImage.onload = () => {
                 const natW = studioBaseImage.naturalWidth || 900;
@@ -1184,13 +1386,14 @@
                 drawingCanvas.height = natH;
                 ctx.clearRect(0, 0, natW, natH);
 
-                if (img.layerDataUrl) {
+                if (img.layerUrl) {
                     const layerImg = new Image();
+                    layerImg.crossOrigin = 'anonymous';
                     layerImg.onload = () => {
                         ctx.drawImage(layerImg, 0, 0, natW, natH);
                         pushCanvasHistory();
                     };
-                    layerImg.src = img.layerDataUrl;
+                    layerImg.src = img.layerUrl;
                 } else {
                     pushCanvasHistory();
                 }
@@ -1374,18 +1577,35 @@
             const img = group?.images.find(i => i.id === editorState.imageId);
             if (!img) return;
 
-            if (isCanvasBlank(drawingCanvas)) {
-                img.layerDataUrl = null;
-                img.layerVisible = true;
-            } else {
-                img.layerDataUrl = drawingCanvas.toDataURL('image/png');
-                img.layerVisible = editorState.layerVisible;
-            }
+            const saveBtn = document.getElementById('saveDrawingLayerBtn');
+            const originalBtnHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Uploading Layer...</span>`;
+            lucide.createIcons({ root: saveBtn });
 
-            await persistWorkspace();
-            renderActiveWorkspace();
-            closeDrawingStudio();
-            showToast('Drawing layer saved!', 'success');
+            try {
+                if (isCanvasBlank(drawingCanvas)) {
+                    img.layerUrl = null;
+                    img.layerVisible = true;
+                } else {
+                    const layerBlob = await new Promise(resolve => drawingCanvas.toBlob(resolve, 'image/png'));
+                    const cloudLayerUrl = await uploadImageToCloudinary(layerBlob, LAYER_TAG, `layer_${img.id}_${Date.now()}.png`);
+                    img.layerUrl = cloudLayerUrl;
+                    img.layerVisible = editorState.layerVisible;
+                }
+
+                renderActiveWorkspace();
+                closeDrawingStudio();
+                await pushWorkspaceStateToCloud();
+                showToast('Drawing layer saved to Cloudinary CDN!', 'success');
+            } catch (err) {
+                console.error('Failed to upload drawing layer:', err);
+                showToast(`Failed to save layer to cloud: ${err.message}`, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalBtnHtml;
+                lucide.createIcons({ root: saveBtn });
+            }
         }
 
         // --- Confirmation Modal Helper ---
@@ -1409,21 +1629,21 @@
 
         function confirmDeleteImage(imageId) {
             openConfirmModal(
-                'Delete Image & Layer?',
-                'This will permanently remove this image and its annotation layer from the group.',
+                'Remove Image from Group?',
+                'This will remove this image and its annotation layer from the cloud group state.',
                 async () => {
                     const group = getActiveGroup();
                     if (!group) return;
                     group.images = group.images.filter(i => i.id !== imageId);
-                    await persistWorkspace();
                     renderGroupsSidebar();
                     renderActiveWorkspace();
-                    showToast('Image removed from group', 'info');
+                    await pushWorkspaceStateToCloud();
+                    showToast('Image removed & cloud synced', 'info');
                 }
             );
         }
 
-        // --- Mobile Sidebar Controls ---
+        // --- Utility Functions (Sidebar, Toast, Escaping) ---
         function openMobileSidebar() {
             document.getElementById('sidebar').classList.remove('-translate-x-full');
             document.getElementById('sidebarBackdrop').classList.remove('hidden');
@@ -1434,18 +1654,14 @@
             document.getElementById('sidebarBackdrop').classList.add('hidden');
         }
 
-        // --- Toast Notifications ---
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-
-            const styles = {
-                success: 'bg-zinc-900 border-emerald-500/40 text-emerald-200',
-                error: 'bg-zinc-900 border-red-500/40 text-red-200',
-                warning: 'bg-zinc-900 border-amber-500/40 text-amber-200',
-                info: 'bg-zinc-900 border-indigo-500/40 text-zinc-200'
+            const colors = {
+                success: 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200',
+                error: 'bg-red-950/95 border-red-500/40 text-red-200',
+                warning: 'bg-amber-950/95 border-amber-500/40 text-amber-200',
+                info: 'bg-studio-900/95 border-zinc-700 text-zinc-200'
             };
-
             const icons = {
                 success: 'check-circle-2',
                 error: 'alert-circle',
@@ -1453,53 +1669,53 @@
                 info: 'info'
             };
 
-            toast.className = `pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border shadow-xl text-xs font-medium backdrop-blur-md transition-all duration-200 transform translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md text-xs font-medium transition-all duration-200 ${colors[type] || colors.info}`;
             toast.innerHTML = `
-                <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
-                <span class="flex-1">${escapeHtml(message)}</span>
+                <i data-lucide="${icons[type] || icons.info}" class="w-4 h-4 shrink-0"></i>
+                <span class="leading-snug">${escapeHtml(message)}</span>
             `;
-
             container.appendChild(toast);
             lucide.createIcons({ root: toast });
 
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-1');
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(6px)';
                 setTimeout(() => toast.remove(), 220);
             }, 3400);
         }
 
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>"']/g, m => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            }[m]));
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
-        // --- Event Listeners Binding ---
+        // --- Global Event Listeners ---
         function bindGlobalEvents() {
-            // 1. Global Ctrl+V / Cmd+V Paste Listener
+            // 1. Global Clipboard Paste (Ctrl+V / Cmd+V anywhere)
             window.addEventListener('paste', async (e) => {
                 if (editorState.isOpen) return;
+                const tag = document.activeElement?.tagName?.toLowerCase();
+                if (tag === 'input' || tag === 'textarea') return;
 
                 const items = e.clipboardData?.items;
                 if (!items) return;
 
-                const imageFiles = [];
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i].type.startsWith('image/')) {
-                        const file = items[i].getAsFile();
-                        if (file) imageFiles.push(file);
+                const imageBlobs = [];
+                for (const item of items) {
+                    if (item.type.startsWith('image/')) {
+                        const file = item.getAsFile();
+                        if (file) imageBlobs.push(file);
                     }
                 }
-
-                // If clipboard contains an image, capture it into the open group
-                if (imageFiles.length > 0) {
+                if (imageBlobs.length > 0) {
                     e.preventDefault();
-                    await handleIncomingImageFiles(imageFiles);
+                    await handleIncomingImageFiles(imageBlobs);
                 }
             });
 
@@ -1554,46 +1770,52 @@
             });
             document.getElementById('headerPasteBtn').addEventListener('click', triggerClipboardPaste);
 
-            // 5. Group Title & Caption Live Auto-Save
+            // 5. Group Title & Caption Live Auto-Save to Cloud
             let captionTimeout = null;
             document.getElementById('groupCaptionInput').addEventListener('input', (e) => {
                 const group = getActiveGroup();
                 if (!group) return;
                 group.caption = e.target.value;
-                document.getElementById('captionSaveIndicator').textContent = 'Saving...';
+                document.getElementById('captionSaveIndicator').textContent = 'Syncing to cloud...';
+                setCloudSyncIndicator('syncing', 'Pending Cloud Sync...');
                 clearTimeout(captionTimeout);
                 captionTimeout = setTimeout(async () => {
-                    await persistWorkspace();
                     renderGroupsSidebar();
-                    document.getElementById('captionSaveIndicator').textContent = 'Saved';
-                }, 350);
+                    await pushWorkspaceStateToCloud();
+                    document.getElementById('captionSaveIndicator').textContent = 'Saved to Cloud';
+                }, 800);
             });
 
-            document.getElementById('activeGroupTitle').addEventListener('input', async (e) => {
+            let titleTimeout = null;
+            document.getElementById('activeGroupTitle').addEventListener('input', (e) => {
                 const group = getActiveGroup();
                 if (!group) return;
                 group.title = e.target.value || 'Untitled Group';
-                await persistWorkspace();
                 renderGroupsSidebar();
+                clearTimeout(titleTimeout);
+                titleTimeout = setTimeout(() => {
+                    pushWorkspaceStateToCloud();
+                }, 800);
             });
 
             // 6. Group Sidebar Actions
             document.getElementById('groupSearchInput').addEventListener('input', renderGroupsSidebar);
             document.getElementById('toggleAllLayersBtn').addEventListener('click', toggleAllLayersInGroup);
+            document.getElementById('headerSyncBtn').addEventListener('click', () => loadWorkspaceFromCloud(false));
 
             document.getElementById('deleteGroupBtn').addEventListener('click', () => {
                 const group = getActiveGroup();
                 if (!group) return;
                 openConfirmModal(
                     `Delete "${group.title}"?`,
-                    `This will delete the group, its caption, and all ${group.images.length} images inside it.`,
+                    `This will delete the group, its caption, and all ${group.images.length} images from your cloud workspace.`,
                     async () => {
                         appState.groups = appState.groups.filter(g => g.id !== group.id);
                         appState.activeGroupId = appState.groups[0]?.id || null;
-                        await persistWorkspace();
                         renderGroupsSidebar();
                         renderActiveWorkspace();
-                        showToast('Group deleted', 'info');
+                        await pushWorkspaceStateToCloud();
+                        showToast('Group deleted & cloud synced', 'info');
                     }
                 );
             });
@@ -1617,25 +1839,43 @@
                 newGroupModal.classList.add('hidden');
             });
 
-            // 8. Cloudinary Config Modal
+            // 8. Cloudinary Config Modal & Initial Gate Screen
             const cloudModal = document.getElementById('cloudinaryModal');
             document.getElementById('openCloudinaryModalBtn').addEventListener('click', () => {
                 document.getElementById('cloudNameInput').value = cloudinaryConfig.cloudName;
                 document.getElementById('uploadPresetInput').value = cloudinaryConfig.uploadPreset;
                 document.getElementById('cloudFolderInput').value = cloudinaryConfig.folder;
+                document.getElementById('modalDiagnosticBox').classList.add('hidden');
                 cloudModal.classList.remove('hidden');
                 cloudModal.classList.add('flex');
             });
             document.getElementById('closeCloudinaryModalBtn').addEventListener('click', () => cloudModal.classList.add('hidden'));
-            document.getElementById('cancelCloudinaryBtn').addEventListener('click', () => cloudModal.classList.add('hidden'));
+
+            document.getElementById('testCloudConnectionBtn').addEventListener('click', async () => {
+                const cName = document.getElementById('cloudNameInput').value.trim();
+                const uPreset = document.getElementById('uploadPresetInput').value.trim();
+                const cFolder = document.getElementById('cloudFolderInput').value.trim();
+                const diagBox = document.getElementById('modalDiagnosticBox');
+                if (!cName || !uPreset) {
+                    diagBox.classList.remove('hidden');
+                    diagBox.className = 'p-3 rounded-xl text-xs bg-red-500/15 border border-red-500/35 text-red-200';
+                    diagBox.textContent = 'Please enter both Cloud Name and Unsigned Upload Preset first.';
+                    return;
+                }
+                await runCloudDiagnostics(cName, uPreset, cFolder, diagBox);
+            });
+
             document.getElementById('clearCloudinaryBtn').addEventListener('click', () => {
                 cloudinaryConfig = { cloudName: '', uploadPreset: '', folder: 'snaplayer-studio' };
                 localStorage.removeItem('snaplayer_cloudinary_config');
+                appState = { activeGroupId: null, groups: [] };
                 updateCloudinaryStatusUI();
                 cloudModal.classList.add('hidden');
-                showToast('Switched to Local Browser Storage mode', 'info');
+                showCloudGateScreen(true);
+                showToast('Disconnected from Cloudinary CDN', 'info');
             });
-            document.getElementById('cloudinaryForm').addEventListener('submit', (e) => {
+
+            document.getElementById('cloudinaryForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 cloudinaryConfig.cloudName = document.getElementById('cloudNameInput').value.trim();
                 cloudinaryConfig.uploadPreset = document.getElementById('uploadPresetInput').value.trim();
@@ -1643,10 +1883,31 @@
                 localStorage.setItem('snaplayer_cloudinary_config', JSON.stringify(cloudinaryConfig));
                 updateCloudinaryStatusUI();
                 cloudModal.classList.add('hidden');
-                showToast(
-                    isCloudinaryConfigured() ? 'Cloudinary CDN connected!' : 'Saved in Local Mode',
-                    'success'
-                );
+                showCloudGateScreen(false);
+                await loadWorkspaceFromCloud(true);
+            });
+
+            document.getElementById('gateCloudinaryForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const cName = document.getElementById('gateCloudNameInput').value.trim();
+                const uPreset = document.getElementById('gateUploadPresetInput').value.trim();
+                const cFolder = document.getElementById('gateCloudFolderInput').value.trim();
+                const diagBox = document.getElementById('gateDiagnosticBox');
+                const submitBtn = document.getElementById('gateConnectSubmitBtn');
+
+                if (!cName || !uPreset) return;
+
+                submitBtn.disabled = true;
+                const ok = await runCloudDiagnostics(cName, uPreset, cFolder, diagBox);
+                submitBtn.disabled = false;
+
+                if (ok) {
+                    cloudinaryConfig = { cloudName: cName, uploadPreset: uPreset, folder: cFolder };
+                    localStorage.setItem('snaplayer_cloudinary_config', JSON.stringify(cloudinaryConfig));
+                    updateCloudinaryStatusUI();
+                    showCloudGateScreen(false);
+                    await loadWorkspaceFromCloud(true);
+                }
             });
 
             // 9. Drawing Studio Controls
@@ -1721,10 +1982,10 @@
                     const parsed = JSON.parse(text);
                     if (parsed && Array.isArray(parsed.groups)) {
                         appState = parsed;
-                        await persistWorkspace();
                         renderGroupsSidebar();
                         renderActiveWorkspace();
-                        showToast('Workspace imported successfully!', 'success');
+                        await pushWorkspaceStateToCloud();
+                        showToast('Workspace imported & synced to cloud!', 'success');
                     } else {
                         throw new Error('Invalid SnapLayer backup format');
                     }
