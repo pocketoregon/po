@@ -1873,13 +1873,23 @@
                 newGroupModal.classList.add('hidden');
                 newGroupModal.classList.remove('flex');
             };
-            document.getElementById('createGroupBtn').addEventListener('click', () => {
+            
+            const handleOpenNewGroupModal = () => {
                 document.getElementById('newGroupNameInput').value = '';
                 document.getElementById('newGroupCaptionInput').value = '';
                 newGroupModal.classList.remove('hidden');
                 newGroupModal.classList.add('flex');
                 setTimeout(() => document.getElementById('newGroupNameInput').focus(), 50);
+            };
+
+            document.getElementById('createGroupBtn').addEventListener('click', handleOpenNewGroupModal);
+            
+            // Also wire up any auxiliary create buttons in empty states if present
+            document.querySelectorAll('[onclick*="createGroupBtn"]').forEach(el => {
+                el.removeAttribute('onclick');
+                el.addEventListener('click', handleOpenNewGroupModal);
             });
+
             document.getElementById('closeNewGroupModalBtn').addEventListener('click', hideNewGroupModal);
             document.getElementById('cancelNewGroupBtn').addEventListener('click', hideNewGroupModal);
             document.getElementById('newGroupForm').addEventListener('submit', (e) => {
