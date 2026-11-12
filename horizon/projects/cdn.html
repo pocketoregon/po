@@ -904,7 +904,8 @@
                 const listUrl = `https://res.cloudinary.com/${cloudName}/raw/list/${STATE_TAG}.json?t=${Date.now()}`;
                 const listRes = await fetch(listUrl, { cache: 'no-store' });
 
-                if (listRes.status === 401 || listRes.status === 403) {
+                const listRestricted = listRes.status === 401 || listRes.status === 403;
+                if (listRestricted && !(cachedSnapshot && cachedSnapshot.secure_url)) {
                     throw new Error('Resource list is restricted in Cloudinary. Uncheck "Resource list" under Settings → Security → Restricted media types.');
                 }
 
