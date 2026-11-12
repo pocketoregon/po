@@ -284,8 +284,20 @@
             </div>
 
             <!-- Active Group Workspace Container -->
-            <div id="workspaceContent" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-                
+            <div id="workspaceContent" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+
+                <!-- Empty No-Groups State (Separate from active group DOM so elements are never destroyed) -->
+                <div id="noGroupsWorkspaceState" class="hidden h-full flex-col items-center justify-center text-center p-6">
+                    <div class="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center mb-4">
+                        <i data-lucide="folder-plus" class="w-6 h-6 text-indigo-400"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-zinc-200">No cloud image groups yet</h3>
+                    <p class="text-xs text-zinc-400 max-w-sm mt-1 mb-4">Create your first group to start pasting images and saving annotation layers to Cloudinary CDN.</p>
+                    <button onclick="document.getElementById('createGroupBtn').click()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-md shadow-indigo-500/20 transition">Create First Cloud Group</button>
+                </div>
+
+                <!-- Active Group View -->
+                <div id="activeGroupContainer" class="space-y-6">
                 <!-- Group Header & Meta -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
                     <div class="flex-1 min-w-0">
@@ -370,6 +382,7 @@
                         <!-- Image Cards injected dynamically -->
                     </div>
                 </section>
+                </div>
             </div>
         </main>
     </div>
@@ -813,6 +826,10 @@
                     }))
                 };
 
+                // Cache latest snapshot pointer per cloudName so immediate page reloads
+                // never miss a newly uploaded state file while Cloudinary's tag index updates
+                const cacheKey = `snaplayer_latest_snapshot_${cloudinaryConfig.cloudName.trim()}`;
+
                 const jsonBlob = new Blob([JSON.stringify(cleanState)], { type: 'application/json' });
                 const snapshotFilename = `snaplayer_state_${Date.now()}.json`;
 
@@ -833,6 +850,16 @@
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
                     throw new Error(errData.error?.message || `HTTP ${response.status}`);
+                }
+
+                const uploadResult = await response.json();
+                if (uploadResult && uploadResult.secure_url) {
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify({
+                            secure_url: uploadResult.secure_url,
+                            updatedAt: cleanState.updatedAt
+                        }));
+                    } catch (_) {}
                 }
 
                 setCloudSyncIndicator('synced', 'Synced to Cloud');
@@ -867,40 +894,53 @@
 
             try {
                 const cloudName = encodeURIComponent(cloudinaryConfig.cloudName.trim());
+                const cacheKey = `snaplayer_latest_snapshot_${cloudinaryConfig.cloudName.trim()}`;
+                let cachedSnapshot = null;
+                try {
+                    const rawCache = localStorage.getItem(cacheKey);
+                    if (rawCache) cachedSnapshot = JSON.parse(rawCache);
+                } catch (_) {}
+
                 const listUrl = `https://res.cloudinary.com/${cloudName}/raw/list/${STATE_TAG}.json?t=${Date.now()}`;
-
                 const listRes = await fetch(listUrl, { cache: 'no-store' });
-
-                if (listRes.status === 404) {
-                    // Brand-new cloud environment with no saved state yet — initialize default cloud group
-                    await initializeFirstCloudGroup();
-                    return;
-                }
 
                 if (listRes.status === 401 || listRes.status === 403) {
                     throw new Error('Resource list is restricted in Cloudinary. Uncheck "Resource list" under Settings → Security → Restricted media types.');
                 }
 
-                if (!listRes.ok) {
-                    throw new Error(`Cloudinary list lookup failed (HTTP ${listRes.status})`);
+                let stateFileUrl = null;
+
+                if (listRes.ok) {
+                    const listData = await listRes.json();
+                    const resources = Array.isArray(listData.resources) ? listData.resources : [];
+                    if (resources.length > 0) {
+                        // Sort newest snapshot first
+                        resources.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                        const latest = resources[0];
+                        const listCreatedAt = new Date(latest.created_at).getTime();
+
+                        // If local pointer is newer than Cloudinary's CDN tag list cache, prefer the newer secure_url
+                        if (cachedSnapshot && cachedSnapshot.secure_url && cachedSnapshot.updatedAt > listCreatedAt + 2000) {
+                            stateFileUrl = `${cachedSnapshot.secure_url}?t=${Date.now()}`;
+                        } else {
+                            const versionPart = latest.version ? `v${latest.version}/` : '';
+                            // Raw assets on Cloudinary already include '.json' inside public_id
+                            const hasExt = /\.[a-z0-9]+$/i.test(latest.public_id);
+                            const formatPart = (!hasExt && latest.format) ? `.${latest.format}` : '';
+                            stateFileUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${versionPart}${latest.public_id}${formatPart}?t=${Date.now()}`;
+                        }
+                    }
                 }
 
-                const listData = await listRes.json();
-                const resources = Array.isArray(listData.resources) ? listData.resources : [];
+                if (!stateFileUrl && cachedSnapshot && cachedSnapshot.secure_url) {
+                    stateFileUrl = `${cachedSnapshot.secure_url}?t=${Date.now()}`;
+                }
 
-                if (resources.length === 0) {
+                if (!stateFileUrl) {
+                    // Brand-new cloud environment with no saved state yet — initialize default cloud group
                     await initializeFirstCloudGroup();
                     return;
                 }
-
-                // Sort newest snapshot first
-                resources.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                const latest = resources[0];
-
-                // Build raw delivery URL using version & public_id
-                const versionPart = latest.version ? `v${latest.version}/` : '';
-                const formatPart = latest.format && !latest.public_id.endsWith(`.${latest.format}`) ? `.${latest.format}` : '';
-                const stateFileUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${versionPart}${latest.public_id}${formatPart}?t=${Date.now()}`;
 
                 const stateRes = await fetch(stateFileUrl, { cache: 'no-store' });
                 if (!stateRes.ok) {
@@ -1180,17 +1220,20 @@
 
         function renderActiveWorkspace() {
             const group = getActiveGroup();
-            const workspaceEl = document.getElementById('workspaceContent');
+            const noGroupsEl = document.getElementById('noGroupsWorkspaceState');
+            const activeContainerEl = document.getElementById('activeGroupContainer');
 
             if (!group) {
-                workspaceEl.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-center p-6">
-                        <p class="text-zinc-400 text-sm mb-3">No cloud image groups yet.</p>
-                        <button onclick="document.getElementById('createGroupBtn').click()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-medium">Create First Cloud Group</button>
-                    </div>
-                `;
+                noGroupsEl.classList.remove('hidden');
+                noGroupsEl.classList.add('flex');
+                activeContainerEl.classList.add('hidden');
+                lucide.createIcons();
                 return;
             }
+
+            noGroupsEl.classList.add('hidden');
+            noGroupsEl.classList.remove('flex');
+            activeContainerEl.classList.remove('hidden');
 
             // Update Group Header & Caption fields
             document.getElementById('activeGroupTitle').value = group.title;
@@ -1723,8 +1766,12 @@
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if (editorState.isOpen) closeDrawingStudio();
-                    document.getElementById('cloudinaryModal').classList.add('hidden');
-                    document.getElementById('newGroupModal').classList.add('hidden');
+                    const cModal = document.getElementById('cloudinaryModal');
+                    cModal.classList.add('hidden');
+                    cModal.classList.remove('flex');
+                    const ngModal = document.getElementById('newGroupModal');
+                    ngModal.classList.add('hidden');
+                    ngModal.classList.remove('flex');
                     closeConfirmModal();
                 }
                 if (editorState.isOpen && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -1822,6 +1869,10 @@
 
             // 7. New Group Modal
             const newGroupModal = document.getElementById('newGroupModal');
+            const hideNewGroupModal = () => {
+                newGroupModal.classList.add('hidden');
+                newGroupModal.classList.remove('flex');
+            };
             document.getElementById('createGroupBtn').addEventListener('click', () => {
                 document.getElementById('newGroupNameInput').value = '';
                 document.getElementById('newGroupCaptionInput').value = '';
@@ -1829,18 +1880,22 @@
                 newGroupModal.classList.add('flex');
                 setTimeout(() => document.getElementById('newGroupNameInput').focus(), 50);
             });
-            document.getElementById('closeNewGroupModalBtn').addEventListener('click', () => newGroupModal.classList.add('hidden'));
-            document.getElementById('cancelNewGroupBtn').addEventListener('click', () => newGroupModal.classList.add('hidden'));
+            document.getElementById('closeNewGroupModalBtn').addEventListener('click', hideNewGroupModal);
+            document.getElementById('cancelNewGroupBtn').addEventListener('click', hideNewGroupModal);
             document.getElementById('newGroupForm').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const name = document.getElementById('newGroupNameInput').value;
                 const cap = document.getElementById('newGroupCaptionInput').value;
+                hideNewGroupModal();
                 createGroup(name, cap);
-                newGroupModal.classList.add('hidden');
             });
 
             // 8. Cloudinary Config Modal & Initial Gate Screen
             const cloudModal = document.getElementById('cloudinaryModal');
+            const hideCloudModal = () => {
+                cloudModal.classList.add('hidden');
+                cloudModal.classList.remove('flex');
+            };
             document.getElementById('openCloudinaryModalBtn').addEventListener('click', () => {
                 document.getElementById('cloudNameInput').value = cloudinaryConfig.cloudName;
                 document.getElementById('uploadPresetInput').value = cloudinaryConfig.uploadPreset;
@@ -1849,15 +1904,7 @@
                 cloudModal.classList.remove('hidden');
                 cloudModal.classList.add('flex');
             });
-            document.getElementById('closeCloudinaryModalBtn').addEventListener('click', () => cloudModal.classList.add('hidden'));
-
-            document.getElementById('testCloudConnectionBtn').addEventListener('click', async () => {
-                const cName = document.getElementById('cloudNameInput').value.trim();
-                const uPreset = document.getElementById('uploadPresetInput').value.trim();
-                const cFolder = document.getElementById('cloudFolderInput').value.trim();
-                const diagBox = document.getElementById('modalDiagnosticBox');
-                if (!cName || !uPreset) {
-                    diagBox.classList.remove('hidden');
+            document.getElementById('closeCloudinaryModalBtn').addEventListener('click', hideCloudModal);
                     diagBox.className = 'p-3 rounded-xl text-xs bg-red-500/15 border border-red-500/35 text-red-200';
                     diagBox.textContent = 'Please enter both Cloud Name and Unsigned Upload Preset first.';
                     return;
@@ -1870,7 +1917,7 @@
                 localStorage.removeItem('snaplayer_cloudinary_config');
                 appState = { activeGroupId: null, groups: [] };
                 updateCloudinaryStatusUI();
-                cloudModal.classList.add('hidden');
+                hideCloudModal();
                 showCloudGateScreen(true);
                 showToast('Disconnected from Cloudinary CDN', 'info');
             });
@@ -1882,7 +1929,7 @@
                 cloudinaryConfig.folder = document.getElementById('cloudFolderInput').value.trim();
                 localStorage.setItem('snaplayer_cloudinary_config', JSON.stringify(cloudinaryConfig));
                 updateCloudinaryStatusUI();
-                cloudModal.classList.add('hidden');
+                hideCloudModal();
                 showCloudGateScreen(false);
                 await loadWorkspaceFromCloud(true);
             });
