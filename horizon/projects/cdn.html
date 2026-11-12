@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapLayer Studio — Cloudinary Image Groups & Annotation Layers</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        studio: {
+                            950: '#09090b',
+                            900: '#101014',
+                            850: '#16161c',
+                            800: '#1e1e26',
+                            700: '#2b2b36',
+                            600: '#3f3f4e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for dark studio theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101014;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2b2b36;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f4e;
+        }
+
+        /* Checkerboard pattern for transparent canvas preview */
+        .checkerboard-bg {
+            background-image: 
+                linear-gradient(45deg, #18181b 25%, transparent 25%), 
+                linear-gradient(-45deg, #18181b 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #18181b 75%), 
+                linear-gradient(-45deg, transparent 75%, #18181b 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Smooth transitions */
+        .layer-fade {
+            transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.22s ease;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            margin-top: -5px;
+            box-shadow: 0 0 0 2px #101014;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #2b2b36;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="bg-studio-950 text-zinc-100 font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200 overflow-hidden h-screen flex flex-col">
+
+    <!-- Top Application Header -->
+    <header class="h-14 border-b border-zinc-800/80 bg-studio-900/90 backdrop-blur-md px-3 sm:px-5 flex items-center justify-between shrink-0 z-30">
+        <div class="flex items-center gap-3">
+            <!-- Mobile Sidebar Toggle -->
+            <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Toggle Groups Sidebar">
+                <i data-lucide="panel-left" class="w-5 h-5"></i>
+            </button>
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i data-lucide="layers" class="w-4 h-4 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-semibold tracking-tight text-white flex items-center gap-2">
+                        SnapLayer
+                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                            CDN STUDIO
+                        </span>
+                    </h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Quick Hint Pill (Desktop) -->
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-studio-850 border border-zinc-800 text-xs text-zinc-400">
+            <span class="inline-flex items-center gap-1 text-zinc-200 font-medium">
+                <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-zinc-800 border border-zinc-700 rounded text-zinc-300">Ctrl</kbd>
+                +
+                <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-zinc-800 border border-zinc-700 rounded text-zinc-300">V</kbd>
+            </span>
+            <span>anywhere to paste image into active group</span>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="flex items-center gap-2">
+            <!-- Paste Trigger Button -->
+            <button id="headerPasteBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-200 text-xs font-medium border border-zinc-700/70 transition active:scale-95" title="Paste image from clipboard">
+                <i data-lucide="clipboard-paste" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span class="hidden sm:inline">Paste Image</span>
+            </button>
+
+            <!-- Upload File Fallback -->
+            <label class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-200 text-xs font-medium border border-zinc-700/70 transition active:scale-95" title="Upload image files">
+                <i data-lucide="upload" class="w-3.5 h-3.5 text-indigo-400"></i>
+                <span class="hidden sm:inline">Upload</span>
+                <input type="file" id="fileInput" accept="image/*" multiple class="hidden">
+            </label>
+
+            <!-- Cloudinary Status & Settings Button -->
+            <button id="openCloudinaryModalBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition active:scale-95">
+                <span id="cdnStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
+                <span id="cdnStatusLabel" class="hidden sm:inline">Local Mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- Mobile Backdrop -->
+        <div id="sidebarBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-20 hidden lg:hidden"></div>
+
+        <!-- Left Sidebar: Image Groups -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-studio-900 border-r border-zinc-800/80 flex flex-col z-20 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out pt-14 lg:pt-0">
+            <!-- Sidebar Header -->
+            <div class="p-4 border-b border-zinc-800/80 flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Image Groups</span>
+                <button id="createGroupBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-sm shadow-indigo-500/20 transition active:scale-95">
+                    <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                    <span>New Group</span>
+                </button>
+            </div>
+
+            <!-- Search Groups -->
+            <div class="px-3 pt-3">
+                <div class="relative">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="groupSearchInput" placeholder="Filter groups..." class="w-full bg-studio-850 border border-zinc-800 focus:border-indigo-500/60 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none transition">
+                </div>
+            </div>
+
+            <!-- Groups List -->
+            <div id="groupsList" class="flex-1 overflow-y-auto p-3 space-y-1.5">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <!-- Sidebar Footer: Backup / Restore -->
+            <div class="p-3 border-t border-zinc-800/80 bg-studio-950/40 flex items-center justify-between gap-2">
+                <button id="exportJsonBtn" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-zinc-800/70 hover:bg-zinc-800 text-zinc-300 text-[11px] font-medium border border-zinc-700/50 transition" title="Export workspace JSON">
+                    <i data-lucide="download" class="w-3 h-3"></i>
+                    <span>Export</span>
+                </button>
+                <label class="flex-1 cursor-pointer flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-zinc-800/70 hover:bg-zinc-800 text-zinc-300 text-[11px] font-medium border border-zinc-700/50 transition" title="Import workspace JSON">
+                    <i data-lucide="upload" class="w-3 h-3"></i>
+                    <span>Import</span>
+                    <input type="file" id="importJsonInput" accept=".json" class="hidden">
+                </label>
+            </div>
+        </aside>
+
+        <!-- Main Group Workspace -->
+        <main id="mainDropZone" class="flex-1 flex flex-col overflow-hidden bg-studio-950 relative">
+            
+            <!-- Drag & Drop Overlay -->
+            <div id="dragOverlay" class="hidden absolute inset-3 rounded-2xl border-2 border-dashed border-indigo-500 bg-indigo-950/40 backdrop-blur-xs z-30 flex flex-col items-center justify-center pointer-events-none">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center mb-3">
+                    <i data-lucide="image-plus" class="w-7 h-7 text-indigo-300"></i>
+                </div>
+                <p class="text-base font-semibold text-white">Drop images to add to current group</p>
+                <p class="text-xs text-indigo-200/80 mt-1">Automatically uploads to Cloudinary CDN if configured</p>
+            </div>
+
+            <!-- Active Group Workspace Container -->
+            <div id="workspaceContent" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+                
+                <!-- Group Header & Meta -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2.5">
+                            <input type="text" id="activeGroupTitle" value="UI Design Concepts" 
+                                class="bg-transparent text-xl sm:text-2xl font-bold text-white tracking-tight border-b border-transparent hover:border-zinc-700 focus:border-indigo-500 outline-none transition w-full max-w-lg truncate"
+                                placeholder="Group Title...">
+                            <span id="activeGroupCountBadge" class="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                0 images
+                            </span>
+                        </div>
+                        <p id="activeGroupMeta" class="text-xs text-zinc-500 mt-1 flex items-center gap-3">
+                            <span>Created just now</span>
+                            <span>•</span>
+                            <span class="text-emerald-400/90 flex items-center gap-1">
+                                <i data-lucide="check-circle-2" class="w-3 h-3"></i> Auto-saved
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Group Bulk Actions -->
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button id="toggleAllLayersBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-studio-850 hover:bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-700/80 transition" title="Toggle drawing layers on all images in this group">
+                            <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span>Toggle All Layers</span>
+                        </button>
+                        <button id="deleteGroupBtn" class="p-2 rounded-lg bg-studio-850 hover:bg-red-950/60 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-800/60 transition" title="Delete this group">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group Caption Section -->
+                <section class="bg-studio-900/90 border border-zinc-800/90 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="groupCaptionInput" class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                            <i data-lucide="align-left" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            Group Set Caption & Notes
+                        </label>
+                        <span id="captionSaveIndicator" class="text-[11px] text-zinc-500 font-mono">Saved</span>
+                    </div>
+                    <textarea id="groupCaptionInput" rows="2" 
+                        placeholder="Write a comprehensive caption, context, or review notes describing the entire image set in this group..."
+                        class="w-full bg-studio-950/70 border border-zinc-800/90 focus:border-indigo-500/60 rounded-xl p-3 text-sm text-zinc-200 placeholder-zinc-600 outline-none resize-y transition leading-relaxed"></textarea>
+                </section>
+
+                <!-- Images Grid Section -->
+                <section class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                            <i data-lucide="images" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            Stored Images & Annotation Layers
+                        </h2>
+                        <span class="text-xs text-zinc-500 hidden sm:inline">Click <strong class="text-zinc-300">Draw Layer</strong> to annotate over any image</span>
+                    </div>
+
+                    <!-- Empty State Drop/Paste Card -->
+                    <div id="emptyGalleryState" class="hidden border-2 border-dashed border-zinc-800 hover:border-zinc-700 rounded-2xl p-10 sm:p-14 text-center bg-studio-900/40 transition">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="clipboard-copy" class="w-6 h-6 text-indigo-400"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-zinc-200">No images in this group yet</h3>
+                        <p class="text-sm text-zinc-400 max-w-md mx-auto mt-1.5 leading-relaxed">
+                            Copy any screenshot or image to your clipboard and press 
+                            <kbd class="px-1.5 py-0.5 text-xs font-mono bg-zinc-800 border border-zinc-700 rounded text-zinc-200">Ctrl + V</kbd> 
+                            to paste it right here, or drag & drop files.
+                        </p>
+                        <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+                            <button onclick="triggerClipboardPaste()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-md shadow-indigo-500/20 transition">
+                                <i data-lucide="clipboard-paste" class="w-4 h-4"></i>
+                                Paste from Clipboard
+                            </button>
+                            <button onclick="document.getElementById('fileInput').click()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium border border-zinc-700 transition">
+                                <i data-lucide="folder-open" class="w-4 h-4"></i>
+                                Browse Files
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Responsive Image Cards Grid -->
+                    <div id="imagesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        <!-- Image Cards injected dynamically -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 1: CLOUDINARY CDN CONFIGURATION                                 -->
+    <!-- ===================================================================== -->
+    <div id="cloudinaryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+        <div class="bg-studio-900 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+                        <i data-lucide="cloud-cog" class="w-4 h-4 text-indigo-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-white">Cloudinary CDN Setup</h3>
+                        <p class="text-[11px] text-zinc-400">Configure unsigned direct browser uploads</p>
+                    </div>
+                </div>
+                <button id="closeCloudinaryModalBtn" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="cloudinaryForm" class="p-5 space-y-4">
+                <div class="p-3 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-xs text-indigo-200/90 leading-relaxed">
+                    <strong>How it works:</strong> When configured, pasted images upload straight to your Cloudinary CDN via unsigned upload preset. Without credentials, images automatically save locally in your browser's IndexedDB.
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Cloud Name</label>
+                    <input type="text" id="cloudNameInput" placeholder="e.g. dxyz123abc" 
+                        class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Unsigned Upload Preset</label>
+                    <input type="text" id="uploadPresetInput" placeholder="e.g. ml_default or snaplayer_unsigned" 
+                        class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Folder Path (Optional)</label>
+                    <input type="text" id="cloudFolderInput" placeholder="e.g. snaplayer-groups" 
+                        class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white font-mono placeholder-zinc-600 outline-none transition">
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <button type="button" id="clearCloudinaryBtn" class="text-xs text-zinc-400 hover:text-red-400 transition">
+                        Disconnect / Use Local Mode
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="cancelCloudinaryBtn" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300 transition">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-medium text-white shadow-lg shadow-indigo-500/20 transition">
+                            Save CDN Config
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 2: NON-DESTRUCTIVE DRAWING LAYER STUDIO                         -->
+    <!-- ===================================================================== -->
+    <div id="drawingModal" class="fixed inset-0 z-50 hidden flex-col bg-studio-950/95 backdrop-blur-md">
+        <!-- Studio Top Toolbar -->
+        <div class="h-14 px-4 border-b border-zinc-800 bg-studio-900 flex items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-3">
+                <button id="closeDrawingModalBtn" class="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" title="Close Editor (Esc)">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </button>
+                <div>
+                    <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                        Annotation Layer Editor
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            SEPARATE OVERLAY
+                        </span>
+                    </h3>
+                    <p class="text-[11px] text-zinc-400 hidden sm:block">Drawings are saved on an independent transparent layer above your image</p>
+                </div>
+            </div>
+
+            <!-- Layer Visibility Preview Toggle Inside Studio -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="studioLayerToggleBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition">
+                    <i data-lucide="eye" id="studioLayerEyeIcon" class="w-3.5 h-3.5"></i>
+                    <span id="studioLayerToggleText">Layer: ON</span>
+                </button>
+
+                <button id="saveDrawingLayerBtn" class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition active:scale-95">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Save Layer</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Drawing Tools Ribbon -->
+        <div class="px-4 py-2.5 border-b border-zinc-800/90 bg-studio-900/70 flex flex-wrap items-center justify-center gap-2 sm:gap-4 shrink-0">
+            <!-- Tool Selection -->
+            <div class="flex items-center bg-studio-950 p-1 rounded-xl border border-zinc-800">
+                <button data-tool="brush" class="draw-tool-btn active px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium flex items-center gap-1.5 transition" title="Freehand Brush">
+                    <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Brush</span>
+                </button>
+                <button data-tool="arrow" class="draw-tool-btn px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white text-xs font-medium flex items-center gap-1.5 transition" title="Arrow Pointer">
+                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Arrow</span>
+                </button>
+                <button data-tool="rect" class="draw-tool-btn px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white text-xs font-medium flex items-center gap-1.5 transition" title="Rectangle Box">
+                    <i data-lucide="square" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Box</span>
+                </button>
+                <button data-tool="circle" class="draw-tool-btn px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white text-xs font-medium flex items-center gap-1.5 transition" title="Circle Highlight">
+                    <i data-lucide="circle" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Circle</span>
+                </button>
+                <button data-tool="eraser" class="draw-tool-btn px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white text-xs font-medium flex items-center gap-1.5 transition" title="Eraser (Erases only the drawing layer)">
+                    <i data-lucide="eraser" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Eraser</span>
+                </button>
+            </div>
+
+            <!-- Color Swatches -->
+            <div class="flex items-center gap-1.5 bg-studio-950 px-2.5 py-1.5 rounded-xl border border-zinc-800">
+                <button data-color="#ef4444" class="color-swatch w-5 h-5 rounded-full bg-red-500 ring-2 ring-white scale-110 transition" title="Red"></button>
+                <button data-color="#f59e0b" class="color-swatch w-5 h-5 rounded-full bg-amber-500 hover:scale-110 transition" title="Amber"></button>
+                <button data-color="#10b981" class="color-swatch w-5 h-5 rounded-full bg-emerald-500 hover:scale-110 transition" title="Emerald"></button>
+                <button data-color="#3b82f6" class="color-swatch w-5 h-5 rounded-full bg-blue-500 hover:scale-110 transition" title="Blue"></button>
+                <button data-color="#a855f7" class="color-swatch w-5 h-5 rounded-full bg-purple-500 hover:scale-110 transition" title="Purple"></button>
+                <button data-color="#ffffff" class="color-swatch w-5 h-5 rounded-full bg-white hover:scale-110 transition" title="White"></button>
+                <input type="color" id="customColorPicker" value="#ef4444" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0" title="Custom Color">
+            </div>
+
+            <!-- Stroke Thickness -->
+            <div class="flex items-center gap-2 bg-studio-950 px-3 py-1.5 rounded-xl border border-zinc-800">
+                <span class="text-[11px] text-zinc-400">Size</span>
+                <input type="range" id="brushSizeSlider" min="2" max="28" value="5" class="w-20 sm:w-24">
+                <span id="brushSizeValue" class="text-[11px] font-mono text-zinc-300 w-5 text-right">5px</span>
+            </div>
+
+            <!-- History & Clear Controls -->
+            <div class="flex items-center gap-1 bg-studio-950 p-1 rounded-xl border border-zinc-800">
+                <button id="undoDrawBtn" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 transition" title="Undo (Ctrl+Z)">
+                    <i data-lucide="undo-2" class="w-4 h-4"></i>
+                </button>
+                <button id="redoDrawBtn" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 transition" title="Redo">
+                    <i data-lucide="redo-2" class="w-4 h-4"></i>
+                </button>
+                <div class="w-px h-4 bg-zinc-800 mx-0.5"></div>
+                <button id="clearLayerBtn" class="px-2 py-1 rounded-lg text-xs text-red-400 hover:bg-red-950/50 transition" title="Clear entire drawing layer">
+                    Clear Layer
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Stage Area -->
+        <div id="canvasStageContainer" class="flex-1 overflow-hidden flex items-center justify-center p-4 sm:p-8 select-none relative">
+            <div id="canvasWrapper" class="relative shadow-2xl rounded-lg overflow-hidden checkerboard-bg border border-zinc-700/80 flex items-center justify-center">
+                <!-- Base Image Layer (Locked) -->
+                <img id="studioBaseImage" src="" alt="Base artwork" class="block max-w-full max-h-[70vh] object-contain pointer-events-none select-none">
+                <!-- Interactive Drawing Overlay Canvas -->
+                <canvas id="drawingCanvas" class="absolute inset-0 w-full h-full cursor-crosshair touch-none layer-fade"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 3: CREATE NEW GROUP DIALOG (Custom Non-Blocking Modal)          -->
+    <!-- ===================================================================== -->
+    <div id="newGroupModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+        <div class="bg-studio-900 border border-zinc-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-white">Create New Image Group</h3>
+                <button id="closeNewGroupModalBtn" class="p-1 rounded-lg text-zinc-400 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <form id="newGroupForm" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Group Name</label>
+                    <input type="text" id="newGroupNameInput" required placeholder="e.g. Landing Page Hero Shots"
+                        class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white placeholder-zinc-600 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-zinc-300 mb-1.5">Initial Group Caption (Optional)</label>
+                    <textarea id="newGroupCaptionInput" rows="2" placeholder="Describe what this image set is for..."
+                        class="w-full bg-studio-950 border border-zinc-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-sm text-white placeholder-zinc-600 outline-none resize-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" id="cancelNewGroupBtn" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-medium text-white">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 4: CONFIRMATION DIALOG (Replaces window.confirm)                -->
+    <!-- ===================================================================== -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+        <div class="bg-studio-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-5 shadow-2xl space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400"></i>
+                </div>
+                <div>
+                    <h4 id="confirmTitle" class="text-sm font-semibold text-white">Confirm Action</h4>
+                    <p id="confirmMessage" class="text-xs text-zinc-400 mt-1 leading-relaxed">Are you sure?</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="confirmCancelBtn" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300">Cancel</button>
+                <button id="confirmAcceptBtn" class="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-medium text-white">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    <script>
+        /**
+         * ============================================================================
+         * SNAPLAYER STUDIO — ARCHITECTURE & STATE MANAGEMENT
+         * ============================================================================
+         * 1. Storage Engine: Uses IndexedDB ('SnapLayerDB') so high-resolution pasted
+         *    images and transparent PNG annotation layers never hit the 5MB localStorage
+         *    limit, while Cloudinary credentials stay in localStorage.
+         * 2. Cloudinary Integration: Uploads pasted/dropped image blobs directly to
+         *    https://api.cloudinary.com/v1_1/{cloudName}/image/upload using unsigned presets.
+         *    Falls back seamlessly to DataURL storage when Cloudinary is unconfigured.
+         * 3. Non-Destructive Layer System: Each image object stores:
+         *    - `baseUrl`: Cloudinary secure_url (or local dataURL)
+         *    - `layerDataUrl`: Transparent PNG dataURL containing ONLY user drawings
+         *    - `layerVisible`: Boolean toggling the overlay canvas/img visibility
+         */
+
+        // --- IndexedDB Helper Wrapper ---
+        const DB_NAME = 'SnapLayerStudioDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'workspace';
+
+        const idbStorage = {
+            db: null,
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME);
+                        }
+                    };
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve();
+                    };
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            },
+            async getState() {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get('appState');
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async saveState(state) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.put(state, 'appState');
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            }
+        };
+
+        // --- Application State ---
+        let appState = {
+            activeGroupId: null,
+            groups: []
+        };
+
+        let cloudinaryConfig = {
+            cloudName: '',
+            uploadPreset: '',
+            folder: 'snaplayer-studio'
+        };
+
+        // --- Drawing Studio State ---
+        let editorState = {
+            isOpen: false,
+            imageId: null,
+            tool: 'brush',      // 'brush' | 'arrow' | 'rect' | 'circle' | 'eraser'
+            color: '#ef4444',
+            brushSize: 5,
+            isDrawing: false,
+            startX: 0,
+            startY: 0,
+            snapshot: null,     // ImageData before current shape stroke
+            history: [],        // Array of dataURLs for Undo
+            historyIndex: -1,
+            layerVisible: true
+        };
+
+        // --- Sample Starter Image Generator (SVG Data URL) ---
+        function createSampleDiagramDataUrl() {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540">
+                <defs>
+                    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#18181b"/>
+                        <stop offset="100%" stop-color="#09090b"/>
+                    </linearGradient>
+                </defs>
+                <rect width="900" height="540" fill="url(#bg)"/>
+                <g stroke="#27272a" stroke-width="1">
+                    <line x1="0" y1="90" x2="900" y2="90"/>
+                    <line x1="0" y1="180" x2="900" y2="180"/>
+                    <line x1="0" y1="270" x2="900" y2="270"/>
+                    <line x1="0" y1="360" x2="900" y2="360"/>
+                    <line x1="0" y1="450" x2="900" y2="450"/>
+                    <line x1="180" y1="0" x2="180" y2="540"/>
+                    <line x1="360" y1="0" x2="360" y2="540"/>
+                    <line x1="540" y1="0" x2="540" y2="540"/>
+                    <line x1="720" y1="0" x2="720" y2="540"/>
+                </g>
+                <rect x="80" y="70" width="740" height="400" rx="18" fill="#121216" stroke="#3f3f46" stroke-width="2"/>
+                <circle cx="112" cy="100" r="6" fill="#ef4444"/>
+                <circle cx="132" cy="100" r="6" fill="#f59e0b"/>
+                <circle cx="152" cy="100" r="6" fill="#10b981"/>
+                <rect x="120" y="145" width="290" height="130" rx="12" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="145" y="190" fill="#e0e7ff" font-family="sans-serif" font-size="18" font-weight="bold">1. Paste via Ctrl + V</text>
+                <text x="145" y="220" fill="#a5b4fc" font-family="sans-serif" font-size="13">Clipboard images upload directly to</text>
+                <text x="145" y="240" fill="#a5b4fc" font-family="sans-serif" font-size="13">Cloudinary CDN inside your active group.</text>
+                <rect x="450" y="145" width="330" height="130" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+                <text x="475" y="190" fill="#d1fae5" font-family="sans-serif" font-size="18" font-weight="bold">2. Toggleable Draw Layer</text>
+                <text x="475" y="220" fill="#6ee7b7" font-family="sans-serif" font-size="13">Sketch callouts on a separate overlay</text>
+                <text x="475" y="240" fill="#6ee7b7" font-family="sans-serif" font-size="13">and switch visibility ON/OFF anytime.</text>
+                <rect x="120" y="305" width="660" height="125" rx="12" fill="#18181b" stroke="#3f3f46"/>
+                <text x="145" y="350" fill="#f4f4f5" font-family="sans-serif" font-size="16" font-weight="bold">Try it now: Click "Draw Layer" on this card or press Ctrl+V to paste a screenshot!</text>
+                <text x="145" y="380" fill="#a1a1aa" font-family="sans-serif" font-size="13">You can toggle the red sample markup layer ON or OFF using the eye button below.</text>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        function createSampleAnnotationLayerDataUrl() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 900;
+            canvas.height = 540;
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Highlight circle around step 2
+            ctx.beginPath();
+            ctx.ellipse(615, 210, 180, 78, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Curved arrow pointing to it
+            ctx.beginPath();
+            ctx.moveTo(410, 325);
+            ctx.quadraticCurveTo(490, 315, 535, 275);
+            ctx.stroke();
+
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(535, 275);
+            ctx.lineTo(516, 277);
+            ctx.moveTo(535, 275);
+            ctx.lineTo(529, 293);
+            ctx.stroke();
+
+            return canvas.toDataURL('image/png');
+        }
+
+        // --- Initialization ---
+        async function initApp() {
+            lucide.createIcons();
+            loadCloudinaryConfig();
+
+            try {
+                await idbStorage.init();
+                const savedState = await idbStorage.getState();
+                if (savedState && Array.isArray(savedState.groups) && savedState.groups.length > 0) {
+                    appState = savedState;
+                } else {
+                    // Seed initial welcome group so user can test immediately
+                    const starterGroupId = 'grp_' + Date.now();
+                    appState = {
+                        activeGroupId: starterGroupId,
+                        groups: [
+                            {
+                                id: starterGroupId,
+                                title: 'Product Walkthrough & Markups',
+                                caption: 'Welcome to SnapLayer! Press Ctrl+V anywhere to paste screenshots from your clipboard into this group. Each image has an independent drawing layer you can toggle ON or OFF.',
+                                createdAt: Date.now(),
+                                images: [
+                                    {
+                                        id: 'img_' + Date.now(),
+                                        baseUrl: createSampleDiagramDataUrl(),
+                                        layerDataUrl: createSampleAnnotationLayerDataUrl(),
+                                        layerVisible: true,
+                                        storageType: 'demo',
+                                        uploading: false,
+                                        createdAt: Date.now()
+                                    }
+                                ]
+                            }
+                        ]
+                    };
+                    await persistWorkspace();
+                }
+            } catch (err) {
+                console.error('IndexedDB initialization error:', err);
+                showToast('Using in-memory session storage.', 'warning');
+            }
+
+            bindGlobalEvents();
+            renderGroupsSidebar();
+            renderActiveWorkspace();
+        }
+
+        async function persistWorkspace() {
+            try {
+                await idbStorage.saveState(appState);
+            } catch (e) {
+                console.error('Failed to persist state:', e);
+            }
+        }
+
+        // --- Cloudinary Configuration Management ---
+        function loadCloudinaryConfig() {
+            try {
+                const raw = localStorage.getItem('snaplayer_cloudinary_config');
+                if (raw) {
+                    cloudinaryConfig = { ...cloudinaryConfig, ...JSON.parse(raw) };
+                }
+            } catch (e) {
+                console.warn('Error reading Cloudinary config:', e);
+            }
+            updateCloudinaryStatusUI();
+        }
+
+        function isCloudinaryConfigured() {
+            return Boolean(cloudinaryConfig.cloudName.trim() && cloudinaryConfig.uploadPreset.trim());
+        }
+
+        function updateCloudinaryStatusUI() {
+            const dot = document.getElementById('cdnStatusDot');
+            const label = document.getElementById('cdnStatusLabel');
+            if (isCloudinaryConfigured()) {
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400';
+                label.textContent = `CDN: ${cloudinaryConfig.cloudName}`;
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+                label.textContent = 'Local Mode (Setup CDN)';
+            }
+        }
+
+        /**
+         * Uploads an image Blob/File to Cloudinary CDN using unsigned upload preset.
+         * Returns secure_url on success, or falls back to local DataURL.
+         */
+        async function uploadImageToCloudinary(blob) {
+            if (!isCloudinaryConfigured()) {
+                const localUrl = await blobToDataUrl(blob);
+                return { url: localUrl, storageType: 'local' };
+            }
+
+            const formData = new FormData();
+            formData.append('file', blob);
+            formData.append('upload_preset', cloudinaryConfig.uploadPreset.trim());
+            if (cloudinaryConfig.folder && cloudinaryConfig.folder.trim()) {
+                formData.append('folder', cloudinaryConfig.folder.trim());
+            }
+
+            const endpoint = `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudinaryConfig.cloudName.trim())}/image/upload`;
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error?.message || `Cloudinary HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { url: data.secure_url, storageType: 'cloudinary' };
+        }
+
+        function blobToDataUrl(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // --- Group Helpers ---
+        function getActiveGroup() {
+            return appState.groups.find(g => g.id === appState.activeGroupId) || appState.groups[0] || null;
+        }
+
+        function createGroup(title, caption = '') {
+            const newGrp = {
+                id: 'grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                title: title.trim() || 'Untitled Group',
+                caption: caption.trim(),
+                createdAt: Date.now(),
+                images: []
+            };
+            appState.groups.unshift(newGrp);
+            appState.activeGroupId = newGrp.id;
+            persistWorkspace();
+            renderGroupsSidebar();
+            renderActiveWorkspace();
+            showToast(`Group "${newGrp.title}" created`, 'success');
+        }
+
+        function switchGroup(groupId) {
+            appState.activeGroupId = groupId;
+            persistWorkspace();
+            renderGroupsSidebar();
+            renderActiveWorkspace();
+            closeMobileSidebar();
+        }
+
+        // --- Image Ingestion (Paste / Drop / File Picker) ---
+        async function handleIncomingImageFiles(fileList) {
+            const activeGroup = getActiveGroup();
+            if (!activeGroup) {
+                showToast('Please create or select a group first.', 'warning');
+                return;
+            }
+
+            const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+            if (imageFiles.length === 0) return;
+
+            showToast(
+                isCloudinaryConfigured()
+                    ? `Uploading ${imageFiles.length} image(s) to Cloudinary...`
+                    : `Pasting ${imageFiles.length} image(s) into "${activeGroup.title}"...`,
+                'info'
+            );
+
+            for (const file of imageFiles) {
+                // Create immediate optimistic preview card using DataURL
+                const tempDataUrl = await blobToDataUrl(file);
+                const imgId = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+
+                const newImageObj = {
+                    id: imgId,
+                    baseUrl: tempDataUrl,
+                    layerDataUrl: null,
+                    layerVisible: true,
+                    storageType: isCloudinaryConfigured() ? 'cloudinary' : 'local',
+                    uploading: isCloudinaryConfigured(),
+                    createdAt: Date.now()
+                };
+
+                activeGroup.images.unshift(newImageObj);
+                renderGroupsSidebar();
+                renderActiveWorkspace();
+
+                if (isCloudinaryConfigured()) {
+                    try {
+                        const result = await uploadImageToCloudinary(file);
+                        const target = activeGroup.images.find(i => i.id === imgId);
+                        if (target) {
+                            target.baseUrl = result.url;
+                            target.storageType = result.storageType;
+                            target.uploading = false;
+                        }
+                        await persistWorkspace();
+                        renderActiveWorkspace();
+                        showToast('Image stored on Cloudinary CDN!', 'success');
+                    } catch (err) {
+                        console.error('Cloudinary upload failed:', err);
+                        const target = activeGroup.images.find(i => i.id === imgId);
+                        if (target) {
+                            target.uploading = false;
+                            target.storageType = 'local';
+                        }
+                        await persistWorkspace();
+                        renderActiveWorkspace();
+                        showToast(`Cloudinary error: ${err.message}. Kept local copy.`, 'error');
+                    }
+                } else {
+                    await persistWorkspace();
+                }
+            }
+        }
+
+        // Manual Clipboard Read Button Fallback
+        async function triggerClipboardPaste() {
+            try {
+                if (!navigator.clipboard || !navigator.clipboard.read) {
+                    showToast('Press Ctrl+V (or Cmd+V) directly on the page to paste.', 'info');
+                    return;
+                }
+                const clipboardItems = await navigator.clipboard.read();
+                const blobs = [];
+                for (const item of clipboardItems) {
+                    const imageType = item.types.find(t => t.startsWith('image/'));
+                    if (imageType) {
+                        const blob = await item.getType(imageType);
+                        blobs.push(blob);
+                    }
+                }
+                if (blobs.length > 0) {
+                    await handleIncomingImageFiles(blobs);
+                } else {
+                    showToast('No image found in your clipboard.', 'warning');
+                }
+            } catch (err) {
+                showToast('Press Ctrl+V on your keyboard to paste clipboard images.', 'info');
+            }
+        }
+
+        // --- Rendering Functions ---
+        function renderGroupsSidebar() {
+            const listEl = document.getElementById('groupsList');
+            const filterText = document.getElementById('groupSearchInput').value.toLowerCase().trim();
+
+            const filtered = appState.groups.filter(g => 
+                g.title.toLowerCase().includes(filterText) || 
+                (g.caption && g.caption.toLowerCase().includes(filterText))
+            );
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 px-3">
+                        <p class="text-xs text-zinc-500">No matching groups found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(group => {
+                const isActive = group.id === appState.activeGroupId;
+                const imgCount = group.images.length;
+                return `
+                    <button onclick="switchGroup('${group.id}')"
+                        class="w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between gap-2 transition group ${
+                            isActive 
+                                ? 'bg-indigo-600/15 text-white border border-indigo-500/40 shadow-xs' 
+                                : 'text-zinc-400 hover:text-zinc-200 hover:bg-studio-850 border border-transparent'
+                        }">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="${isActive ? 'folder-open' : 'folder'}" 
+                               class="w-4 h-4 shrink-0 ${isActive ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-300'}"></i>
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium truncate">${escapeHtml(group.title)}</p>
+                                ${group.caption ? `<p class="text-[10px] text-zinc-500 truncate mt-0.5">${escapeHtml(group.caption)}</p>` : ''}
+                            </div>
+                        </div>
+                        <span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                            isActive ? 'bg-indigo-500/25 text-indigo-200' : 'bg-zinc-800 text-zinc-400'
+                        }">
+                            ${imgCount}
+                        </span>
+                    </button>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function renderActiveWorkspace() {
+            const group = getActiveGroup();
+            const workspaceEl = document.getElementById('workspaceContent');
+
+            if (!group) {
+                workspaceEl.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-6">
+                        <p class="text-zinc-400 text-sm mb-3">No image groups available.</p>
+                        <button onclick="openNewGroupModal()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-medium">Create First Group</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Update Group Header & Caption fields
+            document.getElementById('activeGroupTitle').value = group.title;
+            document.getElementById('activeGroupCountBadge').textContent = `${group.images.length} ${group.images.length === 1 ? 'image' : 'images'}`;
+            document.getElementById('groupCaptionInput').value = group.caption || '';
+
+            const dateStr = new Date(group.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('activeGroupMeta').innerHTML = `
+                <span>Created ${dateStr}</span>
+                <span>•</span>
+                <span class="text-emerald-400/90 flex items-center gap-1">
+                    <i data-lucide="check-circle-2" class="w-3 h-3"></i> Synced
+                </span>
+            `;
+
+            const emptyState = document.getElementById('emptyGalleryState');
+            const gridEl = document.getElementById('imagesGrid');
+
+            if (group.images.length === 0) {
+                emptyState.classList.remove('hidden');
+                gridEl.innerHTML = '';
+            } else {
+                emptyState.classList.add('hidden');
+                gridEl.innerHTML = group.images.map((img, idx) => {
+                    const hasLayer = Boolean(img.layerDataUrl);
+                    const isLayerOn = img.layerVisible !== false;
+
+                    return `
+                        <article class="bg-studio-900 border border-zinc-800/90 hover:border-zinc-700 rounded-2xl overflow-hidden flex flex-col shadow-lg transition group">
+                            <!-- Card Top Meta Bar -->
+                            <div class="px-3.5 py-2.5 bg-studio-950/60 border-b border-zinc-800/80 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-[11px] font-mono text-zinc-500">#${group.images.length - idx}</span>
+                                    ${img.uploading ? `
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 animate-pulse">
+                                            <i data-lucide="loader-2" class="w-2.5 h-2.5 animate-spin"></i> Uploading CDN...
+                                        </span>
+                                    ` : img.storageType === 'cloudinary' ? `
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30" title="Hosted on Cloudinary CDN">
+                                            <i data-lucide="cloud" class="w-2.5 h-2.5"></i> Cloudinary
+                                        </span>
+                                    ` : `
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700/70" title="Stored locally in browser">
+                                            <i data-lucide="hard-drive" class="w-2.5 h-2.5"></i> Local
+                                        </span>
+                                    `}
+                                </div>
+
+                                <div class="flex items-center gap-1">
+                                    ${img.storageType === 'cloudinary' ? `
+                                        <button onclick="copyCdnUrl('${img.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Copy Cloudinary CDN URL">
+                                            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="confirmDeleteImage('${img.id}')" class="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-950/40 transition" title="Remove image">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Layered Image Viewport (Base Image + Toggleable Drawing Layer) -->
+                            <div onclick="openDrawingStudio('${img.id}')" class="relative aspect-video bg-studio-950 checkerboard-bg overflow-hidden cursor-pointer flex items-center justify-center">
+                                <!-- Base Image -->
+                                <img src="${img.baseUrl}" alt="Group item" loading="lazy" class="w-full h-full object-contain select-none">
+
+                                <!-- Independent Drawing Overlay Layer -->
+                                ${hasLayer ? `
+                                    <img src="${img.layerDataUrl}" alt="Annotation overlay" 
+                                         class="absolute inset-0 w-full h-full object-contain pointer-events-none layer-fade ${isLayerOn ? 'opacity-100' : 'opacity-0'}">
+                                ` : ''}
+
+                                <!-- Hover Edit Prompt -->
+                                <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span class="px-3.5 py-1.5 rounded-full bg-zinc-900/95 text-white text-xs font-medium border border-zinc-700 shadow-xl flex items-center gap-1.5">
+                                        <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                        Open Layer Editor
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Card Footer: Layer Toggle & Draw Action -->
+                            <div class="px-3.5 py-2.5 bg-studio-900 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                                <!-- Per-Image Drawing Layer Toggle Switch -->
+                                <button onclick="toggleImageLayer('${img.id}')" 
+                                    class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
+                                        !hasLayer 
+                                            ? 'bg-zinc-800/40 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+                                            : isLayerOn 
+                                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35 hover:bg-emerald-500/25' 
+                                                : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-zinc-200'
+                                    }"
+                                    title="${hasLayer ? 'Toggle drawing layer visibility' : 'No drawings on layer yet'}">
+                                    <i data-lucide="${isLayerOn && hasLayer ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
+                                    <span>${!hasLayer ? 'No Markup' : isLayerOn ? 'Layer: ON' : 'Layer: OFF'}</span>
+                                </button>
+
+                                <!-- Open Annotation Studio Button -->
+                                <button onclick="openDrawingStudio('${img.id}')" 
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/15 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-medium transition">
+                                    <i data-lucide="brush" class="w-3.5 h-3.5"></i>
+                                    <span>Draw Layer</span>
+                                </button>
+                            </div>
+                        </article>
+                    `;
+                }).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- Per-Image Layer Toggle & Bulk Toggle ---
+        async function toggleImageLayer(imageId) {
+            const group = getActiveGroup();
+            if (!group) return;
+            const img = group.images.find(i => i.id === imageId);
+            if (!img) return;
+
+            if (!img.layerDataUrl) {
+                openDrawingStudio(imageId);
+                return;
+            }
+
+            img.layerVisible = !(img.layerVisible !== false);
+            await persistWorkspace();
+            renderActiveWorkspace();
+        }
+
+        async function toggleAllLayersInGroup() {
+            const group = getActiveGroup();
+            if (!group || group.images.length === 0) return;
+
+            const layeredImages = group.images.filter(i => Boolean(i.layerDataUrl));
+            if (layeredImages.length === 0) {
+                showToast('No images in this group have drawing layers yet.', 'info');
+                return;
+            }
+
+            const anyVisible = layeredImages.some(i => i.layerVisible !== false);
+            const nextState = !anyVisible;
+
+            layeredImages.forEach(i => {
+                i.layerVisible = nextState;
+            });
+
+            await persistWorkspace();
+            renderActiveWorkspace();
+            showToast(`All drawing layers turned ${nextState ? 'ON' : 'OFF'}`, 'info');
+        }
+
+        function copyCdnUrl(imageId) {
+            const group = getActiveGroup();
+            const img = group?.images.find(i => i.id === imageId);
+            if (!img) return;
+
+            const tempInput = document.createElement('input');
+            tempInput.value = img.baseUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Cloudinary CDN URL copied to clipboard!', 'success');
+        }
+
+        // ============================================================================
+        // NON-DESTRUCTIVE DRAWING LAYER STUDIO ENGINE
+        // ============================================================================
+        const drawingModal = document.getElementById('drawingModal');
+        const studioBaseImage = document.getElementById('studioBaseImage');
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const ctx = drawingCanvas.getContext('2d', { willReadFrequently: true });
+
+        function openDrawingStudio(imageId) {
+            const group = getActiveGroup();
+            const img = group?.images.find(i => i.id === imageId);
+            if (!img) return;
+
+            editorState.isOpen = true;
+            editorState.imageId = imageId;
+            editorState.layerVisible = img.layerVisible !== false;
+            editorState.history = [];
+            editorState.historyIndex = -1;
+
+            updateStudioLayerToggleUI();
+
+            drawingModal.classList.remove('hidden');
+            drawingModal.classList.add('flex');
+
+            // Load base image to size canvas accurately
+            studioBaseImage.crossOrigin = 'anonymous';
+            studioBaseImage.onload = () => {
+                const natW = studioBaseImage.naturalWidth || 900;
+                const natH = studioBaseImage.naturalHeight || 540;
+                drawingCanvas.width = natW;
+                drawingCanvas.height = natH;
+                ctx.clearRect(0, 0, natW, natH);
+
+                if (img.layerDataUrl) {
+                    const layerImg = new Image();
+                    layerImg.onload = () => {
+                        ctx.drawImage(layerImg, 0, 0, natW, natH);
+                        pushCanvasHistory();
+                    };
+                    layerImg.src = img.layerDataUrl;
+                } else {
+                    pushCanvasHistory();
+                }
+            };
+            studioBaseImage.src = img.baseUrl;
+        }
+
+        function closeDrawingStudio() {
+            editorState.isOpen = false;
+            editorState.imageId = null;
+            drawingModal.classList.add('hidden');
+            drawingModal.classList.remove('flex');
+        }
+
+        function updateStudioLayerToggleUI() {
+            const btn = document.getElementById('studioLayerToggleBtn');
+            const text = document.getElementById('studioLayerToggleText');
+            if (editorState.layerVisible) {
+                drawingCanvas.style.opacity = '1';
+                btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition';
+                text.textContent = 'Layer: ON';
+            } else {
+                drawingCanvas.style.opacity = '0';
+                btn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700 text-xs font-medium transition';
+                text.textContent = 'Layer: OFF';
+            }
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = drawingCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function startStroke(e) {
+            if (!editorState.isOpen) return;
+            if (!editorState.layerVisible) {
+                editorState.layerVisible = true;
+                updateStudioLayerToggleUI();
+            }
+
+            e.preventDefault();
+            editorState.isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            editorState.startX = pos.x;
+            editorState.startY = pos.y;
+
+            // Scale brush relative to image resolution so strokes feel consistent
+            const resolutionScale = Math.max(1, drawingCanvas.width / 850);
+            const scaledWidth = editorState.brushSize * resolutionScale;
+
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = scaledWidth;
+
+            if (editorState.tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.strokeStyle = 'rgba(0,0,0,1)';
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = editorState.color;
+                ctx.fillStyle = editorState.color;
+            }
+
+            if (editorState.tool === 'brush' || editorState.tool === 'eraser') {
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                ctx.lineTo(pos.x + 0.1, pos.y + 0.1);
+                ctx.stroke();
+            } else {
+                // Save canvas bitmap for clean shape previewing
+                editorState.snapshot = ctx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        function moveStroke(e) {
+            if (!editorState.isDrawing) return;
+            e.preventDefault();
+            const pos = getCanvasCoordinates(e);
+
+            if (editorState.tool === 'brush' || editorState.tool === 'eraser') {
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            } else {
+                // Restore pre-shape snapshot
+                ctx.putImageData(editorState.snapshot, 0, 0);
+                drawShapePreview(editorState.startX, editorState.startY, pos.x, pos.y);
+            }
+        }
+
+        function endStroke(e) {
+            if (!editorState.isDrawing) return;
+            editorState.isDrawing = false;
+            ctx.globalCompositeOperation = 'source-over';
+            pushCanvasHistory();
+        }
+
+        function drawShapePreview(x1, y1, x2, y2) {
+            ctx.beginPath();
+            if (editorState.tool === 'rect') {
+                ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            } else if (editorState.tool === 'circle') {
+                const rx = Math.abs(x2 - x1) / 2;
+                const ry = Math.abs(y2 - y1) / 2;
+                const cx = Math.min(x1, x2) + rx;
+                const cy = Math.min(y1, y2) + ry;
+                ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (editorState.tool === 'arrow') {
+                const headLen = Math.max(16, ctx.lineWidth * 3.5);
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+                ctx.stroke();
+            }
+        }
+
+        function pushCanvasHistory() {
+            // Trim redo branch if we drew after undoing
+            if (editorState.historyIndex < editorState.history.length - 1) {
+                editorState.history = editorState.history.slice(0, editorState.historyIndex + 1);
+            }
+            editorState.history.push(drawingCanvas.toDataURL('image/png'));
+            if (editorState.history.length > 25) {
+                editorState.history.shift();
+            } else {
+                editorState.historyIndex++;
+            }
+            updateUndoRedoButtons();
+        }
+
+        function undoCanvas() {
+            if (editorState.historyIndex <= 0) return;
+            editorState.historyIndex--;
+            restoreCanvasFromHistory(editorState.history[editorState.historyIndex]);
+        }
+
+        function redoCanvas() {
+            if (editorState.historyIndex >= editorState.history.length - 1) return;
+            editorState.historyIndex++;
+            restoreCanvasFromHistory(editorState.history[editorState.historyIndex]);
+        }
+
+        function restoreCanvasFromHistory(dataUrl) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                ctx.drawImage(img, 0, 0);
+                updateUndoRedoButtons();
+            };
+            img.src = dataUrl;
+        }
+
+        function updateUndoRedoButtons() {
+            document.getElementById('undoDrawBtn').disabled = editorState.historyIndex <= 0;
+            document.getElementById('redoDrawBtn').disabled = editorState.historyIndex >= editorState.history.length - 1;
+        }
+
+        function isCanvasBlank(canvas) {
+            const pixelBuffer = new Uint32Array(
+                ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer
+            );
+            return !pixelBuffer.some(color => color !== 0);
+        }
+
+        async function saveDrawingLayer() {
+            const group = getActiveGroup();
+            const img = group?.images.find(i => i.id === editorState.imageId);
+            if (!img) return;
+
+            if (isCanvasBlank(drawingCanvas)) {
+                img.layerDataUrl = null;
+                img.layerVisible = true;
+            } else {
+                img.layerDataUrl = drawingCanvas.toDataURL('image/png');
+                img.layerVisible = editorState.layerVisible;
+            }
+
+            await persistWorkspace();
+            renderActiveWorkspace();
+            closeDrawingStudio();
+            showToast('Drawing layer saved!', 'success');
+        }
+
+        // --- Confirmation Modal Helper ---
+        let pendingConfirmCallback = null;
+
+        function openConfirmModal(title, message, onConfirm) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            pendingConfirmCallback = onConfirm;
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            pendingConfirmCallback = null;
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmDeleteImage(imageId) {
+            openConfirmModal(
+                'Delete Image & Layer?',
+                'This will permanently remove this image and its annotation layer from the group.',
+                async () => {
+                    const group = getActiveGroup();
+                    if (!group) return;
+                    group.images = group.images.filter(i => i.id !== imageId);
+                    await persistWorkspace();
+                    renderGroupsSidebar();
+                    renderActiveWorkspace();
+                    showToast('Image removed from group', 'info');
+                }
+            );
+        }
+
+        // --- Mobile Sidebar Controls ---
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.remove('hidden');
+        }
+
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.add('hidden');
+        }
+
+        // --- Toast Notifications ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            const styles = {
+                success: 'bg-zinc-900 border-emerald-500/40 text-emerald-200',
+                error: 'bg-zinc-900 border-red-500/40 text-red-200',
+                warning: 'bg-zinc-900 border-amber-500/40 text-amber-200',
+                info: 'bg-zinc-900 border-indigo-500/40 text-zinc-200'
+            };
+
+            const icons = {
+                success: 'check-circle-2',
+                error: 'alert-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border shadow-xl text-xs font-medium backdrop-blur-md transition-all duration-200 transform translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
+                <span class="flex-1">${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons({ root: toast });
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-1');
+                setTimeout(() => toast.remove(), 220);
+            }, 3400);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        // --- Event Listeners Binding ---
+        function bindGlobalEvents() {
+            // 1. Global Ctrl+V / Cmd+V Paste Listener
+            window.addEventListener('paste', async (e) => {
+                if (editorState.isOpen) return;
+
+                const items = e.clipboardData?.items;
+                if (!items) return;
+
+                const imageFiles = [];
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.startsWith('image/')) {
+                        const file = items[i].getAsFile();
+                        if (file) imageFiles.push(file);
+                    }
+                }
+
+                // If clipboard contains an image, capture it into the open group
+                if (imageFiles.length > 0) {
+                    e.preventDefault();
+                    await handleIncomingImageFiles(imageFiles);
+                }
+            });
+
+            // 2. Keyboard Shortcuts (Esc to close modals, Ctrl+Z in studio)
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (editorState.isOpen) closeDrawingStudio();
+                    document.getElementById('cloudinaryModal').classList.add('hidden');
+                    document.getElementById('newGroupModal').classList.add('hidden');
+                    closeConfirmModal();
+                }
+                if (editorState.isOpen && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    undoCanvas();
+                }
+            });
+
+            // 3. Drag & Drop Files onto Main Workspace
+            const dropZone = document.getElementById('mainDropZone');
+            const dragOverlay = document.getElementById('dragOverlay');
+            let dragCounter = 0;
+
+            dropZone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dragCounter++;
+                dragOverlay.classList.remove('hidden');
+            });
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter <= 0) {
+                    dragCounter = 0;
+                    dragOverlay.classList.add('hidden');
+                }
+            });
+            dropZone.addEventListener('dragover', (e) => e.preventDefault());
+            dropZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                dragCounter = 0;
+                dragOverlay.classList.add('hidden');
+                if (e.dataTransfer?.files?.length) {
+                    await handleIncomingImageFiles(e.dataTransfer.files);
+                }
+            });
+
+            // 4. File Input & Header Paste Button
+            document.getElementById('fileInput').addEventListener('change', async (e) => {
+                if (e.target.files?.length) {
+                    await handleIncomingImageFiles(e.target.files);
+                    e.target.value = '';
+                }
+            });
+            document.getElementById('headerPasteBtn').addEventListener('click', triggerClipboardPaste);
+
+            // 5. Group Title & Caption Live Auto-Save
+            let captionTimeout = null;
+            document.getElementById('groupCaptionInput').addEventListener('input', (e) => {
+                const group = getActiveGroup();
+                if (!group) return;
+                group.caption = e.target.value;
+                document.getElementById('captionSaveIndicator').textContent = 'Saving...';
+                clearTimeout(captionTimeout);
+                captionTimeout = setTimeout(async () => {
+                    await persistWorkspace();
+                    renderGroupsSidebar();
+                    document.getElementById('captionSaveIndicator').textContent = 'Saved';
+                }, 350);
+            });
+
+            document.getElementById('activeGroupTitle').addEventListener('input', async (e) => {
+                const group = getActiveGroup();
+                if (!group) return;
+                group.title = e.target.value || 'Untitled Group';
+                await persistWorkspace();
+                renderGroupsSidebar();
+            });
+
+            // 6. Group Sidebar Actions
+            document.getElementById('groupSearchInput').addEventListener('input', renderGroupsSidebar);
+            document.getElementById('toggleAllLayersBtn').addEventListener('click', toggleAllLayersInGroup);
+
+            document.getElementById('deleteGroupBtn').addEventListener('click', () => {
+                const group = getActiveGroup();
+                if (!group) return;
+                openConfirmModal(
+                    `Delete "${group.title}"?`,
+                    `This will delete the group, its caption, and all ${group.images.length} images inside it.`,
+                    async () => {
+                        appState.groups = appState.groups.filter(g => g.id !== group.id);
+                        appState.activeGroupId = appState.groups[0]?.id || null;
+                        await persistWorkspace();
+                        renderGroupsSidebar();
+                        renderActiveWorkspace();
+                        showToast('Group deleted', 'info');
+                    }
+                );
+            });
+
+            // 7. New Group Modal
+            const newGroupModal = document.getElementById('newGroupModal');
+            document.getElementById('createGroupBtn').addEventListener('click', () => {
+                document.getElementById('newGroupNameInput').value = '';
+                document.getElementById('newGroupCaptionInput').value = '';
+                newGroupModal.classList.remove('hidden');
+                newGroupModal.classList.add('flex');
+                setTimeout(() => document.getElementById('newGroupNameInput').focus(), 50);
+            });
+            document.getElementById('closeNewGroupModalBtn').addEventListener('click', () => newGroupModal.classList.add('hidden'));
+            document.getElementById('cancelNewGroupBtn').addEventListener('click', () => newGroupModal.classList.add('hidden'));
+            document.getElementById('newGroupForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('newGroupNameInput').value;
+                const cap = document.getElementById('newGroupCaptionInput').value;
+                createGroup(name, cap);
+                newGroupModal.classList.add('hidden');
+            });
+
+            // 8. Cloudinary Config Modal
+            const cloudModal = document.getElementById('cloudinaryModal');
+            document.getElementById('openCloudinaryModalBtn').addEventListener('click', () => {
+                document.getElementById('cloudNameInput').value = cloudinaryConfig.cloudName;
+                document.getElementById('uploadPresetInput').value = cloudinaryConfig.uploadPreset;
+                document.getElementById('cloudFolderInput').value = cloudinaryConfig.folder;
+                cloudModal.classList.remove('hidden');
+                cloudModal.classList.add('flex');
+            });
+            document.getElementById('closeCloudinaryModalBtn').addEventListener('click', () => cloudModal.classList.add('hidden'));
+            document.getElementById('cancelCloudinaryBtn').addEventListener('click', () => cloudModal.classList.add('hidden'));
+            document.getElementById('clearCloudinaryBtn').addEventListener('click', () => {
+                cloudinaryConfig = { cloudName: '', uploadPreset: '', folder: 'snaplayer-studio' };
+                localStorage.removeItem('snaplayer_cloudinary_config');
+                updateCloudinaryStatusUI();
+                cloudModal.classList.add('hidden');
+                showToast('Switched to Local Browser Storage mode', 'info');
+            });
+            document.getElementById('cloudinaryForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                cloudinaryConfig.cloudName = document.getElementById('cloudNameInput').value.trim();
+                cloudinaryConfig.uploadPreset = document.getElementById('uploadPresetInput').value.trim();
+                cloudinaryConfig.folder = document.getElementById('cloudFolderInput').value.trim();
+                localStorage.setItem('snaplayer_cloudinary_config', JSON.stringify(cloudinaryConfig));
+                updateCloudinaryStatusUI();
+                cloudModal.classList.add('hidden');
+                showToast(
+                    isCloudinaryConfigured() ? 'Cloudinary CDN connected!' : 'Saved in Local Mode',
+                    'success'
+                );
+            });
+
+            // 9. Drawing Studio Controls
+            drawingCanvas.addEventListener('mousedown', startStroke);
+            drawingCanvas.addEventListener('mousemove', moveStroke);
+            window.addEventListener('mouseup', endStroke);
+            drawingCanvas.addEventListener('touchstart', startStroke, { passive: false });
+            drawingCanvas.addEventListener('touchmove', moveStroke, { passive: false });
+            window.addEventListener('touchend', endStroke);
+
+            document.querySelectorAll('.draw-tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.draw-tool-btn').forEach(b => {
+                        b.classList.remove('bg-indigo-600', 'text-white');
+                        b.classList.add('text-zinc-400');
+                    });
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    btn.classList.remove('text-zinc-400');
+                    editorState.tool = btn.dataset.tool;
+                });
+            });
+
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('ring-2', 'ring-white', 'scale-110'));
+                    swatch.classList.add('ring-2', 'ring-white', 'scale-110');
+                    editorState.color = swatch.dataset.color;
+                    document.getElementById('customColorPicker').value = swatch.dataset.color;
+                });
+            });
+
+            document.getElementById('customColorPicker').addEventListener('input', (e) => {
+                editorState.color = e.target.value;
+            });
+
+            document.getElementById('brushSizeSlider').addEventListener('input', (e) => {
+                editorState.brushSize = parseInt(e.target.value, 10);
+                document.getElementById('brushSizeValue').textContent = `${editorState.brushSize}px`;
+            });
+
+            document.getElementById('studioLayerToggleBtn').addEventListener('click', () => {
+                editorState.layerVisible = !editorState.layerVisible;
+                updateStudioLayerToggleUI();
+            });
+
+            document.getElementById('undoDrawBtn').addEventListener('click', undoCanvas);
+            document.getElementById('redoDrawBtn').addEventListener('click', redoCanvas);
+            document.getElementById('clearLayerBtn').addEventListener('click', () => {
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                pushCanvasHistory();
+            });
+            document.getElementById('closeDrawingModalBtn').addEventListener('click', closeDrawingStudio);
+            document.getElementById('saveDrawingLayerBtn').addEventListener('click', saveDrawingLayer);
+
+            // 10. Export / Import JSON Workspace Backup
+            document.getElementById('exportJsonBtn').addEventListener('click', () => {
+                const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `snaplayer-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Workspace JSON exported!', 'success');
+            });
+
+            document.getElementById('importJsonInput').addEventListener('change', async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                    const text = await file.text();
+                    const parsed = JSON.parse(text);
+                    if (parsed && Array.isArray(parsed.groups)) {
+                        appState = parsed;
+                        await persistWorkspace();
+                        renderGroupsSidebar();
+                        renderActiveWorkspace();
+                        showToast('Workspace imported successfully!', 'success');
+                    } else {
+                        throw new Error('Invalid SnapLayer backup format');
+                    }
+                } catch (err) {
+                    showToast('Failed to import JSON: ' + err.message, 'error');
+                }
+                e.target.value = '';
+            });
+
+            // 11. Confirm Modal & Mobile Drawer Listeners
+            document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmModal);
+            document.getElementById('confirmAcceptBtn').addEventListener('click', async () => {
+                if (pendingConfirmCallback) await pendingConfirmCallback();
+                closeConfirmModal();
+            });
+
+            document.getElementById('mobileMenuBtn').addEventListener('click', openMobileSidebar);
+            document.getElementById('sidebarBackdrop').addEventListener('click', closeMobileSidebar);
+        }
+
+        // Start App on Window Load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
