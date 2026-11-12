@@ -1915,6 +1915,14 @@
                 cloudModal.classList.add('flex');
             });
             document.getElementById('closeCloudinaryModalBtn').addEventListener('click', hideCloudModal);
+                                document.getElementById('testCloudConnectionBtn').addEventListener('click', async () => {
+                const cName = document.getElementById('cloudNameInput').value.trim();
+                const uPreset = document.getElementById('uploadPresetInput').value.trim();
+                const cFolder = document.getElementById('cloudFolderInput').value.trim();
+                const diagBox = document.getElementById('modalDiagnosticBox');
+
+                if (!cName || !uPreset) {
+                    diagBox.classList.remove('hidden');
                     diagBox.className = 'p-3 rounded-xl text-xs bg-red-500/15 border border-red-500/35 text-red-200';
                     diagBox.textContent = 'Please enter both Cloud Name and Unsigned Upload Preset first.';
                     return;
