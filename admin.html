@@ -97,6 +97,7 @@
                     <button type="button" class="admin-menu-item" data-page="content" onclick="adminMenuGo('content')">✏️ Content Editor</button>
                     <button type="button" class="admin-menu-item" data-page="horizon" onclick="adminMenuGo('horizon')">🚀 Horizon</button>
                     <button type="button" class="admin-menu-item" data-page="mailboxes" onclick="adminMenuGo('mailboxes')">✉️ Mailboxes</button>
+                    <button type="button" class="admin-menu-item" data-page="rdp" onclick="adminMenuGo('rdp')">🖥 RDP</button>
                     <button type="button" class="admin-menu-item" data-page="dev" onclick="adminMenuGo('dev')">🛠 Files</button>
                 </div>
             </div>
@@ -167,6 +168,7 @@
             <button class="tab-btn" onclick="switchTab('content')">✏️ Content Editor</button>
             <button class="tab-btn" onclick="switchTab('horizon')">🚀 Horizon</button>
             <button class="tab-btn" onclick="switchTab('mailboxes')">✉️ Mailboxes</button>
+            <button class="tab-btn" onclick="switchTab('rdp')">🖥 RDP</button>
             <button class="tab-btn" onclick="switchTab('dev')">🛠 Files</button>
         </div>
 
@@ -379,6 +381,56 @@
             </div>
         </div>
 
+        <!-- RDP TAB -->
+        <div id="tab-rdp" class="tab-panel">
+            <div class="bg-white border border-gray-200 rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="outfit font-bold text-lg">🖥 Remote Desktop</h2>
+                        <p class="text-xs text-gray-400 mt-1">Start the GitHub runner OS and view its screen here.</p>
+                    </div>
+                    <span id="rdp-badge" class="badge badge-reader">Offline</span>
+                </div>
+                <div class="px-6 py-5 space-y-4">
+                    <div class="flex gap-2 flex-wrap">
+                        <button id="rdp-start-btn" class="btn btn-dark btn-sm" onclick="rdpStart()">▶ Start OS</button>
+                        <button id="rdp-stop-btn" class="btn btn-red btn-sm" onclick="rdpStop()" disabled>■ Stop</button>
+                        <button class="btn btn-sm" style="background:#f3f4f6;color:#374151;" onclick="rdpRefresh()">↻ Refresh</button>
+                    </div>
+                    <div id="rdp-msg" class="text-sm text-gray-500"></div>
+                    <div>
+                        <label class="content-field-label">Tunnel hostname</label>
+                        <div class="flex gap-3 items-start">
+                            <input id="rdp-host" type="text" class="content-field-input" readonly placeholder="Available once the runner is ready" />
+                            <button class="content-save-btn" onclick="rdpCopy('rdp-host')">Copy</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="content-field-label">Local command (for a normal RDP client)</label>
+                        <div class="flex gap-3 items-start">
+                            <input id="rdp-cmd" type="text" class="content-field-input" readonly placeholder="Available once the runner is ready" />
+                            <button class="content-save-btn" onclick="rdpCopy('rdp-cmd')">Copy</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="content-field-label">Viewer URL (Guacamole connection link)</label>
+                        <div class="flex gap-3 items-start">
+                            <input id="rdp-viewer-url" type="text" class="content-field-input" placeholder="https://your-guacamole-host/#/client/..." />
+                            <button class="content-save-btn" onclick="rdpConnect()">Connect</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 class="outfit font-bold text-lg">Screen</h2>
+                    <a id="rdp-popout" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-orange-600 hover:underline" style="display:none;">Open in new tab ↗</a>
+                </div>
+                <div id="rdp-frame-empty" class="text-gray-400 text-sm text-center py-10">Enter a viewer URL and click Connect.</div>
+                <iframe id="rdp-frame" title="Remote desktop" allow="clipboard-read; clipboard-write; fullscreen" style="width:100%;height:70vh;border:0;display:none;"></iframe>
+            </div>
+        </div>
+
         <!-- FILES TAB -->
         <div id="tab-dev" class="tab-panel">
             <div class="bg-white border border-gray-200 rounded-lg">
@@ -484,6 +536,7 @@
 
     function switchTab(name) {
         if (name !== 'dev') stopDevStatusPolling();
+        if (name !== 'rdp') rdpStopPolling();
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle(
@@ -498,6 +551,7 @@
         if (name === 'content') loadContentEditor();
         if (name === 'stories') loadDashboard();
         if (name === 'horizon') loadHorizonTab();
+        if (name === 'rdp') rdpRefresh();
 
         if (name === 'mailboxes') {
             document.getElementById('mb-result').textContent = '';
@@ -1350,6 +1404,111 @@
             }
         } catch (e) { status.textContent = 'Network error.'; }
         btn.disabled = false;
+    }
+
+    // ── RDP CONTROL ─────────────────────────────────────────────
+    let rdpTimer = null;
+
+    function rdpMsg(text, error = false) {
+        const el = document.getElementById('rdp-msg');
+        el.textContent = text || '';
+        el.style.color = error ? '#dc2626' : '#6b7280';
+    }
+
+    async function rdpCall(path, method) {
+        const res = await fetch(WORKER_URL + path, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', ...authHeader() }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Request failed.');
+        return data;
+    }
+
+    function rdpRender(d) {
+        const state = d.state || 'idle';
+        const labels = { idle: 'Offline', starting: 'Starting…', ready: 'Ready' };
+        const badge = document.getElementById('rdp-badge');
+        badge.textContent = labels[state] || state;
+        badge.className = 'badge ' + (state === 'ready' ? 'badge-admin' : 'badge-reader');
+
+        const host = d.hostname || '';
+        document.getElementById('rdp-host').value = host;
+        document.getElementById('rdp-cmd').value = host
+            ? 'cloudflared access tcp --hostname ' + host + ' --url localhost:3390'
+            : '';
+
+        document.getElementById('rdp-start-btn').disabled = state !== 'idle';
+        document.getElementById('rdp-stop-btn').disabled = state === 'idle';
+    }
+
+    async function rdpRefresh() {
+        try {
+            const d = await rdpCall('/rdp/status', 'GET');
+            rdpRender(d);
+            if (d.state === 'starting') rdpStartPolling(); else rdpStopPolling();
+            if (!document.getElementById('rdp-viewer-url').value) {
+                try { document.getElementById('rdp-viewer-url').value = localStorage.getItem('rdp_viewer_url') || ''; } catch (e) {}
+            }
+        } catch (e) { rdpMsg(e.message, true); }
+    }
+
+    function rdpStartPolling() {
+        if (!rdpTimer) rdpTimer = setInterval(rdpRefresh, 5000);
+    }
+
+    function rdpStopPolling() {
+        if (rdpTimer) { clearInterval(rdpTimer); rdpTimer = null; }
+    }
+
+    async function rdpStart() {
+        rdpMsg('Triggering the runner...');
+        document.getElementById('rdp-start-btn').disabled = true;
+        try {
+            await rdpCall('/rdp/start', 'POST');
+            rdpMsg('Runner is booting. This usually takes 1-2 minutes.');
+            rdpRefresh();
+            rdpStartPolling();
+        } catch (e) {
+            rdpMsg(e.message, true);
+            document.getElementById('rdp-start-btn').disabled = false;
+        }
+    }
+
+    async function rdpStop() {
+        if (!confirm('Stop the runner? Unsynced files on it will be lost.')) return;
+        rdpMsg('Stopping...');
+        try {
+            await rdpCall('/rdp/stop', 'POST');
+            rdpMsg('Stop requested.');
+            document.getElementById('rdp-frame').style.display = 'none';
+            document.getElementById('rdp-frame').removeAttribute('src');
+            document.getElementById('rdp-frame-empty').style.display = 'block';
+            document.getElementById('rdp-popout').style.display = 'none';
+            rdpRefresh();
+        } catch (e) { rdpMsg(e.message, true); }
+    }
+
+    function rdpCopy(id) {
+        const el = document.getElementById(id);
+        if (!el.value) return;
+        navigator.clipboard.writeText(el.value).then(
+            () => showCustomAlert('Copied.'),
+            () => { el.select(); showCustomAlert('Press Ctrl+C to copy.'); }
+        );
+    }
+
+    function rdpConnect() {
+        const url = document.getElementById('rdp-viewer-url').value.trim();
+        if (!/^https:\/\//i.test(url)) { showCustomAlert('Viewer URL must start with https://'); return; }
+        try { localStorage.setItem('rdp_viewer_url', url); } catch (e) {}
+        const frame = document.getElementById('rdp-frame');
+        frame.src = url;
+        frame.style.display = 'block';
+        document.getElementById('rdp-frame-empty').style.display = 'none';
+        const pop = document.getElementById('rdp-popout');
+        pop.href = url;
+        pop.style.display = 'inline';
     }
 
     let horizonProjects = [];
