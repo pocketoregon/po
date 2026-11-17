@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud Web RDP</title>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: #fff; text-align: center; margin: 0; padding: 20px; }
+    canvas { border: 1px solid #333; background: #000; margin-top: 15px; max-width: 100%; }
+    input, button { padding: 10px; margin: 5px; border-radius: 4px; border: 1px solid #444; }
+    button { background: #0078d4; color: white; border: none; cursor: pointer; }
+    #status { margin-top: 10px; color: #aaa; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="login-bar">
+    <input type="text" id="host" placeholder="Cloud Windows IP" required>
+    <input type="text" id="user" placeholder="Username (e.g. Administrator)" required>
+    <input type="password" id="pass" placeholder="Password" required>
+    <button onclick="startRDP()">Connect</button>
+  </div>
+  <div id="status">Ready to connect</div>
+  <canvas id="screen" width="1280" height="720"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io("https://pocket-rdp.fadehost.app");
+    const canvas = document.getElementById('screen');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
+
+    function startRDP() {
+      statusEl.innerText = "Connecting to cloud PC...";
+      socket.emit('connect-rdp', {
+        host: document.getElementById('host').value,
+        username: document.getElementById('user').value,
+        password: document.getElementById('pass').value
+      });
+    }
+
+    socket.on('connect', () => statusEl.innerText = "Bridge reachable. Ready to connect");
+    socket.on('connect_error', () => statusEl.innerText = "Cannot reach the bridge server");
+    socket.on('rdp-connected', () => statusEl.innerText = "Connected");
+    socket.on('rdp-closed', () => statusEl.innerText = "Connection closed");
+    socket.on('rdp-error', (err) => statusEl.innerText = "Error: " + err);
+
+    socket.on('rdp-bitmap', (bitmap) => {
+      const imgData = ctx.createImageData(bitmap.width, bitmap.height);
+      imgData.data.set(new Uint8ClampedArray(bitmap.data));
+      ctx.putImageData(imgData, bitmap.destLeft, bitmap.destTop);
+    });
+
+    function pos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: Math.round((e.clientX - rect.left) * canvas.width / rect.width),
+        y: Math.round((e.clientY - rect.top) * canvas.height / rect.height)
+      };
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      socket.emit('mouse', { ...pos(e), button: 0, isPressed: false });
+    });
+    canvas.addEventListener('mousedown', (e) => {
+      socket.emit('mouse', { ...pos(e), button: e.button + 1, isPressed: true });
+    });
+    canvas.addEventListener('mouseup', (e) => {
+      socket.emit('mouse', { ...pos(e), button: e.button + 1, isPressed: false });
+    });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  </script>
+</body>
+</html>
